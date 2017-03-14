@@ -9,7 +9,8 @@
   },
   "autoload": {
     "psr-4": {
-      "JaneOlszewska\\Experiments\\": "src/"
+      "JaneOlszewska\\Experiments\\": "src/",
+      "JaneOlszewska\\Experiments\\Tests\\": "tests/"
     }
   },
   "minimum-stability": "stable",
