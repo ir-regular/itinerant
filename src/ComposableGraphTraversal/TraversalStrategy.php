@@ -194,11 +194,6 @@ class TraversalStrategy
         return $this->stack[$this->last]['result'][1];
     }
 
-    private function setProcessedChildren(?array $children): void
-    {
-        $this->stack[$this->last]['result'][1] = $children;
-    }
-
     private function pop()
     {
         $this->last--;
@@ -231,7 +226,6 @@ class TraversalStrategy
 
     private function seq(Datum $previousResult): ?Datum
     {
-        // todo: maybe getArgs() instead of this?
         $s1 = $this->getArg(0);
         $s2 = $this->getArg(1);
 
@@ -313,10 +307,8 @@ class TraversalStrategy
             $unprocessed = $this->getUnprocessedChildren();
             array_shift($unprocessed);
 
-            // todo: ...blah
             $processed = $this->getProcessedChildren();
             $processed[] = $previousResult;
-            $this->setProcessedChildren($processed); // todo: is this necessary in light of the below? remove.
 
             if ($unprocessed) { // there's more to process
                 $this->pop();
