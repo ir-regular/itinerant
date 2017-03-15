@@ -30,14 +30,14 @@ class TraversalStrategyTest extends TestCase
         $node = $this->getNodeDatum();
         $fail = TraversalStrategy::getFail();
 
-        $this->assertEquals($fail, $this->ts->apply(['fail'], $node));
+        $this->assertEquals($fail, $this->ts->apply('fail', $node));
     }
 
     public function testId()
     {
         $node = $this->getNodeDatum();
 
-        $this->assertEquals($node, $this->ts->apply(['id'], $node));
+        $this->assertEquals($node, $this->ts->apply('id', $node));
     }
 
     public function testSeq()
@@ -45,9 +45,9 @@ class TraversalStrategyTest extends TestCase
         $node = $this->getNodeDatum();
         $fail = TraversalStrategy::getFail();
 
-        $this->assertEquals($fail, $this->ts->apply(['seq', [['fail'], ['id']]], $node));
-        $this->assertEquals($fail, $this->ts->apply(['seq', [['id'], ['fail']]], $node));
-        $this->assertEquals($node, $this->ts->apply(['seq', [['id'], ['id']]], $node));
+        $this->assertEquals($fail, $this->ts->apply(['seq', ['fail', 'id']], $node));
+        $this->assertEquals($fail, $this->ts->apply(['seq', ['id', 'fail']], $node));
+        $this->assertEquals($node, $this->ts->apply(['seq', ['id', 'id']], $node));
     }
 
     public function testChoice()
@@ -55,10 +55,10 @@ class TraversalStrategyTest extends TestCase
         $node = $this->getNodeDatum();
         $fail = TraversalStrategy::getFail();
 
-        $this->assertEquals($node, $this->ts->apply(['choice', [['fail'], ['id']]], $node));
-        $this->assertEquals($node, $this->ts->apply(['choice', [['id'], ['fail']]], $node));
-        $this->assertEquals($node, $this->ts->apply(['choice', [['id'], ['id']]], $node));
-        $this->assertEquals($fail, $this->ts->apply(['choice', [['fail'], ['fail']]], $node));
+        $this->assertEquals($node, $this->ts->apply(['choice', ['fail', 'id']], $node));
+        $this->assertEquals($node, $this->ts->apply(['choice', ['id', 'fail']], $node));
+        $this->assertEquals($node, $this->ts->apply(['choice', ['id', 'id']], $node));
+        $this->assertEquals($fail, $this->ts->apply(['choice', ['fail', 'fail']], $node));
     }
 
     public function testAll()
@@ -67,9 +67,9 @@ class TraversalStrategyTest extends TestCase
         $nodes = $this->getNodeArrayDatum($this->getNodes());
         $fail = TraversalStrategy::getFail();
 
-        $this->assertEquals($node, $this->ts->apply(['all', [['id']]], $node));
-        $this->assertEquals($nodes, $this->ts->apply(['all', [['id']]], $nodes));
-        $this->assertEquals($fail, $this->ts->apply(['all', [['fail']]], $nodes));
+        $this->assertEquals($node, $this->ts->apply(['all', ['id']], $node));
+        $this->assertEquals($nodes, $this->ts->apply(['all', ['id']], $nodes));
+        $this->assertEquals($fail, $this->ts->apply(['all', ['fail']], $nodes));
     }
 
     public function testOne()
@@ -78,9 +78,9 @@ class TraversalStrategyTest extends TestCase
         $nodes = $this->getNodeArrayDatum($this->getNodes());
         $fail = TraversalStrategy::getFail();
 
-        $this->assertEquals($fail, $this->ts->apply(['one', [['fail']]], $node));
-        $this->assertEquals($fail, $this->ts->apply(['one', [['fail']]], $nodes));
-        $this->assertEquals($node, $this->ts->apply(['one', [['id']]], $nodes));
+        $this->assertEquals($fail, $this->ts->apply(['one', ['fail']], $node));
+        $this->assertEquals($fail, $this->ts->apply(['one', ['fail']], $nodes));
+        $this->assertEquals($node, $this->ts->apply(['one', ['id']], $nodes));
     }
 
     public function testAdhoc()
@@ -96,16 +96,16 @@ class TraversalStrategyTest extends TestCase
         // adhoc on its own, not applying action and defaulting to 'fail' strategy
 
         $nodes = $this->getNodeArrayDatum([]);
-        $this->assertEquals($fail, $this->ts->apply(['adhoc', [['fail'], $modifyAction]], $nodes));
+        $this->assertEquals($fail, $this->ts->apply(['adhoc', ['fail', $modifyAction]], $nodes));
 
         // adhoc on its own, not applying action and defaulting to 'id' strategy
 
-        $this->assertEquals($nodes, $this->ts->apply(['adhoc', [['id'], $modifyAction]], $nodes));
+        $this->assertEquals($nodes, $this->ts->apply(['adhoc', ['id', $modifyAction]], $nodes));
 
         // adhoc on its own, applying action
 
         $node = $this->getNodeDatum();
-        $this->assertEquals($modifiedNode, $this->ts->apply(['adhoc', [['fail'], $modifyAction]], $node));
+        $this->assertEquals($modifiedNode, $this->ts->apply(['adhoc', ['fail', $modifyAction]], $node));
 
         // todo: test adhoc where it substitutes with strategy (id/fail)
 
@@ -113,14 +113,14 @@ class TraversalStrategyTest extends TestCase
 
         $nodes = $this->getNodeArrayDatum($this->getNodes());
 
-        $result = $this->ts->apply(['all', [['adhoc', [['fail'], $modifyAction]]]], $nodes);
+        $result = $this->ts->apply(['all', [['adhoc', ['fail', $modifyAction]]]], $nodes);
         $this->assertEquals($modifiedNodes, $result);
 
         // adhoc with one
 
         $nodes = $this->getNodeArrayDatum($this->getNodes());
 
-        $result = $this->ts->apply(['one', [['adhoc', [['fail'], $modifyAction]]]], $nodes);
+        $result = $this->ts->apply(['one', [['adhoc', ['fail', $modifyAction]]]], $nodes);
         $this->assertEquals($modifiedNode, $result);
     }
 
@@ -149,7 +149,7 @@ class TraversalStrategyTest extends TestCase
 
         // full_td(s) = seq(s, all(full_td(s)))
         $this->ts->registerStrategy('full_td', ['seq', ['0', ['all', [['full_td', ['0']]]]]], 1);
-        $result = $this->ts->apply(['full_td', [['adhoc', [['id'], $ordAction]]]], $nodeOfNodes);
+        $result = $this->ts->apply(['full_td', [['adhoc', ['id', $ordAction]]]], $nodeOfNodes);
         $this->assertEquals($ordNodeOfNodes, $result);
     }
 

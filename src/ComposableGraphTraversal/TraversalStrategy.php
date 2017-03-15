@@ -86,10 +86,13 @@ class TraversalStrategy
         $this->argCounts[$key] = $argCount;
     }
 
-    public function apply(array $s, Datum $datum): Datum
+    /**
+     * @param array|string $s
+     * @param Datum $datum
+     * @return Datum
+     */
+    public function apply($s, Datum $datum): Datum
     {
-        // todo: verify that $s is well-structured
-
         $this->push($s, $datum);
         $currentDatum = $datum;
 
@@ -156,6 +159,8 @@ class TraversalStrategy
 
     private function push($strategy, ?Datum $datum, ?array $unprocessed = null, ?array $processed = null): void
     {
+        $strategy = $this->sanitiseStrategy($strategy);
+
         $stratKey = $strategy[0];
         $stratArgs = $strategy[1] ?? [];
 
@@ -428,5 +433,18 @@ class TraversalStrategy
         $this->push($strategy, $originalDatum);
 
         return null; // always non-terminal
+    }
+
+    private function sanitiseStrategy($s)
+    {
+        // not allowing user-defined 0-argument strategies because they'd just be aliases of these two
+
+        if (is_string($s)
+            && ($s == self::FAIL || $s == self::ID)
+        ) {
+            $s = [$s];
+        }
+
+        return $s;
     }
 }
