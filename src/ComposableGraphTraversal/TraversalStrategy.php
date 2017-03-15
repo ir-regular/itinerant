@@ -25,19 +25,20 @@ class TraversalStrategy
     private const ALL_INTERMEDIATE = 'all-intermediate';
     private const ONE_INTERMEDIATE = 'one-intermediate';
 
-    // todo: currently not in use; to be used for registering user-defined strategies
-    private $strategies = [
-//        self::ID => ['TraversalStrategy', 'id'],
-//        self::FAIL => ['TraversalStrategy', 'fail'],
-//        self::SEQ => ['TraversalStrategy', 'seq'],
-//        self::CHOICE => ['TraversalStrategy', 'choice'],
-//        self::ALL => ['TraversalStrategy', 'all'],
-//        self::ONE => ['TraversalStrategy', 'one'],
-//        self::ADHOC => ['TraversalStrategy', 'adhoc'],
-    ];
-    private $argCounts = [
-        // tbd
-    ];
+// todo: currently not in use; possibly to be used when simplifying code
+//        self::ID => [self::class, 'id'],
+//        self::FAIL => [self::class, 'fail'],
+//        self::SEQ => [self::class, 'seq'],
+//        self::CHOICE => [self::class, 'choice'],
+//        self::ALL => [self::class, 'all'],
+//        self::ONE => [self::class, 'one'],
+//        self::ADHOC => [self::class, 'adhoc'],
+
+    /** @var array */
+    private $strategies = [];
+
+    /** @var int[] */
+    private $argCounts = [];
 
     /** @var array */
     private $stack = [];
@@ -48,13 +49,15 @@ class TraversalStrategy
     /** @var Datum */
     private static $fail;
 
-    public static function getFail()
+    public static function getFail(): Datum
     {
         // todo: urk, do something else
         if (!self::$fail) {
             self::$fail = new class implements Datum
             {
+                // no, it's not used anywhere: it's here so that I can distinguish this object while debugging
                 private $s = 'fail';
+
                 public function getChildren(): ?array
                 {
                     return null; // intentionally empty
