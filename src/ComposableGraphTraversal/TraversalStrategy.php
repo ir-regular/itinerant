@@ -208,7 +208,10 @@ class TraversalStrategy
     private function getArg($index)
     {
         if (!array_key_exists($index, $this->stack[$this->last]['strat'][1])) {
-            throw new \Exception('Requested nonexistent argument');
+            $strat = $this->getCurrentStratKey();
+            $count = count($this->stack[$this->last]['strat'][1]);
+            throw new \InvalidArgumentException(
+                "Too few arguments supplied for strategy {$strat}: {$index}'th requested, {$count} available");
         }
 
         return $this->stack[$this->last]['strat'][1][$index];
