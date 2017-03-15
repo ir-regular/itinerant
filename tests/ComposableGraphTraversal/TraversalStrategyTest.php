@@ -3,6 +3,7 @@
 namespace JaneOlszewska\Experiments\Tests\ComposableGraphTraversal;
 
 use JaneOlszewska\Experiments\ComposableGraphTraversal\Action;
+use JaneOlszewska\Experiments\ComposableGraphTraversal\ChildHandler\ViaGetter;
 use JaneOlszewska\Experiments\ComposableGraphTraversal\Datum;
 use JaneOlszewska\Experiments\ComposableGraphTraversal\TraversalStrategy;
 use PHPUnit\Framework\TestCase;
@@ -18,19 +19,24 @@ class TraversalStrategyTest extends TestCase
     /** @var TraversalStrategy */
     private $ts;
 
+    /** @var Datum */
+    private $fail;
+
     protected function setUp()
     {
         parent::setUp();
 
-        $this->ts = new TraversalStrategy();
+        $childHandler = new ViaGetter();
+        $this->fail = $this->getNodeDatum('fail');
+
+        $this->ts = new TraversalStrategy($childHandler, $this->fail);
     }
 
     public function testFail()
     {
         $node = $this->getNodeDatum();
-        $fail = TraversalStrategy::getFail();
 
-        $this->assertEquals($fail, $this->ts->apply('fail', $node));
+        $this->assertEquals($this->fail, $this->ts->apply('fail', $node));
     }
 
     public function testId()
@@ -43,50 +49,44 @@ class TraversalStrategyTest extends TestCase
     public function testSeq()
     {
         $node = $this->getNodeDatum();
-        $fail = TraversalStrategy::getFail();
 
-        $this->assertEquals($fail, $this->ts->apply(['seq', 'fail', 'id'], $node));
-        $this->assertEquals($fail, $this->ts->apply(['seq', 'id', 'fail'], $node));
+        $this->assertEquals($this->fail, $this->ts->apply(['seq', 'fail', 'id'], $node));
+        $this->assertEquals($this->fail, $this->ts->apply(['seq', 'id', 'fail'], $node));
         $this->assertEquals($node, $this->ts->apply(['seq', 'id', 'id'], $node));
     }
 
     public function testChoice()
     {
         $node = $this->getNodeDatum();
-        $fail = TraversalStrategy::getFail();
 
         $this->assertEquals($node, $this->ts->apply(['choice', 'fail', 'id'], $node));
         $this->assertEquals($node, $this->ts->apply(['choice', 'id', 'fail'], $node));
         $this->assertEquals($node, $this->ts->apply(['choice', 'id', 'id'], $node));
-        $this->assertEquals($fail, $this->ts->apply(['choice', 'fail', 'fail'], $node));
+        $this->assertEquals($this->fail, $this->ts->apply(['choice', 'fail', 'fail'], $node));
     }
 
     public function testAll()
     {
         $node = $this->getNodeDatum();
         $nodes = $this->getNodeArrayDatum($this->getNodes());
-        $fail = TraversalStrategy::getFail();
 
         $this->assertEquals($node, $this->ts->apply(['all', 'id'], $node));
         $this->assertEquals($nodes, $this->ts->apply(['all', 'id'], $nodes));
-        $this->assertEquals($fail, $this->ts->apply(['all', 'fail'], $nodes));
+        $this->assertEquals($this->fail, $this->ts->apply(['all', 'fail'], $nodes));
     }
 
     public function testOne()
     {
         $node = $this->getNodeDatum();
         $nodes = $this->getNodeArrayDatum($this->getNodes());
-        $fail = TraversalStrategy::getFail();
 
-        $this->assertEquals($fail, $this->ts->apply(['one', 'fail'], $node));
-        $this->assertEquals($fail, $this->ts->apply(['one', 'fail'], $nodes));
+        $this->assertEquals($this->fail, $this->ts->apply(['one', 'fail'], $node));
+        $this->assertEquals($this->fail, $this->ts->apply(['one', 'fail'], $nodes));
         $this->assertEquals($node, $this->ts->apply(['one', 'id'], $nodes));
     }
 
     public function testAdhoc()
     {
-        $fail = TraversalStrategy::getFail();
-
         $newName = 'modified!';
         $modifyAction = $this->getSetNameAction($newName);
 
@@ -96,7 +96,7 @@ class TraversalStrategyTest extends TestCase
         // adhoc on its own, not applying action and defaulting to 'fail' strategy
 
         $nodes = $this->getNodeArrayDatum([]);
-        $this->assertEquals($fail, $this->ts->apply(['adhoc', 'fail', $modifyAction], $nodes));
+        $this->assertEquals($this->fail, $this->ts->apply(['adhoc', 'fail', $modifyAction], $nodes));
 
         // adhoc on its own, not applying action and defaulting to 'id' strategy
 
@@ -209,6 +209,7 @@ class TraversalStrategyTest extends TestCase
      */
     private function getNodeArrayDatum(array $children)
     {
+        /** @var Datum $n */
         $n = new class($children) implements Datum
         {
             private $name = 'array'; // only here so that it's easily distinguishable in debug variables

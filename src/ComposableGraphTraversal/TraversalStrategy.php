@@ -2,13 +2,8 @@
 
 namespace JaneOlszewska\Experiments\ComposableGraphTraversal;
 
-/**
- * You may be wondering why all the methods specify return type ?Datum even though some of them explicitly return null.
- * This is because I *may* want to make this prettier and make things more generic. Someday.
- *
- * This will also be converted into duck typing soon (tm) because as nice as strict typing is, some of us
- * have to work with existing libraries that don't implement the Datum interface.
- */
+use JaneOlszewska\Experiments\ComposableGraphTraversal\ChildHandler\ChildHandlerInterface;
+
 class TraversalStrategy
 {
     const ID = 'id';
@@ -35,6 +30,9 @@ class TraversalStrategy
 //        self::ONE => [self::class, 'one'],
 //        self::ADHOC => [self::class, 'adhoc'],
 
+    /** @var ChildHandlerInterface */
+    private $childHandler;
+
     /** @var array */
     private $strategies = [];
 
@@ -47,31 +45,18 @@ class TraversalStrategy
     /** @var int */
     private $last = -1;
 
-    /** @var Datum */
-    private static $fail;
+    /** @var mixed */
+    private $fail;
 
-    public static function getFail(): Datum
+    /**
+     * TraversalStrategy constructor.
+     * @param ChildHandlerInterface $childHandler
+     * @param mixed $fail A representation of "fail", valid for whatever nodes/adhoc methods will be used
+     */
+    public function __construct(ChildHandlerInterface $childHandler, $fail)
     {
-        // todo: urk, do something else
-        if (!self::$fail) {
-            self::$fail = new class implements Datum
-            {
-                // no, it's not used anywhere: it's here so that I can distinguish this object while debugging
-                private $s = 'fail';
-
-                public function getChildren(): ?array
-                {
-                    return null; // intentionally empty
-                }
-
-                public function setChildren(array $children = []): void
-                {
-                    // do nothing
-                }
-            };
-        }
-
-        return self::$fail;
+        $this->childHandler = $childHandler;
+        $this->fail = $fail;
     }
 
     /**
@@ -89,10 +74,10 @@ class TraversalStrategy
 
     /**
      * @param array|string $s
-     * @param Datum $datum
-     * @return Datum
+     * @param mixed $datum
+     * @return mixed
      */
-    public function apply($s, Datum $datum): Datum
+    public function apply($s, $datum)
     {
         $this->push($s, $datum);
         $currentDatum = $datum;
@@ -167,7 +152,7 @@ class TraversalStrategy
         return $result;
     }
 
-    private function push($strategy, ?Datum $datum = null, ?array $unprocessed = null, ?array $processed = null): void
+    private function push($strategy, $datum = null, ?array $unprocessed = null, ?array $processed = null): void
     {
         $strategy = $this->sanitiseStrategy($strategy);
 
@@ -191,22 +176,16 @@ class TraversalStrategy
         return $this->stack[$this->last]['strat'][0];
     }
 
-    private function getOriginalDatum(): Datum
+    private function getOriginalDatum()
     {
         return $this->stack[$this->last]['input'][0];
     }
 
-    /**
-     * @return Datum[]
-     */
     private function getUnprocessedChildren(): ?array
     {
         return $this->stack[$this->last]['input'][1];
     }
 
-    /**
-     * @return Datum[]
-     */
     private function getProcessedChildren(): ?array
     {
         return $this->stack[$this->last]['result'][1];
@@ -235,34 +214,34 @@ class TraversalStrategy
         return $this->stack[$this->last]['strat'][1][$index];
     }
 
-    private function id(Datum $previousResult): Datum
+    private function id($previousResult)
     {
         return $previousResult;
     }
 
-    private function fail(Datum $previousResult): Datum
+    private function fail($previousResult)
     {
-        return self::$fail;
+        return $this->fail;
     }
 
-    private function seq(Datum $previousResult): ?Datum
+    private function seq($previousResult)
     {
         $s1 = $this->getArg(0);
         $s2 = $this->getArg(1);
 
         $this->pop();
 
-        $this->push([self::SEQ_INTERMEDIATE, $s2], self::$fail);
+        $this->push([self::SEQ_INTERMEDIATE, $s2], $this->fail);
         $this->push($s1, $previousResult);
 
         return null; // always non-terminal
     }
 
-    private function seqIntermediate(Datum $previousResult): ?Datum
+    private function seqIntermediate($previousResult)
     {
         $res = $previousResult;
 
-        if (self::$fail !== $previousResult) {
+        if ($this->fail !== $previousResult) {
             $s2 = $this->getArg(0);
             $this->pop();
             $this->push($s2, $previousResult);
@@ -272,25 +251,25 @@ class TraversalStrategy
         return $res;
     }
 
-    private function choice(Datum $previousResult): ?Datum
+    private function choice($previousResult)
     {
         $s1 = $this->getArg(0);
         $s2 = $this->getArg(1);
 
         $this->pop(); // remove self
 
-        $this->push($s2, self::$fail);
+        $this->push($s2, $this->fail);
         $this->push([self::CHOICE_INTERMEDIATE], $previousResult);
         $this->push($s1, $previousResult);
 
         return null; // always non-terminal
     }
 
-    private function choiceIntermediate(Datum $previousResult)
+    private function choiceIntermediate($previousResult)
     {
         $res = $this->getOriginalDatum();
 
-        if (self::$fail !== $previousResult) {
+        if ($this->fail !== $previousResult) {
             $this->pop(); // pop self; $s2 will be auto-popped
             $res = $previousResult; // pass $s1 result
         }
@@ -298,11 +277,11 @@ class TraversalStrategy
         return $res;
     }
 
-    private function all(Datum $previousResult): ?Datum
+    private function all($previousResult)
     {
         $s1 = $this->getArg(0);
         $res = $previousResult; // if $d has no children: return $d, strategy terminal independent of what $s1 actually is
-        $unprocessed = $previousResult->getChildren();
+        $unprocessed = $this->childHandler->getChildren($previousResult);
 
         if ($unprocessed) {
             $this->pop();
@@ -316,11 +295,11 @@ class TraversalStrategy
         return $res;
     }
 
-    private function allIntermediate(Datum $previousResult): ?Datum
+    private function allIntermediate($previousResult)
     {
         $res = $previousResult;
 
-        if (self::$fail !== $previousResult) {
+        if ($this->fail !== $previousResult) {
             $s1 = $this->getArg(0);
             $originalResult = $this->getOriginalDatum();
 
@@ -340,7 +319,7 @@ class TraversalStrategy
                 $res = $unprocessed[0];
 
             } else {
-                $originalResult->setChildren($processed);
+                $this->childHandler->setChildren($originalResult, $processed);
                 $res = $originalResult;
             }
         }
@@ -348,12 +327,12 @@ class TraversalStrategy
         return $res;
     }
 
-    private function one(Datum $previousResult): ?Datum
+    private function one($previousResult)
     {
         $s1 = $this->getArg(0);
         // if $d has no children: fail, strategy terminal independent of what $s1 actually is
-        $res = self::$fail;
-        $unprocessed = $previousResult->getChildren();
+        $res = $this->fail;
+        $unprocessed = $this->childHandler->getChildren($previousResult);
 
         if ($unprocessed) {
             $this->pop();
@@ -368,11 +347,11 @@ class TraversalStrategy
         return $res;
     }
 
-    private function oneIntermediate(Datum $previousResult): ?Datum
+    private function oneIntermediate($previousResult)
     {
         $res = $previousResult;
 
-        if (self::$fail === $previousResult) {
+        if ($this->fail === $previousResult) {
             // if the result of the last child resolution was fail, need to try with the next one (if exists)
             $s1 = $this->getArg(0);
 
@@ -395,7 +374,7 @@ class TraversalStrategy
         return $res;
     }
 
-    private function adhoc(Datum $previousResult): ?Datum
+    private function adhoc($previousResult)
     {
         $s = $this->getArg(0);
         /** @var Action $a */
@@ -413,7 +392,7 @@ class TraversalStrategy
         return $res;
     }
 
-    private function userDefined(Datum $previousResult): ?Datum
+    private function userDefined($previousResult)
     {
         $key = $this->getCurrentStratKey();
 
