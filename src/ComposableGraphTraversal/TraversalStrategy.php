@@ -161,8 +161,8 @@ class TraversalStrategy
     {
         $strategy = $this->sanitiseStrategy($strategy);
 
-        $stratKey = $strategy[0];
-        $stratArgs = $strategy[1] ?? [];
+        $stratKey = array_shift($strategy);
+        $stratArgs = $strategy;
 
         // strat, datum, childrenUnprocessed, childrenProcessed
         $this->stack[] = [
@@ -242,7 +242,7 @@ class TraversalStrategy
 
         $this->pop();
 
-        $this->push([self::SEQ_INTERMEDIATE, [$s2]], self::$fail);
+        $this->push([self::SEQ_INTERMEDIATE, $s2], self::$fail);
         $this->push($s1, $previousResult);
 
         return null; // always non-terminal
@@ -297,9 +297,9 @@ class TraversalStrategy
         if ($unprocessed) {
             $this->pop();
 
-            $this->push([self::ALL_INTERMEDIATE, [$s1]], $previousResult, $unprocessed, []);
+            $this->push([self::ALL_INTERMEDIATE, $s1], $previousResult, $unprocessed, []);
             $this->push($s1, $unprocessed[0]);
-            $this->push([self::ALL_INTERMEDIATE, [$s1]], $previousResult, $unprocessed, []); // only here to be immediately popped
+            $this->push([self::ALL_INTERMEDIATE, $s1], $previousResult, $unprocessed, []); // only here to be immediately popped
             $res = $unprocessed[0];
         }
 
@@ -324,9 +324,9 @@ class TraversalStrategy
             if ($unprocessed) { // there's more to process
                 $this->pop();
 
-                $this->push([self::ALL_INTERMEDIATE, [$s1]], $originalResult, $unprocessed, $processed);
+                $this->push([self::ALL_INTERMEDIATE, $s1], $originalResult, $unprocessed, $processed);
                 $this->push($s1, $unprocessed[0]);
-                $this->push([self::ALL_INTERMEDIATE, [$s1]], $originalResult, $unprocessed, $processed); // only here to be popped
+                $this->push([self::ALL_INTERMEDIATE, $s1], $originalResult, $unprocessed, $processed); // only here to be popped
                 $res = $unprocessed[0];
 
             } else {
@@ -349,10 +349,10 @@ class TraversalStrategy
             $this->pop();
 
             // not interested in previously processed results: thus null
-            $this->push([self::ONE_INTERMEDIATE, [$s1]], null, $unprocessed, null);
+            $this->push([self::ONE_INTERMEDIATE, $s1], null, $unprocessed, null);
             $this->push($s1, $unprocessed[0]);
             // this one is just meant to get popped instantly
-            $this->push([self::ONE_INTERMEDIATE, [$s1]], null, $unprocessed, null);
+            $this->push([self::ONE_INTERMEDIATE, $s1], null, $unprocessed, null);
             $res = $unprocessed[0];
         }
 
@@ -374,10 +374,10 @@ class TraversalStrategy
                 $this->pop();
 
                 // not interested in previously processed results: thus null
-                $this->push([self::ONE_INTERMEDIATE, [$s1]], null, $unprocessed, null);
+                $this->push([self::ONE_INTERMEDIATE, $s1], null, $unprocessed, null);
                 $this->push($s1, $unprocessed[0]);
-                // this one is just meant to get popped instantly
-                $this->push([self::ONE_INTERMEDIATE, [$s1]], null, $unprocessed, null);
+                // this one is just meant to get popped instantly: TODO: add NOP
+                $this->push([self::ONE_INTERMEDIATE, $s1], null, $unprocessed, null);
                 $res = $unprocessed[0];
             }
 
@@ -444,7 +444,7 @@ class TraversalStrategy
         ) {
             $s = [$s];
         }
-
+// todo: check strategy arg count is good;
         return $s;
     }
 }
