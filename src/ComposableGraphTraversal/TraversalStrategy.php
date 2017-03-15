@@ -24,6 +24,7 @@ class TraversalStrategy
     private const SEQ_INTERMEDIATE = 'seq-intermediate';
     private const ALL_INTERMEDIATE = 'all-intermediate';
     private const ONE_INTERMEDIATE = 'one-intermediate';
+    private const NOP = 'nop';
 
 // todo: currently not in use; possibly to be used when simplifying code
 //        self::ID => [self::class, 'id'],
@@ -135,6 +136,15 @@ class TraversalStrategy
                 case self::ADHOC:
                     $result = $this->adhoc($currentDatum);
                     break;
+                case self::NOP:
+                    /*
+                     * Including this just in case there is some logic error in the library.
+                     *
+                     * In actual use NOP is only pushed as a filler, to be immediately popped in the last lines of
+                     * the do...while loop when it is discovered $result is not null - see all/one implementations.
+                     */
+                    throw new \DomainException('Logic error: NOP should never be evaluated');
+                    break;
                 default:
                     $result = $this->userDefined($currentDatum);
             }
@@ -157,7 +167,7 @@ class TraversalStrategy
         return $result;
     }
 
-    private function push($strategy, ?Datum $datum, ?array $unprocessed = null, ?array $processed = null): void
+    private function push($strategy, ?Datum $datum = null, ?array $unprocessed = null, ?array $processed = null): void
     {
         $strategy = $this->sanitiseStrategy($strategy);
 
@@ -299,7 +309,7 @@ class TraversalStrategy
 
             $this->push([self::ALL_INTERMEDIATE, $s1], $previousResult, $unprocessed, []);
             $this->push($s1, $unprocessed[0]);
-            $this->push([self::ALL_INTERMEDIATE, $s1], $previousResult, $unprocessed, []); // only here to be immediately popped
+            $this->push([self::NOP]); // only here to be immediately popped
             $res = $unprocessed[0];
         }
 
@@ -326,7 +336,7 @@ class TraversalStrategy
 
                 $this->push([self::ALL_INTERMEDIATE, $s1], $originalResult, $unprocessed, $processed);
                 $this->push($s1, $unprocessed[0]);
-                $this->push([self::ALL_INTERMEDIATE, $s1], $originalResult, $unprocessed, $processed); // only here to be popped
+                $this->push([self::NOP]); // only here to be popped
                 $res = $unprocessed[0];
 
             } else {
@@ -351,8 +361,7 @@ class TraversalStrategy
             // not interested in previously processed results: thus null
             $this->push([self::ONE_INTERMEDIATE, $s1], null, $unprocessed, null);
             $this->push($s1, $unprocessed[0]);
-            // this one is just meant to get popped instantly
-            $this->push([self::ONE_INTERMEDIATE, $s1], null, $unprocessed, null);
+            $this->push([self::NOP]); // only here to be popped
             $res = $unprocessed[0];
         }
 
@@ -376,8 +385,7 @@ class TraversalStrategy
                 // not interested in previously processed results: thus null
                 $this->push([self::ONE_INTERMEDIATE, $s1], null, $unprocessed, null);
                 $this->push($s1, $unprocessed[0]);
-                // this one is just meant to get popped instantly: TODO: add NOP
-                $this->push([self::ONE_INTERMEDIATE, $s1], null, $unprocessed, null);
+                $this->push([self::NOP]); // only here to be popped
                 $res = $unprocessed[0];
             }
 
@@ -444,7 +452,10 @@ class TraversalStrategy
         ) {
             $s = [$s];
         }
-// todo: check strategy arg count is good;
+
+        // todo: check strategy arg count is good;
+        // todo: allow users to use strings for everything _but_ the private consts
+
         return $s;
     }
 }
