@@ -153,6 +153,15 @@ class TraversalStrategyTest extends TestCase
         $this->assertEquals($ordNodeOfNodes, $result);
     }
 
+    public function testApplyStrategyValidation()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessageRegExp("/Invalid argument structure for the strategy: .+/");
+        $this->ts->apply('all', null);
+
+        // todo: we could test all ways the validation should work... this is just the initial test
+    }
+
     /**
      * @param string $name
      *

@@ -2,7 +2,10 @@
 
 namespace JaneOlszewska\Experiments\ComposableGraphTraversal;
 
+use JaneOlszewska\Experiments\ComposableGraphTraversal\Action\ActionInterface;
+use JaneOlszewska\Experiments\ComposableGraphTraversal\Action\ValidateTraversalStrategy;
 use JaneOlszewska\Experiments\ComposableGraphTraversal\ChildHandler\ChildHandlerInterface;
+use JaneOlszewska\Experiments\ComposableGraphTraversal\ChildHandler\RestOfElements;
 
 class TraversalStrategy
 {
@@ -29,6 +32,9 @@ class TraversalStrategy
 //        self::ALL => [self::class, 'all'],
 //        self::ONE => [self::class, 'one'],
 //        self::ADHOC => [self::class, 'adhoc'],
+
+    /** @var ActionInterface */
+    private $validatePreApplicationAction;
 
     /** @var ChildHandlerInterface */
     private $childHandler;
@@ -59,6 +65,51 @@ class TraversalStrategy
         $this->fail = $fail;
     }
 
+    /** @var TraversalStrategy */
+    private $ts;
+
+    /**
+     * @return TraversalStrategy
+     */
+    private function getInternalValidationTS()
+    {
+        if (!isset($this->ts)) {
+            $this->ts = new TraversalStrategy(new RestOfElements(), false);
+        }
+
+        return $this->ts;
+    }
+
+    /**
+     * Witness the ultimate coolness: TraversalStrategy is self-validating!
+     *
+     * @param mixed $strategy
+     * @throws \InvalidArgumentException if $strategy is found invalid
+     */
+    private function validateBeforeApplication($strategy): void
+    {
+        $validate = 'validate';
+
+        if (($ts = $this->getInternalValidationTS()) && !isset($ts->strategies[$validate])) {
+            $this->validatePreApplicationAction = new ValidateTraversalStrategy();
+            $a = $this->validatePreApplicationAction;
+            // register without validation to avoid infinite recursion
+            $this->ts->registerWithoutValidation(
+                $validate,
+                ['seq', ['adhoc', 'fail', $a], ['all', [$validate]]], // top-down application of $a
+                0
+            );
+        }
+
+        // apply without validation to avoid infinite recursion
+        $result = $this->ts->applyWithoutValidation($validate, $strategy);
+
+        if ($result === $this->ts->fail) {
+            $error = $this->validatePreApplicationAction->getLastError();
+            throw new \InvalidArgumentException("Invalid argument structure for the strategy: {$error}");
+        }
+    }
+
     /**
      * @param string $key
      * @param array $expansion
@@ -66,8 +117,11 @@ class TraversalStrategy
      */
     public function registerStrategy(string $key, array $expansion, int $argCount): void
     {
-        // todo: validate $expansion contents - should only contain default and registered keys
-        // (can also use $key which is just being registered, for recursion)
+        $this->registerWithoutValidation($key, $expansion, $argCount);
+    }
+
+    private function registerWithoutValidation(string $key, array $expansion, int $argCount): void
+    {
         $this->strategies[$key] = $expansion;
         $this->argCounts[$key] = $argCount;
     }
@@ -78,6 +132,17 @@ class TraversalStrategy
      * @return mixed
      */
     public function apply($s, $datum)
+    {
+        $this->validateBeforeApplication($s);
+        return $this->applyWithoutValidation($s, $datum);
+    }
+
+    /**
+     * @param array|string $s
+     * @param mixed $datum
+     * @return mixed
+     */
+    private function applyWithoutValidation($s, $datum)
     {
         $this->push($s, $datum);
         $currentDatum = $datum;
@@ -380,6 +445,8 @@ class TraversalStrategy
         /** @var ActionInterface $a */
         $a = $this->getArg(1);
 
+        // todo: allow Callable actions
+
         if ($a->isApplicableTo($previousResult)) {
             $res = $a->applyTo($previousResult); // strategy resolved to applied action; terminal
 
@@ -424,10 +491,8 @@ class TraversalStrategy
 
     private function sanitiseStrategy($s)
     {
-        // not allowing user-defined 0-argument strategies because they'd just be aliases of these two
-
         if (is_string($s)
-            && ($s == self::FAIL || $s == self::ID)
+            && ($s == self::FAIL || $s == self::ID || ($this->argCounts[$s] == 0))
         ) {
             $s = [$s];
         }
