@@ -377,7 +377,7 @@ class TraversalStrategy
     private function adhoc($previousResult)
     {
         $s = $this->getArg(0);
-        /** @var Action $a */
+        /** @var ActionInterface $a */
         $a = $this->getArg(1);
 
         if ($a->isApplicableTo($previousResult)) {

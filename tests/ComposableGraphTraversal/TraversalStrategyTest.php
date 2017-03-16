@@ -2,7 +2,7 @@
 
 namespace JaneOlszewska\Experiments\Tests\ComposableGraphTraversal;
 
-use JaneOlszewska\Experiments\ComposableGraphTraversal\Action;
+use JaneOlszewska\Experiments\ComposableGraphTraversal\Action\ActionInterface;
 use JaneOlszewska\Experiments\ComposableGraphTraversal\ChildHandler\ViaGetter;
 use JaneOlszewska\Experiments\ComposableGraphTraversal\Datum;
 use JaneOlszewska\Experiments\ComposableGraphTraversal\TraversalStrategy;
@@ -235,7 +235,7 @@ class TraversalStrategyTest extends TestCase
 
     private function getSetNameAction($newName)
     {
-        return new class($newName) implements Action
+        return new class($newName) implements ActionInterface
         {
             private $newName;
 
@@ -244,12 +244,12 @@ class TraversalStrategyTest extends TestCase
                 $this->newName = $newName;
             }
 
-            public function isApplicableTo(Datum $d): bool
+            public function isApplicableTo($d): bool
             {
                 return method_exists($d, 'setName');
             }
 
-            public function applyTo(Datum $d): Datum
+            public function applyTo($d)
             {
                 $d->setName($this->newName);
                 return $d;
@@ -259,16 +259,16 @@ class TraversalStrategyTest extends TestCase
 
     private function getLabelWithOrdAction()
     {
-        return new class implements Action
+        return new class implements ActionInterface
         {
             private static $ord = 1;
 
-            public function isApplicableTo(Datum $d): bool
+            public function isApplicableTo($d): bool
             {
                 return method_exists($d, 'setName');
             }
 
-            public function applyTo(Datum $d): Datum
+            public function applyTo($d)
             {
                 $d->setName(self::$ord++);
                 return $d;
