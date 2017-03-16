@@ -171,6 +171,34 @@ class TraversalStrategyTest extends TestCase
         // todo: again we could test all ways the validation should work... this is just the initial test
     }
 
+    public function testAdhocWithCallableAction()
+    {
+        $newName = 'modified!';
+        $modifyAction = function($node) use($newName) {
+            $node->setName($newName);
+            return $node;
+        };
+
+        $modifiedNodes = $this->getNodeArrayDatum($this->getNodes(2, $newName));
+
+        $nodes = $this->getNodeArrayDatum($this->getNodes());
+
+        $result = $this->ts->apply(['all', ['adhoc', 'fail', $modifyAction]], $nodes);
+        $this->assertEquals($modifiedNodes, $result);
+    }
+
+    public function testAdhocWithNonApplicableCallableAction()
+    {
+        $nonApplicableAction = function($node) {
+            return null;
+        };
+
+        $nodes = $this->getNodeArrayDatum($this->getNodes());
+
+        $result = $this->ts->apply(['all', ['adhoc', 'fail', $nonApplicableAction]], $nodes);
+        $this->assertEquals($this->fail, $result);
+    }
+
     /**
      * @param string $name
      *

@@ -8,6 +8,9 @@ use JaneOlszewska\Experiments\ComposableGraphTraversal\Action\ValidateUserRegist
 use JaneOlszewska\Experiments\ComposableGraphTraversal\ChildHandler\ChildHandlerInterface;
 use JaneOlszewska\Experiments\ComposableGraphTraversal\ChildHandler\RestOfElements;
 
+/**
+ * @todo Documentation ¯\_(ツ)_/¯
+ */
 class TraversalStrategy
 {
     const ID = 'id';
@@ -496,15 +499,23 @@ class TraversalStrategy
     private function adhoc($previousResult)
     {
         $s = $this->getArg(0);
-        /** @var ActionInterface $a */
         $a = $this->getArg(1);
 
-        // todo: allow Callable actions
+        $applied = false;
 
-        if ($a->isApplicableTo($previousResult)) {
-            $res = $a->applyTo($previousResult); // strategy resolved to applied action; terminal
+        if ($a instanceof ActionInterface) {
+            if ($a->isApplicableTo($previousResult)) {
+                $applied = true;
+                $res = $a->applyTo($previousResult); // strategy resolved to applied action; terminal
+            }
+        } elseif (is_callable($a)) {
+            // strategy resolved to applied action; terminal unless null returned
+            // todo: document this clearly somewhere
+            $res = call_user_func($a, $previousResult);
+            $applied = ($res !== null);
+        }
 
-        } else {
+        if (!$applied) {
             $this->pop(); // remove self, fully resolved
             $this->push($s, $previousResult); // resolve strategy $s with $d
             $res = null; // non-terminal

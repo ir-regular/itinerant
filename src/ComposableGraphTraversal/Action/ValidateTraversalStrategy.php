@@ -16,7 +16,7 @@ class ValidateTraversalStrategy implements ActionInterface
     /** @var int[] */
     protected $argumentCountsPerStrategyKey;
 
-    /** @var string */
+    /** @var string|null */
     protected $lastError;
 
     /**
@@ -38,7 +38,7 @@ class ValidateTraversalStrategy implements ActionInterface
     /**
      * @return string
      */
-    public function getLastError(): string
+    public function getLastError(): ?string
     {
         return $this->lastError;
     }
@@ -91,7 +91,7 @@ class ValidateTraversalStrategy implements ActionInterface
      */
     protected function isAction($d): bool
     {
-        return $d instanceof ActionInterface; // todo: allow Callable with a single argument
+        return ($d instanceof ActionInterface) || is_callable($d);
     }
 
     /**
