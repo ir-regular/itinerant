@@ -28,6 +28,21 @@ class TraversalStrategy
     private const ONE_INTERMEDIATE = 'one-intermediate';
     private const NOP = 'nop';
 
+    private const INBUILT_STRATEGIES = [
+        self::ID,
+        self::FAIL,
+        self::SEQ,
+        self::CHOICE,
+        self::ALL,
+        self::ONE,
+        self::ADHOC,
+        self::CHOICE_INTERMEDIATE,
+        self::SEQ_INTERMEDIATE,
+        self::ALL_INTERMEDIATE,
+        self::ONE_INTERMEDIATE,
+        self::NOP
+    ];
+
     /** @var ActionInterface */
     private $validatePreApplicationAction;
 
@@ -39,7 +54,7 @@ class TraversalStrategy
 
     /** @var array */
     private $strategies = [
-        // Note that values of predefined strategies currently not in use; keys used for validation
+        // Note that values for predefined strategies currently not in use
         self::ID => [self::class, 'id'],
         self::FAIL => [self::class, 'fail'],
         self::SEQ => [self::class, 'seq'],
@@ -138,6 +153,10 @@ class TraversalStrategy
      */
     private function validateBeforeRegistering(string $strategyKey, array $strategy, int $argCount): void
     {
+        if (in_array($strategyKey, self::INBUILT_STRATEGIES)) {
+            throw new \InvalidArgumentException("Cannot overwrite inbuilt strategy key: {$strategyKey}");
+        }
+
         $validate = 'validate_registered';
 
         if (($ts = $this->getInternalValidationTS()) && !isset($ts->strategies[$validate])) {
@@ -171,8 +190,6 @@ class TraversalStrategy
      */
     public function registerStrategy(string $key, array $expansion, int $argCount): void
     {
-        // todo: ensure user cannot overwrite one of our inbuilt strategies
-        // (they should, however, be able to re-register an action under the same key)
         $this->validateBeforeRegistering($key, $expansion, $argCount);
         $this->registerWithoutValidation($key, $expansion, $argCount);
     }

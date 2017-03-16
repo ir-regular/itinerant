@@ -199,6 +199,13 @@ class TraversalStrategyTest extends TestCase
         $this->assertEquals($this->fail, $result);
     }
 
+    public function testCannotReRegisterInbuiltStrategy()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessageRegExp("/Cannot overwrite inbuilt strategy key: .+/");
+        $this->ts->registerStrategy('nop', ['fail'], 0);
+    }
+
     /**
      * @param string $name
      *
