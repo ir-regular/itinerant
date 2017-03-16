@@ -3,7 +3,6 @@
 namespace JaneOlszewska\Experiments\Tests\ComposableGraphTraversal\ChildHandler;
 
 use JaneOlszewska\Experiments\ComposableGraphTraversal\ChildHandler\ViaGetter;
-use JaneOlszewska\Experiments\ComposableGraphTraversal\Datum;
 use PHPUnit\Framework\TestCase;
 
 class ViaGetterTest extends TestCase
@@ -34,11 +33,11 @@ class ViaGetterTest extends TestCase
 
     /**
      * @param array $children
-     * @return Datum
+     * @return object
      */
-    private function getDatum(array $children): Datum
+    private function getDatum(array $children)
     {
-        return new class($children) implements Datum
+        return new class($children)
         {
             /** @var \ArrayObject */
             private $c;

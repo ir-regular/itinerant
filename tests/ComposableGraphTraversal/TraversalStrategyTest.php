@@ -4,7 +4,6 @@ namespace JaneOlszewska\Experiments\Tests\ComposableGraphTraversal;
 
 use JaneOlszewska\Experiments\ComposableGraphTraversal\Action\ActionInterface;
 use JaneOlszewska\Experiments\ComposableGraphTraversal\ChildHandler\ViaGetter;
-use JaneOlszewska\Experiments\ComposableGraphTraversal\Datum;
 use JaneOlszewska\Experiments\ComposableGraphTraversal\TraversalStrategy;
 use PHPUnit\Framework\TestCase;
 
@@ -19,7 +18,7 @@ class TraversalStrategyTest extends TestCase
     /** @var TraversalStrategy */
     private $ts;
 
-    /** @var Datum */
+    /** @var object */
     private $fail;
 
     protected function setUp()
@@ -209,11 +208,11 @@ class TraversalStrategyTest extends TestCase
     /**
      * @param string $name
      *
-     * @return Datum
+     * @return object
      */
     private function getNodeDatum(string $name = 'node')
     {
-        return new class($name) implements Datum
+        return new class($name)
         {
             /** @var string */
             private $name;
@@ -258,16 +257,14 @@ class TraversalStrategyTest extends TestCase
 
     /**
      * @param array $children
-     * @return Datum
+     * @return object
      */
     private function getNodeArrayDatum(array $children)
     {
-        /** @var Datum $n */
-        $n = new class($children) implements Datum
+        $n = new class($children)
         {
             private $name = 'array'; // only here so that it's easily distinguishable in debug variables
 
-            /** @var Datum[] */
             private $children;
 
             public function getChildren(): ?array
