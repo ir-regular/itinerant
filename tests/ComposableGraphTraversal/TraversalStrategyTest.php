@@ -162,6 +162,15 @@ class TraversalStrategyTest extends TestCase
         // todo: we could test all ways the validation should work... this is just the initial test
     }
 
+    public function testRegisterStrategyValidation()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessageRegExp("/Invalid argument structure for the strategy: .+/");
+        $this->ts->registerStrategy('broken', ['does_not_work', 'because it is', 'broken'], 0);
+
+        // todo: again we could test all ways the validation should work... this is just the initial test
+    }
+
     /**
      * @param string $name
      *

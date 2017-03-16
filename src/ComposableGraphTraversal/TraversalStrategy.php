@@ -4,6 +4,7 @@ namespace JaneOlszewska\Experiments\ComposableGraphTraversal;
 
 use JaneOlszewska\Experiments\ComposableGraphTraversal\Action\ActionInterface;
 use JaneOlszewska\Experiments\ComposableGraphTraversal\Action\ValidateTraversalStrategy;
+use JaneOlszewska\Experiments\ComposableGraphTraversal\Action\ValidateUserRegisteredTraversalStrategy;
 use JaneOlszewska\Experiments\ComposableGraphTraversal\ChildHandler\ChildHandlerInterface;
 use JaneOlszewska\Experiments\ComposableGraphTraversal\ChildHandler\RestOfElements;
 
@@ -35,6 +36,9 @@ class TraversalStrategy
 
     /** @var ActionInterface */
     private $validatePreApplicationAction;
+
+    /** @var ActionInterface */
+    private $validatePreRegistrationAction;
 
     /** @var ChildHandlerInterface */
     private $childHandler;
@@ -111,12 +115,47 @@ class TraversalStrategy
     }
 
     /**
+     * Needs slightly expanded validation rules for registered strategies: they contain argument substitution markers.
+     *
+     * @param $strategy
+     * @throws \InvalidArgumentException if $strategy is found invalid
+     */
+    private function validateBeforeRegistering($strategy): void
+    {
+        $validate = 'validate_registered';
+
+        if (($ts = $this->getInternalValidationTS()) && !isset($ts->strategies[$validate])) {
+            $this->validatePreRegistrationAction = new ValidateUserRegisteredTraversalStrategy();
+            $a = $this->validatePreRegistrationAction;
+            // register without validation to avoid infinite recursion
+            $this->ts->registerWithoutValidation(
+                $validate,
+                ['seq', ['adhoc', 'fail', $a], ['all', [$validate]]], // top-down application of $a
+                0
+            );
+        }
+
+        // apply without validation to avoid infinite recursion
+        $result = $this->ts->applyWithoutValidation($validate, $strategy);
+
+        // todo: validate $expansion contents - should only contain default and registered keys
+        // (can also use $key which is just being registered, for recursion)
+        // todo: need to pass $key and $argCount somehow to the action for validation
+
+        if ($result === $this->ts->fail) {
+            $error = $this->validatePreRegistrationAction->getLastError();
+            throw new \InvalidArgumentException("Invalid argument structure for the strategy: {$error}");
+        }
+    }
+
+    /**
      * @param string $key
      * @param array $expansion
      * @param int $argCount
      */
     public function registerStrategy(string $key, array $expansion, int $argCount): void
     {
+        $this->validateBeforeRegistering($expansion);
         $this->registerWithoutValidation($key, $expansion, $argCount);
     }
 
