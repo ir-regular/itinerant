@@ -2,6 +2,7 @@
 
 namespace JaneOlszewska\Experiments\ComposableGraphTraversal\Action;
 
+use JaneOlszewska\Experiments\ComposableGraphTraversal\ChildHandler\ChildHandlerInterface;
 use JaneOlszewska\Experiments\ComposableGraphTraversal\TraversalStrategy;
 
 /**
@@ -9,13 +10,35 @@ use JaneOlszewska\Experiments\ComposableGraphTraversal\TraversalStrategy;
  */
 class ValidateTraversalStrategy implements ActionInterface
 {
+    /** @var ChildHandlerInterface */
+    protected $childHandler;
+
+    /** @var int[] */
+    protected $argumentCountsPerStrategyKey;
+
     /** @var string */
-    private $lastError;
+    protected $lastError;
+
+    /**
+     * @param ChildHandlerInterface $childHandler
+     */
+    public function __construct(ChildHandlerInterface $childHandler)
+    {
+        $this->childHandler = $childHandler;
+    }
+
+    /**
+     * @param int[] $argumentCountsPerStrategyKey
+     */
+    public function setStrategyArgumentCounts(array $argumentCountsPerStrategyKey): void
+    {
+        $this->argumentCountsPerStrategyKey = $argumentCountsPerStrategyKey;
+    }
 
     /**
      * @return string
      */
-    public function getLastError()
+    public function getLastError(): string
     {
         return $this->lastError;
     }
@@ -28,8 +51,9 @@ class ValidateTraversalStrategy implements ActionInterface
     {
         $isApplicable = true;
 
-        if (!$this->isZeroArgumentNode($d)) {
-            if (!$this->isAction($d)) {
+        if (!$this->isZeroArgumentNode($d)) { // is applicable to zero-argument nodes
+            if (!$this->isAction($d)) { // is applicable to actions
+                // ...if not a zero-argument node or action, check if valid strategy
                 $isApplicable = $this->isValidStrategy($d);
             }
         }
@@ -52,8 +76,13 @@ class ValidateTraversalStrategy implements ActionInterface
      */
     protected function isZeroArgumentNode($d): bool
     {
-        // todo: must allow for user-registered 0-argument strategies
-        return is_string($d) && ($d == TraversalStrategy::FAIL || $d == TraversalStrategy::ID);
+        return is_string($d)
+            // inbuilt zero-argument strategies
+            && (TraversalStrategy::FAIL == $d
+                || TraversalStrategy::ID == $d
+                // user-registered 0-argument strategies
+                || (isset($this->argumentCountsPerStrategyKey[$d[0]])
+                    && 0 == $this->argumentCountsPerStrategyKey[$d[0]]));
     }
 
     /**
@@ -71,9 +100,18 @@ class ValidateTraversalStrategy implements ActionInterface
      */
     protected function isValidStrategy($d): bool
     {
-        $isStrategy = is_array($d);
-        // todo: and check $d[0] is one of available strategies
-        // todo: and check the number of arguments (count($d) - 1) is correct
-        return $isStrategy;
+        $valid = false;
+
+        // a node is a valid strategy if it is an array
+        if (is_array($d)) {
+            // ...and its key (first element) is included in the list of valid strategies
+            if (isset($this->argumentCountsPerStrategyKey[$d[0]])) {
+                // ...and its argument count matches the
+                $argCount = $this->argumentCountsPerStrategyKey[$d[0]];
+                $valid = ($argCount == count($this->childHandler->getChildren($d)));
+            }
+        }
+
+        return $valid;
     }
 }
