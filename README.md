@@ -10,3 +10,5 @@ General idea (shamelessly) based on (I mean copied from)
 Go read that for theory and examples.
 
 Bonus: converts recursion to iteration.
+
+Please look at TraversalStrategyTest class for examples of usage.

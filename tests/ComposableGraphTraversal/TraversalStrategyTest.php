@@ -205,6 +205,59 @@ class TraversalStrategyTest extends TestCase
         $this->ts->registerStrategy('nop', ['fail'], 0);
     }
 
+    public function testAdhocSelectOneByAttribute()
+    {
+        $secondNode = $this->getNodeDatum('2');
+        $ordNodeOfNodes = $this->getNodeArrayDatum(
+            [
+                $this->getNodeArrayDatum([
+                    $this->getNodeDatum('1'),
+                    $secondNode
+                ]),
+                $this->getNodeArrayDatum([
+                    $this->getNodeDatum('3'),
+                    $this->getNodeDatum('4')
+                ])
+            ]
+        );
+
+        // register 'attr' strategy: this is a rather roundabout way of creating a node-by-attribute selector.
+
+        $action = new class implements ActionInterface
+        {
+            /** @var string */
+            private $currentSearch;
+
+            public function setCurrentSearch($s)
+            {
+                $this->currentSearch = $s;
+            }
+
+            public function isApplicableTo($d): bool
+            {
+                return method_exists($d, 'getName') && $d->getName() == $this->currentSearch;
+            }
+
+            public function applyTo($d)
+            {
+                return $d;
+            }
+        };
+
+        $this->ts->registerStrategy('attr', ['adhoc', 'fail', $action], 0);
+
+        // register strategy that traverses the graph top-down and return the first element that successfully fulfils
+        // whatever strategy was provided as 1st arg
+
+        $this->ts->registerStrategy('once_td', ['choice', '0', ['one', ['once_td', '0']]], 1);
+
+        // perform the actual test: search for an element with name == '2'
+
+        $action->setCurrentSearch('2');
+        $result = $this->ts->apply(['once_td', 'attr'], $ordNodeOfNodes);
+        $this->assertEquals($secondNode, $result);
+    }
+
     /**
      * @param string $name
      *
