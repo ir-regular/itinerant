@@ -81,8 +81,8 @@ class ValidateTraversalStrategy implements ActionInterface
             && (TraversalStrategy::FAIL == $d
                 || TraversalStrategy::ID == $d
                 // user-registered 0-argument strategies
-                || (isset($this->argumentCountsPerStrategyKey[$d[0]])
-                    && 0 == $this->argumentCountsPerStrategyKey[$d[0]]));
+                || (isset($this->argumentCountsPerStrategyKey[$d])
+                    && 0 == $this->argumentCountsPerStrategyKey[$d]));
     }
 
     /**
