@@ -97,6 +97,22 @@ class TraversalStrategy
         $this->fail = $fail;
     }
 
+    /**
+     * @return ChildHandlerInterface
+     */
+    public function getChildHandler(): ChildHandlerInterface
+    {
+        return $this->childHandler;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getFail()
+    {
+        return $this->fail;
+    }
+
     /** @var TraversalStrategy */
     private $ts;
 
