@@ -5,7 +5,9 @@
     "php": ">=7.1"
   },
   "require-dev": {
-    "phpunit/phpunit": "^6.0"
+    "phpunit/phpunit": "^6.0",
+    "squizlabs/php_codesniffer": "^2.8",
+    "slevomat/coding-standard": "dev-master as 1.1"
   },
   "autoload": {
     "psr-4": {

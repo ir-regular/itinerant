@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ruleset name="DueDil PHP 7 house Standard">
+
+    <description>Largely strict PSR-2 with a few tweaks (see comments for why)</description>
+
+    <file>./src</file>
+
+    <rule ref="PSR2" />
+
+    <rule ref="Generic.Files.LineLength.TooLong">
+        <!-- Severity is dropped so that it doesn't fail builds, but can easily be seen locally with severity=3 -->
+        <severity>3</severity>
+    </rule>
+
+    <rule ref="PSR2.Classes.PropertyDeclaration.Underscore">
+        <!-- Severity is dropped so that it doesnt fail builds, but can easily be seen locally with severity=3 -->
+        <severity>4</severity>
+    </rule>
+
+    <!-- Be a tiny bit stricter about a few rare/old-style things -->
+    <rule ref="Generic.CodeAnalysis.EmptyStatement"/>
+    <rule ref="Generic.Formatting.SpaceAfterCast"/>
+    <rule ref="Generic.PHP.DisallowShortOpenTag"/>
+    <rule ref="Generic.NamingConventions.ConstructorName"/>
+    <rule ref="Generic.PHP.NoSilencedErrors"/>
+
+    <!-- PSR2 ruleset includes this, but allows on blank lines: we redefine it to
+    be stricter -->
+    <rule ref="Squiz.WhiteSpace.SuperfluousWhitespace">
+        <properties>
+            <property name="ignoreBlankLines" value="false"/>
+        </properties>
+    </rule>
+
+    <!-- Just to mess with Andreas, really ¯\_(ツ)_/¯ -->
+    <rule ref="PEAR.ControlStructures.MultiLineCondition"/>
+
+    <!-- Ensure consistency in return type hints.
+    This comes from a third-party package, not built-in.
+
+    Note that I'm referencing ONLY the sniff(s) we want directly as PHP files, and
+    **NOT** including their whole ruleset in the normal/documented fashion.
+
+    That's partly because it's very extensive and is likely to be controversial or
+    annoying... but more importantly, it's because this sniff is not in
+    a released version: so we have to reference master in composer, which makes it
+    more likely that the complete ruleset will change without notice.-->
+    <rule ref="./vendor/slevomat/coding-standard/SlevomatCodingStandard/Sniffs/TypeHints/ReturnTypeHintSpacingSniff.php" />
+
+</ruleset>
