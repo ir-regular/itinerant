@@ -301,7 +301,6 @@ class TraversalStrategy
             // pass the result into the strategy lower on the stack
             $this->pop();
             $currentDatum = $result;
-
         } while ($this->stack);
 
         return $result;
@@ -363,7 +362,8 @@ class TraversalStrategy
             $strat = $this->getCurrentStratKey();
             $count = count($this->stack[$this->last]['strat'][1]);
             throw new \InvalidArgumentException(
-                "Too few arguments supplied for strategy {$strat}: {$index}'th requested, {$count} available");
+                "Too few arguments supplied for strategy {$strat}: {$index}'th requested, {$count} available"
+            );
         }
 
         return $this->stack[$this->last]['strat'][1][$index];
@@ -435,7 +435,8 @@ class TraversalStrategy
     private function all($previousResult)
     {
         $s1 = $this->getArg(0);
-        $res = $previousResult; // if $d has no children: return $d, strategy terminal independent of what $s1 actually is
+        // if $d has no children: return $d, strategy terminal independent of what $s1 actually is
+        $res = $previousResult;
         $unprocessed = $this->childHandler->getChildren($previousResult);
 
         if ($unprocessed) {
@@ -472,7 +473,6 @@ class TraversalStrategy
                 $this->push($s1, $unprocessed[0]);
                 $this->push([self::NOP]); // only here to be popped
                 $res = $unprocessed[0];
-
             } else {
                 $this->childHandler->setChildren($originalResult, $processed);
                 $res = $originalResult;
@@ -573,7 +573,7 @@ class TraversalStrategy
         // substitute numeric placeholders with the actual arguments
         array_walk_recursive($strategy, function (&$value) use ($args) {
             if (is_numeric($value)) {
-                $value = $args[(int)$value];
+                $value = $args[(int) $value];
             }
         });
 
