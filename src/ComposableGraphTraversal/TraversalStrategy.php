@@ -43,10 +43,10 @@ class TraversalStrategy
         self::NOP
     ];
 
-    /** @var ActionInterface */
+    /** @var ValidateTraversalStrategy */
     private $validatePreApplicationAction;
 
-    /** @var ActionInterface */
+    /** @var ValidateUserRegisteredTraversalStrategy */
     private $validatePreRegistrationAction;
 
     /** @var ChildHandlerInterface */
@@ -535,6 +535,7 @@ class TraversalStrategy
         $a = $this->getArg(1);
 
         $applied = false;
+        $res = null; // non-terminal by default
 
         if ($a instanceof ActionInterface) {
             if ($a->isApplicableTo($previousResult)) {
@@ -551,7 +552,6 @@ class TraversalStrategy
         if (!$applied) {
             $this->pop(); // remove self, fully resolved
             $this->push($s, $previousResult); // resolve strategy $s with $d
-            $res = null; // non-terminal
         }
 
         return $res;
