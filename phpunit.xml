@@ -1,6 +1,6 @@
 <phpunit bootstrap="vendor/autoload.php" colors="true">
     <testsuites>
-        <testsuite name="GraphTraversal">
+        <testsuite name="unit">
             <directory>tests/ComposableGraphTraversal</directory>
         </testsuite>
     </testsuites>

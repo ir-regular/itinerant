@@ -7,7 +7,18 @@
   "require-dev": {
     "phpunit/phpunit": "^6.0",
     "squizlabs/php_codesniffer": "^2.8",
-    "slevomat/coding-standard": "dev-master as 1.1"
+    "slevomat/coding-standard": "dev-master as 1.1",
+    "phpstan/phpstan": "^0.6.4"
+  },
+  "scripts": {
+    "ci": [
+      "bin/phpcs",
+      "bin/phpstan analyze --level=5 ./src",
+      "bin/phpunit --testsuite unit --testdox"
+    ],
+    "test": [
+      "bin/phpunit --testsuite unit"
+    ]
   },
   "autoload": {
     "psr-4": {
