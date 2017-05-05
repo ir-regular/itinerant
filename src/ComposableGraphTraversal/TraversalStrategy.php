@@ -141,10 +141,19 @@ class TraversalStrategy
         if (($ts = $this->getInternalValidationTS()) && !isset($ts->strategies[$validate])) {
             $this->validatePreApplicationAction = new ValidateTraversalStrategy($this->ts->childHandler);
             $a = $this->validatePreApplicationAction;
+            $isNotCallableArray = function ($d) {
+                return (is_array($d) && is_callable($d)) ? null : $d;
+            };
             // register without validation to avoid infinite recursion
             $this->ts->registerWithoutValidation(
                 $validate,
-                ['seq', ['adhoc', 'fail', $a], ['all', [$validate]]], // top-down application of $a
+                ['choice',
+                    ['seq',
+                        ['adhoc', 'fail', $isNotCallableArray], // if doesn't fail, safe to nest further
+                        ['seq', ['adhoc', 'fail', $a], ['all', [$validate]]], // top-down application of $a
+                    ],
+                    ['adhoc', 'fail', $a] // just validate without nesting
+                ],
                 0
             );
         }
