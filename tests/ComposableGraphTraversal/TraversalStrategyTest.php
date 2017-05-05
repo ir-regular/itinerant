@@ -173,7 +173,7 @@ class TraversalStrategyTest extends TestCase
     public function testAdhocWithCallableAction()
     {
         $newName = 'modified!';
-        $modifyAction = function($node) use($newName) {
+        $modifyAction = function ($node) use ($newName) {
             $node->setName($newName);
             return $node;
         };
@@ -186,9 +186,26 @@ class TraversalStrategyTest extends TestCase
         $this->assertEquals($modifiedNodes, $result);
     }
 
+    public function testAdhocWithCallableAsArrayAction()
+    {
+        $modifyAction = [$this, 'callableAction'];
+        $modifiedNodes = $this->getNodeArrayDatum($this->getNodes(2, 'modified!'));
+
+        $nodes = $this->getNodeArrayDatum($this->getNodes());
+
+        $result = $this->ts->apply(['all', ['adhoc', 'fail', $modifyAction]], $nodes);
+        $this->assertEquals($modifiedNodes, $result);
+    }
+
+    public function callableAction($node)
+    {
+        $node->setName('modified!');
+        return $node;
+    }
+
     public function testAdhocWithNonApplicableCallableAction()
     {
-        $nonApplicableAction = function($node) {
+        $nonApplicableAction = function ($node) {
             return null;
         };
 
