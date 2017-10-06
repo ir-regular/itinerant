@@ -1,8 +1,8 @@
 <?php
 
-namespace JaneOlszewska\Experiments\Tests\ComposableGraphTraversal\ChildHandler;
+namespace JaneOlszewska\Tests\Itinerant\ChildHandler;
 
-use JaneOlszewska\Experiments\ComposableGraphTraversal\ChildHandler\ViaGetter;
+use JaneOlszewska\Itinerant\ChildHandler\ViaGetter;
 use PHPUnit\Framework\TestCase;
 
 class ViaGetterTest extends TestCase

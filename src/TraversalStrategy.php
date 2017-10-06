@@ -1,12 +1,12 @@
 <?php
 
-namespace JaneOlszewska\Experiments\ComposableGraphTraversal;
+namespace JaneOlszewska\Itinerant;
 
-use JaneOlszewska\Experiments\ComposableGraphTraversal\Action\ActionInterface;
-use JaneOlszewska\Experiments\ComposableGraphTraversal\Action\ValidateTraversalStrategy;
-use JaneOlszewska\Experiments\ComposableGraphTraversal\Action\ValidateUserRegisteredTraversalStrategy;
-use JaneOlszewska\Experiments\ComposableGraphTraversal\ChildHandler\ChildHandlerInterface;
-use JaneOlszewska\Experiments\ComposableGraphTraversal\ChildHandler\RestOfElements;
+use JaneOlszewska\Itinerant\Action\ActionInterface;
+use JaneOlszewska\Itinerant\Action\ValidateTraversalStrategy;
+use JaneOlszewska\Itinerant\Action\ValidateUserRegisteredTraversalStrategy;
+use JaneOlszewska\Itinerant\ChildHandler\ChildHandlerInterface;
+use JaneOlszewska\Itinerant\ChildHandler\RestOfElements;
 
 /**
  * @todo Documentation ¯\_(ツ)_/¯
