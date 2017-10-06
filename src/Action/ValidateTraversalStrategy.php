@@ -1,9 +1,9 @@
 <?php
 
-namespace JaneOlszewska\Experiments\ComposableGraphTraversal\Action;
+namespace JaneOlszewska\Itinerant\Action;
 
-use JaneOlszewska\Experiments\ComposableGraphTraversal\ChildHandler\ChildHandlerInterface;
-use JaneOlszewska\Experiments\ComposableGraphTraversal\TraversalStrategy;
+use JaneOlszewska\Itinerant\ChildHandler\ChildHandlerInterface;
+use JaneOlszewska\Itinerant\TraversalStrategy;
 
 /**
  * Action internal to library: validates every node of a traversal strategy supplied to TraversalStrategy::apply()

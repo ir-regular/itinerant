@@ -1,10 +1,10 @@
 <?php
 
-namespace JaneOlszewska\Experiments\Tests\ComposableGraphTraversal;
+namespace JaneOlszewska\Tests\Itinerant;
 
-use JaneOlszewska\Experiments\ComposableGraphTraversal\Action\ActionInterface;
-use JaneOlszewska\Experiments\ComposableGraphTraversal\ChildHandler\ViaGetter;
-use JaneOlszewska\Experiments\ComposableGraphTraversal\TraversalStrategy;
+use JaneOlszewska\Itinerant\Action\ActionInterface;
+use JaneOlszewska\Itinerant\ChildHandler\ViaGetter;
+use JaneOlszewska\Itinerant\TraversalStrategy;
 use PHPUnit\Framework\TestCase;
 
 /**

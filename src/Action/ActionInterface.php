@@ -1,6 +1,6 @@
 <?php
 
-namespace JaneOlszewska\Experiments\ComposableGraphTraversal\Action;
+namespace JaneOlszewska\Itinerant\Action;
 
 interface ActionInterface
 {

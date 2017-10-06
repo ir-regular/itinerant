@@ -1,5 +1,5 @@
 {
-  "name": "jane-olszewska/composable-graph-traversal",
+  "name": "jane-olszewska/itinerant",
   "type": "library",
   "require": {
     "php": ">=7.1"
@@ -21,8 +21,8 @@
   },
   "autoload": {
     "psr-4": {
-      "JaneOlszewska\\Experiments\\": "src/",
-      "JaneOlszewska\\Experiments\\Tests\\": "tests/"
+      "JaneOlszewska\\Itinerant\\": "src/",
+      "JaneOlszewska\\Itinerant\\Tests\\": "tests/"
     }
   },
   "minimum-stability": "stable",

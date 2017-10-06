@@ -1,6 +1,6 @@
 <?php
 
-namespace JaneOlszewska\Experiments\ComposableGraphTraversal\ChildHandler;
+namespace JaneOlszewska\Itinerant\ChildHandler;
 
 class RestOfElements implements ChildHandlerInterface
 {
