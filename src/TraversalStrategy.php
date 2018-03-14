@@ -245,6 +245,7 @@ class TraversalStrategy
 
         do {
             $key = $this->stack->getCurrentStratKey();
+            $args = $this->stack->getCurrentStratArguments();
 
             // todo: so this could be simplified. Later. I'm in the dirty hacking mode.
 
@@ -256,31 +257,31 @@ class TraversalStrategy
                     $result = $this->id($currentDatum);
                     break;
                 case self::SEQ:
-                    $result = $this->seq($currentDatum);
+                    $result = $this->seq($currentDatum, ...$args);
                     break;
                 case self::SEQ_INTERMEDIATE:
-                    $result = $this->seqIntermediate($currentDatum);
+                    $result = $this->seqIntermediate($currentDatum, ...$args);
                     break;
                 case self::CHOICE:
-                    $result = $this->choice($currentDatum);
+                    $result = $this->choice($currentDatum, ...$args);
                     break;
                 case self::CHOICE_INTERMEDIATE:
                     $result = $this->choiceIntermediate($currentDatum);
                     break;
                 case self::ALL:
-                    $result = $this->all($currentDatum);
+                    $result = $this->all($currentDatum, ...$args);
                     break;
                 case self::ALL_INTERMEDIATE:
-                    $result = $this->allIntermediate($currentDatum);
+                    $result = $this->allIntermediate($currentDatum, ...$args);
                     break;
                 case self::ONE:
-                    $result = $this->one($currentDatum);
+                    $result = $this->one($currentDatum, ...$args);
                     break;
                 case self::ONE_INTERMEDIATE:
-                    $result = $this->oneIntermediate($currentDatum);
+                    $result = $this->oneIntermediate($currentDatum, ...$args);
                     break;
                 case self::ADHOC:
-                    $result = $this->adhoc($currentDatum);
+                    $result = $this->adhoc($currentDatum, ...$args);
                     break;
                 case self::NOP:
                     /*
@@ -292,7 +293,7 @@ class TraversalStrategy
                     throw new \DomainException('Logic error: NOP should never be evaluated');
                     break;
                 default:
-                    $result = $this->userDefined($currentDatum);
+                    $result = $this->userDefined($currentDatum, ...$args);
             }
 
             if ($result === null) {
@@ -322,11 +323,8 @@ class TraversalStrategy
         return $this->fail;
     }
 
-    private function seq($previousResult)
+    private function seq($previousResult, $s1, $s2)
     {
-        $s1 = $this->stack->getCurrentStratArg(0);
-        $s2 = $this->stack->getCurrentStratArg(1);
-
         $this->stack->pop();
 
         $this->push([self::SEQ_INTERMEDIATE, $s2], $this->fail);
@@ -335,12 +333,11 @@ class TraversalStrategy
         return null; // always non-terminal
     }
 
-    private function seqIntermediate($previousResult)
+    private function seqIntermediate($previousResult, $s2)
     {
         $res = $previousResult;
 
         if ($this->fail !== $previousResult) {
-            $s2 = $this->stack->getCurrentStratArg(0);
             $this->stack->pop();
             $this->push($s2, $previousResult);
             $res = null;
@@ -349,11 +346,8 @@ class TraversalStrategy
         return $res;
     }
 
-    private function choice($previousResult)
+    private function choice($previousResult, $s1, $s2)
     {
-        $s1 = $this->stack->getCurrentStratArg(0);
-        $s2 = $this->stack->getCurrentStratArg(1);
-
         $this->stack->pop(); // remove self
 
         $this->push($s2, $this->fail);
@@ -375,9 +369,8 @@ class TraversalStrategy
         return $res;
     }
 
-    private function all($previousResult)
+    private function all($previousResult, $s1)
     {
-        $s1 = $this->stack->getCurrentStratArg(0);
         // if $d has no children: return $d, strategy terminal independent of what $s1 actually is
         $res = $previousResult;
         $unprocessed = $this->childHandler->getChildren($previousResult);
@@ -394,12 +387,11 @@ class TraversalStrategy
         return $res;
     }
 
-    private function allIntermediate($previousResult)
+    private function allIntermediate($previousResult, $s1)
     {
         $res = $previousResult;
 
         if ($this->fail !== $previousResult) {
-            $s1 = $this->stack->getCurrentStratArg(0);
             $originalResult = $this->stack->getOriginalDatum();
 
             // if the result of the last child resolution wasn't fail, continue
@@ -425,9 +417,8 @@ class TraversalStrategy
         return $res;
     }
 
-    private function one($previousResult)
+    private function one($previousResult, $s1)
     {
-        $s1 = $this->stack->getCurrentStratArg(0);
         // if $d has no children: fail, strategy terminal independent of what $s1 actually is
         $res = $this->fail;
         $unprocessed = $this->childHandler->getChildren($previousResult);
@@ -445,13 +436,12 @@ class TraversalStrategy
         return $res;
     }
 
-    private function oneIntermediate($previousResult)
+    private function oneIntermediate($previousResult, $s1)
     {
         $res = $previousResult;
 
         if ($this->fail === $previousResult) {
             // if the result of the last child resolution was fail, need to try with the next one (if exists)
-            $s1 = $this->stack->getCurrentStratArg(0);
 
             $unprocessed = $this->stack->getUnprocessedChildren();
             array_shift($unprocessed);
@@ -472,11 +462,8 @@ class TraversalStrategy
         return $res;
     }
 
-    private function adhoc($previousResult)
+    private function adhoc($previousResult, $s, $a)
     {
-        $s = $this->stack->getCurrentStratArg(0);
-        $a = $this->stack->getCurrentStratArg(1);
-
         $applied = false;
         $res = null; // non-terminal by default
 
@@ -495,20 +482,16 @@ class TraversalStrategy
         return $res;
     }
 
-    private function userDefined($previousResult)
+    private function userDefined($previousResult, ...$args)
     {
         $key = $this->stack->getCurrentStratKey();
 
         $originalDatum = $this->stack->getOriginalDatum();
-        $args = $this->stack->getCurrentStratArguments();
-
-        if (count($args) !== $this->argCounts[$key]) {
-            throw new \LengthException("Wrong number of arguments provided for user defined strategy {$key}");
-        }
 
         $strategy = $this->strategies[$key];
 
         // substitute numeric placeholders with the actual arguments
+        // @TODO: yep, it's ugly, and it doesn't validate the index
         array_walk_recursive($strategy, function (&$value) use ($args) {
             if (is_numeric($value)) {
                 $value = $args[(int) $value];
