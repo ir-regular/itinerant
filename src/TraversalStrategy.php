@@ -76,11 +76,8 @@ class TraversalStrategy
         self::ADHOC => 2,
     ];
 
-    /** @var array */
-    private $stack = [];
-
-    /** @var int */
-    private $last = -1;
+    /** @var StrategyStack */
+    private $stack;
 
     /** @var mixed */
     private $fail;
@@ -92,6 +89,7 @@ class TraversalStrategy
      */
     public function __construct(ChildHandlerInterface $childHandler, $fail)
     {
+        $this->stack = new StrategyStack();
         $this->childHandler = $childHandler;
         $this->fail = $fail;
     }
@@ -246,7 +244,7 @@ class TraversalStrategy
         $currentDatum = $datum;
 
         do {
-            $key = $this->getCurrentStratKey();
+            $key = $this->stack->getCurrentStratKey();
 
             // todo: so this could be simplified. Later. I'm in the dirty hacking mode.
 
@@ -307,74 +305,11 @@ class TraversalStrategy
 
             // strategy terminal: $currentDatum transformed into $result
             // pass the result into the strategy lower on the stack
-            $this->pop();
+            $this->stack->pop();
             $currentDatum = $result;
-        } while ($this->stack);
+        } while (!$this->stack->isEmpty());
 
         return $result;
-    }
-
-    private function push($strategy, $datum = null, ?array $unprocessed = null, ?array $processed = null): void
-    {
-        $strategy = $this->sanitiseStrategy($strategy);
-
-        $stratKey = array_shift($strategy);
-        $stratArgs = $strategy;
-
-        // strat, datum, childrenUnprocessed, childrenProcessed
-        $this->stack[] = [
-            'strat' => [$stratKey, $stratArgs],
-            'input' => [$datum, $unprocessed],
-            'result' => [null, $processed]
-        ];
-
-        $this->last++;
-    }
-
-    // todo: I don't quite like how processed/unprocessed children are stored, but I don't want to think of it now
-
-    private function getCurrentStratKey()
-    {
-        return $this->stack[$this->last]['strat'][0];
-    }
-
-    private function getOriginalDatum()
-    {
-        return $this->stack[$this->last]['input'][0];
-    }
-
-    private function getUnprocessedChildren(): ?array
-    {
-        return $this->stack[$this->last]['input'][1];
-    }
-
-    private function getProcessedChildren(): ?array
-    {
-        return $this->stack[$this->last]['result'][1];
-    }
-
-    private function pop()
-    {
-        $this->last--;
-        return array_pop($this->stack);
-    }
-
-    private function getArguments()
-    {
-        return $this->stack[$this->last]['strat'][1];
-    }
-
-    private function getArg($index)
-    {
-        if (!array_key_exists($index, $this->stack[$this->last]['strat'][1])) {
-            $strat = $this->getCurrentStratKey();
-            $count = count($this->stack[$this->last]['strat'][1]);
-            throw new \InvalidArgumentException(
-                "Too few arguments supplied for strategy {$strat}: {$index}'th requested, {$count} available"
-            );
-        }
-
-        return $this->stack[$this->last]['strat'][1][$index];
     }
 
     private function id($previousResult)
@@ -389,10 +324,10 @@ class TraversalStrategy
 
     private function seq($previousResult)
     {
-        $s1 = $this->getArg(0);
-        $s2 = $this->getArg(1);
+        $s1 = $this->stack->getCurrentStratArg(0);
+        $s2 = $this->stack->getCurrentStratArg(1);
 
-        $this->pop();
+        $this->stack->pop();
 
         $this->push([self::SEQ_INTERMEDIATE, $s2], $this->fail);
         $this->push($s1, $previousResult);
@@ -405,8 +340,8 @@ class TraversalStrategy
         $res = $previousResult;
 
         if ($this->fail !== $previousResult) {
-            $s2 = $this->getArg(0);
-            $this->pop();
+            $s2 = $this->stack->getCurrentStratArg(0);
+            $this->stack->pop();
             $this->push($s2, $previousResult);
             $res = null;
         }
@@ -416,10 +351,10 @@ class TraversalStrategy
 
     private function choice($previousResult)
     {
-        $s1 = $this->getArg(0);
-        $s2 = $this->getArg(1);
+        $s1 = $this->stack->getCurrentStratArg(0);
+        $s2 = $this->stack->getCurrentStratArg(1);
 
-        $this->pop(); // remove self
+        $this->stack->pop(); // remove self
 
         $this->push($s2, $this->fail);
         $this->push([self::CHOICE_INTERMEDIATE], $previousResult);
@@ -430,10 +365,10 @@ class TraversalStrategy
 
     private function choiceIntermediate($previousResult)
     {
-        $res = $this->getOriginalDatum();
+        $res = $this->stack->getOriginalDatum();
 
         if ($this->fail !== $previousResult) {
-            $this->pop(); // pop self; $s2 will be auto-popped
+            $this->stack->pop(); // pop self; $s2 will be auto-popped
             $res = $previousResult; // pass $s1 result
         }
 
@@ -442,13 +377,13 @@ class TraversalStrategy
 
     private function all($previousResult)
     {
-        $s1 = $this->getArg(0);
+        $s1 = $this->stack->getCurrentStratArg(0);
         // if $d has no children: return $d, strategy terminal independent of what $s1 actually is
         $res = $previousResult;
         $unprocessed = $this->childHandler->getChildren($previousResult);
 
         if ($unprocessed) {
-            $this->pop();
+            $this->stack->pop();
 
             $this->push([self::ALL_INTERMEDIATE, $s1], $previousResult, $unprocessed, []);
             $this->push($s1, $unprocessed[0]);
@@ -464,18 +399,18 @@ class TraversalStrategy
         $res = $previousResult;
 
         if ($this->fail !== $previousResult) {
-            $s1 = $this->getArg(0);
-            $originalResult = $this->getOriginalDatum();
+            $s1 = $this->stack->getCurrentStratArg(0);
+            $originalResult = $this->stack->getOriginalDatum();
 
             // if the result of the last child resolution wasn't fail, continue
-            $unprocessed = $this->getUnprocessedChildren();
+            $unprocessed = $this->stack->getUnprocessedChildren();
             array_shift($unprocessed);
 
-            $processed = $this->getProcessedChildren();
+            $processed = $this->stack->getProcessedChildren();
             $processed[] = $previousResult;
 
             if ($unprocessed) { // there's more to process
-                $this->pop();
+                $this->stack->pop();
 
                 $this->push([self::ALL_INTERMEDIATE, $s1], $originalResult, $unprocessed, $processed);
                 $this->push($s1, $unprocessed[0]);
@@ -492,13 +427,13 @@ class TraversalStrategy
 
     private function one($previousResult)
     {
-        $s1 = $this->getArg(0);
+        $s1 = $this->stack->getCurrentStratArg(0);
         // if $d has no children: fail, strategy terminal independent of what $s1 actually is
         $res = $this->fail;
         $unprocessed = $this->childHandler->getChildren($previousResult);
 
         if ($unprocessed) {
-            $this->pop();
+            $this->stack->pop();
 
             // not interested in previously processed results: thus null
             $this->push([self::ONE_INTERMEDIATE, $s1], null, $unprocessed, null);
@@ -516,13 +451,13 @@ class TraversalStrategy
 
         if ($this->fail === $previousResult) {
             // if the result of the last child resolution was fail, need to try with the next one (if exists)
-            $s1 = $this->getArg(0);
+            $s1 = $this->stack->getCurrentStratArg(0);
 
-            $unprocessed = $this->getUnprocessedChildren();
+            $unprocessed = $this->stack->getUnprocessedChildren();
             array_shift($unprocessed);
 
             if ($unprocessed) { // fail, but there's more to process
-                $this->pop();
+                $this->stack->pop();
 
                 // not interested in previously processed results: thus null
                 $this->push([self::ONE_INTERMEDIATE, $s1], null, $unprocessed, null);
@@ -539,8 +474,8 @@ class TraversalStrategy
 
     private function adhoc($previousResult)
     {
-        $s = $this->getArg(0);
-        $a = $this->getArg(1);
+        $s = $this->stack->getCurrentStratArg(0);
+        $a = $this->stack->getCurrentStratArg(1);
 
         $applied = false;
         $res = null; // non-terminal by default
@@ -553,7 +488,7 @@ class TraversalStrategy
         }
 
         if (!$applied) {
-            $this->pop(); // remove self, fully resolved
+            $this->stack->pop(); // remove self, fully resolved
             $this->push($s, $previousResult); // resolve strategy $s with $d
         }
 
@@ -562,10 +497,10 @@ class TraversalStrategy
 
     private function userDefined($previousResult)
     {
-        $key = $this->getCurrentStratKey();
+        $key = $this->stack->getCurrentStratKey();
 
-        $originalDatum = $this->getOriginalDatum();
-        $args = $this->getArguments();
+        $originalDatum = $this->stack->getOriginalDatum();
+        $args = $this->stack->getCurrentStratArguments();
 
         if (count($args) !== $this->argCounts[$key]) {
             throw new \LengthException("Wrong number of arguments provided for user defined strategy {$key}");
@@ -580,10 +515,16 @@ class TraversalStrategy
             }
         });
 
-        $this->pop();
+        $this->stack->pop();
         $this->push($strategy, $originalDatum);
 
         return null; // always non-terminal
+    }
+
+    private function push($strategy, $datum = null, ?array $unprocessed = null, ?array $processed = null): void
+    {
+        $strategy = $this->sanitiseStrategy($strategy);
+        $this->stack->push($strategy, $datum, $unprocessed, $processed);
     }
 
     private function sanitiseStrategy($s)
