@@ -45,16 +45,18 @@ class ValidateTraversalStrategy
 
     public function __invoke($d)
     {
-        $isApplicable = true;
+        $isValid = true;
 
         if (!$this->isZeroArgumentNode($d)) { // is applicable to zero-argument nodes
             if (!$this->isAction($d)) { // is applicable to actions
                 // ...if not a zero-argument node or action, check if valid strategy
-                $isApplicable = $this->isValidStrategy($d);
+                $isValid = $this->isValidStrategy($d);
             }
+        } else {
+            return $this->sanitiseZeroArgumentNode($d);
         }
 
-        if ($isApplicable) {
+        if ($isValid) {
             return $d;
         } else {
             $this->lastError = print_r($d, true); // todo: better error reporting
@@ -105,5 +107,10 @@ class ValidateTraversalStrategy
         }
 
         return $valid;
+    }
+
+    protected function sanitiseZeroArgumentNode($d)
+    {
+        return [$d];
     }
 }

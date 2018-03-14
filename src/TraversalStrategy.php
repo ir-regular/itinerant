@@ -131,7 +131,7 @@ class TraversalStrategy
      * @param mixed $strategy
      * @throws \InvalidArgumentException if $strategy is found invalid
      */
-    private function validateBeforeApplication($strategy): void
+    private function validateAndSanitise($strategy)
     {
         $validate = 'validate';
 
@@ -146,10 +146,10 @@ class TraversalStrategy
                 $validate,
                 ['choice',
                     ['seq',
-                        ['adhoc', 'fail', $isNotCallableArray], // if doesn't fail, safe to nest further
-                        ['seq', ['adhoc', 'fail', $a], ['all', [$validate]]], // top-down application of $a
+                        ['adhoc', ['fail'], $isNotCallableArray], // if doesn't fail, safe to nest further
+                        ['seq', ['adhoc', ['fail'], $a], ['all', [$validate]]], // top-down application of $a
                     ],
-                    ['adhoc', 'fail', $a] // just validate without nesting
+                    ['adhoc', ['fail'], $a] // just validate without nesting
                 ],
                 0
             );
@@ -158,12 +158,14 @@ class TraversalStrategy
         $this->validatePreApplicationAction->setStrategyArgumentCounts($this->argCounts);
 
         // apply without validation to avoid infinite recursion
-        $result = $this->ts->applyWithoutValidation($validate, $strategy);
+        $result = $this->ts->applyWithoutValidation([$validate], $strategy);
 
         if ($result === $this->ts->fail) {
             $error = $this->validatePreApplicationAction->getLastError();
             throw new \InvalidArgumentException("Invalid argument structure for the strategy: {$error}");
         }
+
+        return $result;
     }
 
     /**
@@ -173,7 +175,7 @@ class TraversalStrategy
      * @param array $strategy
      * @param int $argCount
      */
-    private function validateBeforeRegistering(string $strategyKey, array $strategy, int $argCount): void
+    private function validateAndSanitiseBeforeRegistering(string $strategyKey, array $strategy, int $argCount)
     {
         if (in_array($strategyKey, self::INBUILT_STRATEGIES)) {
             throw new \InvalidArgumentException("Cannot overwrite inbuilt strategy key: {$strategyKey}");
@@ -187,7 +189,7 @@ class TraversalStrategy
             // register without validation to avoid infinite recursion
             $this->ts->registerWithoutValidation(
                 $validate,
-                ['seq', ['adhoc', 'fail', $a], ['all', [$validate]]], // top-down application of $a
+                ['seq', ['adhoc', ['fail'], $a], ['all', [$validate]]], // top-down application of $a
                 0
             );
         }
@@ -197,12 +199,14 @@ class TraversalStrategy
         );
 
         // apply without validation to avoid infinite recursion
-        $result = $this->ts->applyWithoutValidation($validate, $strategy);
+        $result = $this->ts->applyWithoutValidation([$validate], $strategy);
 
         if ($result === $this->ts->fail) {
             $error = $this->validatePreRegistrationAction->getLastError();
             throw new \InvalidArgumentException("Invalid argument structure for the strategy: {$error}");
         }
+
+        return $result;
     }
 
     /**
@@ -212,7 +216,7 @@ class TraversalStrategy
      */
     public function registerStrategy(string $key, array $expansion, int $argCount): void
     {
-        $this->validateBeforeRegistering($key, $expansion, $argCount);
+        $expansion = $this->validateAndSanitiseBeforeRegistering($key, $expansion, $argCount);
         $this->registerWithoutValidation($key, $expansion, $argCount);
     }
 
@@ -229,7 +233,7 @@ class TraversalStrategy
      */
     public function apply($s, $datum)
     {
-        $this->validateBeforeApplication($s);
+        $s = $this->validateAndSanitise($s);
         return $this->applyWithoutValidation($s, $datum);
     }
 
@@ -240,7 +244,7 @@ class TraversalStrategy
      */
     private function applyWithoutValidation($s, $datum)
     {
-        $this->push($s, $datum);
+        $this->stack->push($s, $datum);
         $currentDatum = $datum;
 
         do {
@@ -327,8 +331,8 @@ class TraversalStrategy
     {
         $this->stack->pop();
 
-        $this->push([self::SEQ_INTERMEDIATE, $s2], $this->fail);
-        $this->push($s1, $previousResult);
+        $this->stack->push([self::SEQ_INTERMEDIATE, $s2], $this->fail);
+        $this->stack->push($s1, $previousResult);
 
         return null; // always non-terminal
     }
@@ -339,7 +343,7 @@ class TraversalStrategy
 
         if ($this->fail !== $previousResult) {
             $this->stack->pop();
-            $this->push($s2, $previousResult);
+            $this->stack->push($s2, $previousResult);
             $res = null;
         }
 
@@ -350,9 +354,9 @@ class TraversalStrategy
     {
         $this->stack->pop(); // remove self
 
-        $this->push($s2, $this->fail);
-        $this->push([self::CHOICE_INTERMEDIATE], $previousResult);
-        $this->push($s1, $previousResult);
+        $this->stack->push($s2, $this->fail);
+        $this->stack->push([self::CHOICE_INTERMEDIATE], $previousResult);
+        $this->stack->push($s1, $previousResult);
 
         return null; // always non-terminal
     }
@@ -378,9 +382,9 @@ class TraversalStrategy
         if ($unprocessed) {
             $this->stack->pop();
 
-            $this->push([self::ALL_INTERMEDIATE, $s1], $previousResult, $unprocessed, []);
-            $this->push($s1, $unprocessed[0]);
-            $this->push([self::NOP]); // only here to be immediately popped
+            $this->stack->push([self::ALL_INTERMEDIATE, $s1], $previousResult, $unprocessed, []);
+            $this->stack->push($s1, $unprocessed[0]);
+            $this->stack->push([self::NOP]); // only here to be immediately popped
             $res = $unprocessed[0];
         }
 
@@ -404,9 +408,9 @@ class TraversalStrategy
             if ($unprocessed) { // there's more to process
                 $this->stack->pop();
 
-                $this->push([self::ALL_INTERMEDIATE, $s1], $originalResult, $unprocessed, $processed);
-                $this->push($s1, $unprocessed[0]);
-                $this->push([self::NOP]); // only here to be popped
+                $this->stack->push([self::ALL_INTERMEDIATE, $s1], $originalResult, $unprocessed, $processed);
+                $this->stack->push($s1, $unprocessed[0]);
+                $this->stack->push([self::NOP]); // only here to be popped
                 $res = $unprocessed[0];
             } else {
                 $this->childHandler->setChildren($originalResult, $processed);
@@ -427,9 +431,9 @@ class TraversalStrategy
             $this->stack->pop();
 
             // not interested in previously processed results: thus null
-            $this->push([self::ONE_INTERMEDIATE, $s1], null, $unprocessed, null);
-            $this->push($s1, $unprocessed[0]);
-            $this->push([self::NOP]); // only here to be popped
+            $this->stack->push([self::ONE_INTERMEDIATE, $s1], null, $unprocessed, null);
+            $this->stack->push($s1, $unprocessed[0]);
+            $this->stack->push([self::NOP]); // only here to be popped
             $res = $unprocessed[0];
         }
 
@@ -450,9 +454,9 @@ class TraversalStrategy
                 $this->stack->pop();
 
                 // not interested in previously processed results: thus null
-                $this->push([self::ONE_INTERMEDIATE, $s1], null, $unprocessed, null);
-                $this->push($s1, $unprocessed[0]);
-                $this->push([self::NOP]); // only here to be popped
+                $this->stack->push([self::ONE_INTERMEDIATE, $s1], null, $unprocessed, null);
+                $this->stack->push($s1, $unprocessed[0]);
+                $this->stack->push([self::NOP]); // only here to be popped
                 $res = $unprocessed[0];
             }
 
@@ -476,7 +480,7 @@ class TraversalStrategy
 
         if (!$applied) {
             $this->stack->pop(); // remove self, fully resolved
-            $this->push($s, $previousResult); // resolve strategy $s with $d
+            $this->stack->push($s, $previousResult); // resolve strategy $s with $d
         }
 
         return $res;
@@ -499,25 +503,8 @@ class TraversalStrategy
         });
 
         $this->stack->pop();
-        $this->push($strategy, $originalDatum);
+        $this->stack->push($strategy, $originalDatum);
 
         return null; // always non-terminal
-    }
-
-    private function push($strategy, $datum = null, ?array $unprocessed = null, ?array $processed = null): void
-    {
-        $strategy = $this->sanitiseStrategy($strategy);
-        $this->stack->push($strategy, $datum, $unprocessed, $processed);
-    }
-
-    private function sanitiseStrategy($s)
-    {
-        if (is_string($s)
-            && ($s == self::FAIL || $s == self::ID || ($this->argCounts[$s] == 0))
-        ) {
-            $s = [$s];
-        }
-
-        return $s;
     }
 }
