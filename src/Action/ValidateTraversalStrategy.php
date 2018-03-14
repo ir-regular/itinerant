@@ -8,7 +8,7 @@ use JaneOlszewska\Itinerant\TraversalStrategy;
 /**
  * Action internal to library: validates every node of a traversal strategy supplied to TraversalStrategy::apply()
  */
-class ValidateTraversalStrategy implements ActionInterface
+class ValidateTraversalStrategy
 {
     /** @var ChildHandlerInterface */
     protected $childHandler;
@@ -43,11 +43,7 @@ class ValidateTraversalStrategy implements ActionInterface
         return $this->lastError;
     }
 
-    /**
-     * @param mixed $d
-     * @return bool
-     */
-    public function isApplicableTo($d): bool
+    public function __invoke($d)
     {
         $isApplicable = true;
 
@@ -58,16 +54,12 @@ class ValidateTraversalStrategy implements ActionInterface
             }
         }
 
-        if (!$isApplicable) {
+        if ($isApplicable) {
+            return $d;
+        } else {
             $this->lastError = print_r($d, true); // todo: better error reporting
+            return null;
         }
-
-        return $isApplicable;
-    }
-
-    public function applyTo($d)
-    {
-        return $d; // no application necessary: isApplicableTo combined with adhoc(fail,a) does all the heavy lifting
     }
 
     /**
@@ -91,7 +83,7 @@ class ValidateTraversalStrategy implements ActionInterface
      */
     protected function isAction($d): bool
     {
-        return ($d instanceof ActionInterface) || is_callable($d);
+        return is_callable($d);
     }
 
     /**

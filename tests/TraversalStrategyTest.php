@@ -2,7 +2,6 @@
 
 namespace JaneOlszewska\Tests\Itinerant;
 
-use JaneOlszewska\Itinerant\Action\ActionInterface;
 use JaneOlszewska\Itinerant\ChildHandler\ViaGetter;
 use JaneOlszewska\Itinerant\TraversalStrategy;
 use PHPUnit\Framework\TestCase;
@@ -240,7 +239,7 @@ class TraversalStrategyTest extends TestCase
 
         // register 'attr' strategy: this is a rather roundabout way of creating a node-by-attribute selector.
 
-        $action = new class implements ActionInterface
+        $action = new class
         {
             /** @var string */
             private $currentSearch;
@@ -250,14 +249,13 @@ class TraversalStrategyTest extends TestCase
                 $this->currentSearch = $s;
             }
 
-            public function isApplicableTo($d): bool
+            public function __invoke($d)
             {
-                return method_exists($d, 'getName') && $d->getName() == $this->currentSearch;
-            }
+                if (method_exists($d, 'getName') && ($d->getName() == $this->currentSearch)) {
+                    return $d;
+                }
 
-            public function applyTo($d)
-            {
-                return $d;
+                return null;
             }
         };
 
@@ -331,7 +329,7 @@ class TraversalStrategyTest extends TestCase
      */
     private function getNodeArrayDatum(array $children)
     {
-        $n = new class($children)
+        $n = new class
         {
             private $name = 'array'; // only here so that it's easily distinguishable in debug variables
 
@@ -355,7 +353,7 @@ class TraversalStrategyTest extends TestCase
 
     private function getSetNameAction($newName)
     {
-        return new class($newName) implements ActionInterface
+        return new class($newName)
         {
             private $newName;
 
@@ -364,34 +362,32 @@ class TraversalStrategyTest extends TestCase
                 $this->newName = $newName;
             }
 
-            public function isApplicableTo($d): bool
+            public function __invoke($d)
             {
-                return method_exists($d, 'setName');
-            }
+                if (method_exists($d, 'setName')) {
+                    $d->setName($this->newName);
+                    return $d;
+                }
 
-            public function applyTo($d)
-            {
-                $d->setName($this->newName);
-                return $d;
+                return null;
             }
         };
     }
 
     private function getLabelWithOrdAction()
     {
-        return new class implements ActionInterface
+        return new class
         {
             private static $ord = 1;
 
-            public function isApplicableTo($d): bool
+            public function __invoke($d)
             {
-                return method_exists($d, 'setName');
-            }
+                if (method_exists($d, 'setName')) {
+                    $d->setName(self::$ord++);
+                    return $d;
+                }
 
-            public function applyTo($d)
-            {
-                $d->setName(self::$ord++);
-                return $d;
+                return null;
             }
         };
     }

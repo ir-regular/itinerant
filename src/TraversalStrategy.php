@@ -2,7 +2,6 @@
 
 namespace JaneOlszewska\Itinerant;
 
-use JaneOlszewska\Itinerant\Action\ActionInterface;
 use JaneOlszewska\Itinerant\Action\ValidateTraversalStrategy;
 use JaneOlszewska\Itinerant\Action\ValidateUserRegisteredTraversalStrategy;
 use JaneOlszewska\Itinerant\ChildHandler\ChildHandlerInterface;
@@ -546,15 +545,10 @@ class TraversalStrategy
         $applied = false;
         $res = null; // non-terminal by default
 
-        if ($a instanceof ActionInterface) {
-            if ($a->isApplicableTo($previousResult)) {
-                $applied = true;
-                $res = $a->applyTo($previousResult); // strategy resolved to applied action; terminal
-            }
-        } elseif (is_callable($a)) {
+        if (is_callable($a)) {
             // strategy resolved to applied action; terminal unless null returned
             // todo: document this clearly somewhere
-            $res = call_user_func($a, $previousResult);
+            $res = $a($previousResult);
             $applied = ($res !== null);
         }
 
