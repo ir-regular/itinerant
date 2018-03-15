@@ -21,60 +21,17 @@ class TraversalStrategy
     const ADHOC = 'adhoc';
 
     // intermediate stage, required due to passing of results
-    private const CHOICE_INTERMEDIATE = 'choice-intermediate';
-    private const SEQ_INTERMEDIATE = 'seq-intermediate';
-    private const ALL_INTERMEDIATE = 'all-intermediate';
-    private const ONE_INTERMEDIATE = 'one-intermediate';
-    private const NOP = 'nop';
-
-    private const INBUILT_STRATEGIES = [
-        self::ID,
-        self::FAIL,
-        self::SEQ,
-        self::CHOICE,
-        self::ALL,
-        self::ONE,
-        self::ADHOC,
-        self::CHOICE_INTERMEDIATE,
-        self::SEQ_INTERMEDIATE,
-        self::ALL_INTERMEDIATE,
-        self::ONE_INTERMEDIATE,
-        self::NOP
-    ];
-
-    /** @var ValidateTraversalStrategy */
-    private $validatePreApplicationAction;
-
-    /** @var ValidateUserRegisteredTraversalStrategy */
-    private $validatePreRegistrationAction;
+    protected const CHOICE_INTERMEDIATE = 'choice-intermediate';
+    protected const SEQ_INTERMEDIATE = 'seq-intermediate';
+    protected const ALL_INTERMEDIATE = 'all-intermediate';
+    protected const ONE_INTERMEDIATE = 'one-intermediate';
+    protected const NOP = 'nop';
 
     /** @var ChildHandlerInterface */
     private $childHandler;
 
     /** @var array */
-    private $strategies = [
-        // Note that values for predefined strategies currently not in use
-        self::ID => [self::class, 'id'],
-        self::FAIL => [self::class, 'fail'],
-        self::SEQ => [self::class, 'seq'],
-        self::CHOICE => [self::class, 'choice'],
-        self::ALL => [self::class, 'all'],
-        self::ONE => [self::class, 'one'],
-        self::ADHOC => [self::class, 'adhoc'],
-    ];
-
-    /** @var int[] */
-    private $argCounts = [
-        // Note that this array does not include non-public predefined strategies, which are therefore disallowed
-        // by validation and made usable only internally
-        self::ID => 0,
-        self::FAIL => 0,
-        self::SEQ => 2,
-        self::CHOICE => 2,
-        self::ALL => 1,
-        self::ONE => 1,
-        self::ADHOC => 2,
-    ];
+    private $strategies = [];
 
     /** @var StrategyStack */
     private $stack;
@@ -110,105 +67,6 @@ class TraversalStrategy
         return $this->fail;
     }
 
-    /** @var TraversalStrategy */
-    private $ts;
-
-    /**
-     * @return TraversalStrategy
-     */
-    private function getInternalValidationTS()
-    {
-        if (!isset($this->ts)) {
-            $this->ts = new TraversalStrategy(new RestOfElements(), false);
-        }
-
-        return $this->ts;
-    }
-
-    /**
-     * Witness the ultimate coolness: TraversalStrategy is self-validating!
-     *
-     * @param mixed $strategy
-     * @throws \InvalidArgumentException if $strategy is found invalid
-     */
-    private function validateAndSanitise($strategy)
-    {
-        $validate = 'validate';
-
-        if (($ts = $this->getInternalValidationTS()) && !isset($ts->strategies[$validate])) {
-            $this->validatePreApplicationAction = new ValidateTraversalStrategy($this->ts->childHandler);
-            $a = $this->validatePreApplicationAction;
-            $isNotCallableArray = function ($d) {
-                return (is_array($d) && is_callable($d)) ? null : $d;
-            };
-            // register without validation to avoid infinite recursion
-            $this->ts->registerWithoutValidation(
-                $validate,
-                ['choice',
-                    ['seq',
-                        ['adhoc', ['fail'], $isNotCallableArray], // if doesn't fail, safe to nest further
-                        ['seq', ['adhoc', ['fail'], $a], ['all', [$validate]]], // top-down application of $a
-                    ],
-                    ['adhoc', ['fail'], $a] // just validate without nesting
-                ],
-                0
-            );
-        }
-
-        $this->validatePreApplicationAction->setStrategyArgumentCounts($this->argCounts);
-
-        // apply without validation to avoid infinite recursion
-        $result = $this->ts->applyWithoutValidation([$validate], $strategy);
-
-        if ($result === $this->ts->fail) {
-            $error = $this->validatePreApplicationAction->getLastError();
-            throw new \InvalidArgumentException("Invalid argument structure for the strategy: {$error}");
-        }
-
-        return $result;
-    }
-
-    /**
-     * Needs slightly expanded validation rules for registered strategies: they contain argument substitution markers.
-     *
-     * @param string $strategyKey
-     * @param array $strategy
-     * @param int $argCount
-     */
-    private function validateAndSanitiseBeforeRegistering(string $strategyKey, array $strategy, int $argCount)
-    {
-        if (in_array($strategyKey, self::INBUILT_STRATEGIES)) {
-            throw new \InvalidArgumentException("Cannot overwrite inbuilt strategy key: {$strategyKey}");
-        }
-
-        $validate = 'validate_registered';
-
-        if (($ts = $this->getInternalValidationTS()) && !isset($ts->strategies[$validate])) {
-            $this->validatePreRegistrationAction = new ValidateUserRegisteredTraversalStrategy($this->ts->childHandler);
-            $a = $this->validatePreRegistrationAction;
-            // register without validation to avoid infinite recursion
-            $this->ts->registerWithoutValidation(
-                $validate,
-                ['seq', ['adhoc', ['fail'], $a], ['all', [$validate]]], // top-down application of $a
-                0
-            );
-        }
-
-        $this->validatePreRegistrationAction->setStrategyArgumentCounts(
-            array_merge([$strategyKey => $argCount], $this->argCounts)
-        );
-
-        // apply without validation to avoid infinite recursion
-        $result = $this->ts->applyWithoutValidation([$validate], $strategy);
-
-        if ($result === $this->ts->fail) {
-            $error = $this->validatePreRegistrationAction->getLastError();
-            throw new \InvalidArgumentException("Invalid argument structure for the strategy: {$error}");
-        }
-
-        return $result;
-    }
-
     /**
      * @param string $key
      * @param array $expansion
@@ -216,14 +74,13 @@ class TraversalStrategy
      */
     public function registerStrategy(string $key, array $expansion, int $argCount): void
     {
-        $expansion = $this->validateAndSanitiseBeforeRegistering($key, $expansion, $argCount);
-        $this->registerWithoutValidation($key, $expansion, $argCount);
+        // @TODO: remove $argCount, have ValidatedTraversalStrategy figure it out on its own
+        $this->strategies[$key] = $expansion;
     }
 
-    private function registerWithoutValidation(string $key, array $expansion, int $argCount): void
+    public function isStrategyRegistered(string $key): bool
     {
-        $this->strategies[$key] = $expansion;
-        $this->argCounts[$key] = $argCount;
+        return isset($this->strategies[$key]);
     }
 
     /**
@@ -232,17 +89,6 @@ class TraversalStrategy
      * @return mixed
      */
     public function apply($s, $datum)
-    {
-        $s = $this->validateAndSanitise($s);
-        return $this->applyWithoutValidation($s, $datum);
-    }
-
-    /**
-     * @param array|string $s
-     * @param mixed $datum
-     * @return mixed
-     */
-    private function applyWithoutValidation($s, $datum)
     {
         $this->stack->push($s, $datum);
         $currentDatum = $datum;

@@ -107,7 +107,7 @@ $childHandler = new ViaGetter();
 // Define a unique node representing the state of failure
 $fail = ...;
 
-$ts = new TraversalStrategy($childHandler, $fail);
+$ts = new ValidatedTraversalStrategy($childHandler, $fail);
 
 // Define how to perform depth-first traversal of all nodes
 $ts->registerStrategy('full_td', ['seq', '0', ['all', ['full_td', '0']]], 1);
@@ -126,8 +126,9 @@ comes from, by the way.
 
 ## TODO
 
+- giant refactoring
 - change terms used across the library (strategy and action)
 - make it easier to generate strategy definitions
-- is it necessary to instantiate `TraversalStrategy`?
+- is it necessary to instantiate `ValidatedTraversalStrategy`?
 - should strategies be registered per-instance or in a static variable?
 - how to provide a good number of preconfigured basic strategies?
