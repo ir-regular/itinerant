@@ -2,14 +2,16 @@
 
 namespace JaneOlszewska\Itinerant;
 
-use JaneOlszewska\Itinerant\Action\ValidateTraversalStrategy;
-use JaneOlszewska\Itinerant\Action\ValidateUserRegisteredTraversalStrategy;
 use JaneOlszewska\Itinerant\ChildHandler\ChildHandlerInterface;
-use JaneOlszewska\Itinerant\ChildHandler\RestOfElements;
+use JaneOlszewska\Itinerant\Strategy\Adhoc;
+use JaneOlszewska\Itinerant\Strategy\All;
+use JaneOlszewska\Itinerant\Strategy\Choice;
+use JaneOlszewska\Itinerant\Strategy\Fail;
+use JaneOlszewska\Itinerant\Strategy\Id;
+use JaneOlszewska\Itinerant\Strategy\One;
+use JaneOlszewska\Itinerant\Strategy\Seq;
+use JaneOlszewska\Itinerant\Strategy\UserDefined;
 
-/**
- * @todo Documentation ¯\_(ツ)_/¯
- */
 class TraversalStrategy
 {
     const ID = 'id';
@@ -19,13 +21,6 @@ class TraversalStrategy
     const ALL = 'all';
     const ONE = 'one';
     const ADHOC = 'adhoc';
-
-    // intermediate stage, required due to passing of results
-    protected const CHOICE_INTERMEDIATE = 'choice-intermediate';
-    protected const SEQ_INTERMEDIATE = 'seq-intermediate';
-    protected const ALL_INTERMEDIATE = 'all-intermediate';
-    protected const ONE_INTERMEDIATE = 'one-intermediate';
-    protected const NOP = 'nop';
 
     /** @var ChildHandlerInterface */
     private $childHandler;
@@ -83,8 +78,32 @@ class TraversalStrategy
         return isset($this->strategies[$key]);
     }
 
+    private function getStrategy($key)
+    {
+        switch ($key) {
+            case self::ID:
+                return new Id();
+            case self::FAIL:
+                return new Fail($this->fail);
+            case self::SEQ:
+                return new Seq($this->stack, $this->fail);
+            case self::CHOICE:
+                return new Choice($this->stack, $this->fail);
+            case self::ALL:
+                return new All($this->stack, $this->fail, $this->childHandler);
+            case self::ONE:
+                return new One($this->stack, $this->fail, $this->childHandler);
+            case self::ADHOC:
+                return new Adhoc($this->stack);
+            default:
+                return $this->strategies[$key]
+                    ? new UserDefined($this->stack, $this->strategies[$key])
+                    : null;
+        }
+    }
+
     /**
-     * @param array|string $s
+     * @param array $s
      * @param mixed $datum
      * @return mixed
      */
@@ -94,62 +113,43 @@ class TraversalStrategy
         $currentDatum = $datum;
 
         do {
-            $key = $this->stack->getCurrentStratKey();
+            $strategy = $this->stack->getCurrentStrat();
             $args = $this->stack->getCurrentStratArguments();
 
-            // todo: so this could be simplified. Later. I'm in the dirty hacking mode.
-
-            switch ($key) {
-                case self::FAIL:
-                    $result = $this->fail($currentDatum);
-                    break;
-                case self::ID:
-                    $result = $this->id($currentDatum);
-                    break;
-                case self::SEQ:
-                    $result = $this->seq($currentDatum, ...$args);
-                    break;
-                case self::SEQ_INTERMEDIATE:
-                    $result = $this->seqIntermediate($currentDatum, ...$args);
-                    break;
-                case self::CHOICE:
-                    $result = $this->choice($currentDatum, ...$args);
-                    break;
-                case self::CHOICE_INTERMEDIATE:
-                    $result = $this->choiceIntermediate($currentDatum);
-                    break;
-                case self::ALL:
-                    $result = $this->all($currentDatum, ...$args);
-                    break;
-                case self::ALL_INTERMEDIATE:
-                    $result = $this->allIntermediate($currentDatum, ...$args);
-                    break;
-                case self::ONE:
-                    $result = $this->one($currentDatum, ...$args);
-                    break;
-                case self::ONE_INTERMEDIATE:
-                    $result = $this->oneIntermediate($currentDatum, ...$args);
-                    break;
-                case self::ADHOC:
-                    $result = $this->adhoc($currentDatum, ...$args);
-                    break;
-                case self::NOP:
+            if (is_string($strategy)) {
+                if (!$strategy = $this->getStrategy($strategy)) {
                     /*
+                     * That means null/NOP.
+                     *
                      * Including this just in case there is some logic error in the library.
                      *
-                     * In actual use NOP is only pushed as a filler, to be immediately popped in the last lines of
+                     * In actual use null is only pushed as a filler, to be immediately popped in the last lines of
                      * the do...while loop when it is discovered $result is not null - see all/one implementations.
                      */
-                    throw new \DomainException('Logic error: NOP should never be evaluated');
-                    break;
-                default:
-                    $result = $this->userDefined($currentDatum, ...$args);
+                    throw new \DomainException('Logic error: null/NOP should never be evaluated');
+                }
             }
+
+            $result = $strategy($currentDatum, ...$args);
 
             if ($result === null) {
                 // strategy non-terminal, continue applying it to the same datum
                 continue;
             }
+
+
+            // @TODO:
+            // have a proper method on strategies that indicates whether they are terminal or not
+            // and/or figure out how to better return results
+            //
+            // because I hate how they currently store the arguments and the structure being worked upon
+            // (see stack, urgh) and it should simply have a pointer to the current node
+            // (maybe a stack of pointers)
+            //
+            // and children should be coming from an immutable iterator of some sort
+            // (gather the results separately)
+
+
 
             // problem: when allowing result=null to indicate non-terminal strategy,
             // how to achieve the passing/preservation of result?
@@ -161,196 +161,5 @@ class TraversalStrategy
         } while (!$this->stack->isEmpty());
 
         return $result;
-    }
-
-    private function id($previousResult)
-    {
-        return $previousResult;
-    }
-
-    private function fail($previousResult)
-    {
-        return $this->fail;
-    }
-
-    private function seq($previousResult, $s1, $s2)
-    {
-        $this->stack->pop();
-
-        $this->stack->push([self::SEQ_INTERMEDIATE, $s2], $this->fail);
-        $this->stack->push($s1, $previousResult);
-
-        return null; // always non-terminal
-    }
-
-    private function seqIntermediate($previousResult, $s2)
-    {
-        $res = $previousResult;
-
-        if ($this->fail !== $previousResult) {
-            $this->stack->pop();
-            $this->stack->push($s2, $previousResult);
-            $res = null;
-        }
-
-        return $res;
-    }
-
-    private function choice($previousResult, $s1, $s2)
-    {
-        $this->stack->pop(); // remove self
-
-        $this->stack->push($s2, $this->fail);
-        $this->stack->push([self::CHOICE_INTERMEDIATE], $previousResult);
-        $this->stack->push($s1, $previousResult);
-
-        return null; // always non-terminal
-    }
-
-    private function choiceIntermediate($previousResult)
-    {
-        $res = $this->stack->getOriginalDatum();
-
-        if ($this->fail !== $previousResult) {
-            $this->stack->pop(); // pop self; $s2 will be auto-popped
-            $res = $previousResult; // pass $s1 result
-        }
-
-        return $res;
-    }
-
-    private function all($previousResult, $s1)
-    {
-        // if $d has no children: return $d, strategy terminal independent of what $s1 actually is
-        $res = $previousResult;
-        $unprocessed = $this->childHandler->getChildren($previousResult);
-
-        if ($unprocessed) {
-            $this->stack->pop();
-
-            $this->stack->push([self::ALL_INTERMEDIATE, $s1], $previousResult, $unprocessed, []);
-            $this->stack->push($s1, $unprocessed[0]);
-            $this->stack->push([self::NOP]); // only here to be immediately popped
-            $res = $unprocessed[0];
-        }
-
-        return $res;
-    }
-
-    private function allIntermediate($previousResult, $s1)
-    {
-        $res = $previousResult;
-
-        if ($this->fail !== $previousResult) {
-            $originalResult = $this->stack->getOriginalDatum();
-
-            // if the result of the last child resolution wasn't fail, continue
-            $unprocessed = $this->stack->getUnprocessedChildren();
-            array_shift($unprocessed);
-
-            $processed = $this->stack->getProcessedChildren();
-            $processed[] = $previousResult;
-
-            if ($unprocessed) { // there's more to process
-                $this->stack->pop();
-
-                $this->stack->push([self::ALL_INTERMEDIATE, $s1], $originalResult, $unprocessed, $processed);
-                $this->stack->push($s1, $unprocessed[0]);
-                $this->stack->push([self::NOP]); // only here to be popped
-                $res = $unprocessed[0];
-            } else {
-                $this->childHandler->setChildren($originalResult, $processed);
-                $res = $originalResult;
-            }
-        }
-
-        return $res;
-    }
-
-    private function one($previousResult, $s1)
-    {
-        // if $d has no children: fail, strategy terminal independent of what $s1 actually is
-        $res = $this->fail;
-        $unprocessed = $this->childHandler->getChildren($previousResult);
-
-        if ($unprocessed) {
-            $this->stack->pop();
-
-            // not interested in previously processed results: thus null
-            $this->stack->push([self::ONE_INTERMEDIATE, $s1], null, $unprocessed, null);
-            $this->stack->push($s1, $unprocessed[0]);
-            $this->stack->push([self::NOP]); // only here to be popped
-            $res = $unprocessed[0];
-        }
-
-        return $res;
-    }
-
-    private function oneIntermediate($previousResult, $s1)
-    {
-        $res = $previousResult;
-
-        if ($this->fail === $previousResult) {
-            // if the result of the last child resolution was fail, need to try with the next one (if exists)
-
-            $unprocessed = $this->stack->getUnprocessedChildren();
-            array_shift($unprocessed);
-
-            if ($unprocessed) { // fail, but there's more to process
-                $this->stack->pop();
-
-                // not interested in previously processed results: thus null
-                $this->stack->push([self::ONE_INTERMEDIATE, $s1], null, $unprocessed, null);
-                $this->stack->push($s1, $unprocessed[0]);
-                $this->stack->push([self::NOP]); // only here to be popped
-                $res = $unprocessed[0];
-            }
-
-            // else: well we processed everything and nothing succeeded so: FAIL ($res === $previousResult === FAIL)
-        }
-
-        return $res;
-    }
-
-    private function adhoc($previousResult, $s, $a)
-    {
-        $applied = false;
-        $res = null; // non-terminal by default
-
-        if (is_callable($a)) {
-            // strategy resolved to applied action; terminal unless null returned
-            // todo: document this clearly somewhere
-            $res = $a($previousResult);
-            $applied = ($res !== null);
-        }
-
-        if (!$applied) {
-            $this->stack->pop(); // remove self, fully resolved
-            $this->stack->push($s, $previousResult); // resolve strategy $s with $d
-        }
-
-        return $res;
-    }
-
-    private function userDefined($previousResult, ...$args)
-    {
-        $key = $this->stack->getCurrentStratKey();
-
-        $originalDatum = $this->stack->getOriginalDatum();
-
-        $strategy = $this->strategies[$key];
-
-        // substitute numeric placeholders with the actual arguments
-        // @TODO: yep, it's ugly, and it doesn't validate the index
-        array_walk_recursive($strategy, function (&$value) use ($args) {
-            if (is_numeric($value)) {
-                $value = $args[(int) $value];
-            }
-        });
-
-        $this->stack->pop();
-        $this->stack->push($strategy, $originalDatum);
-
-        return null; // always non-terminal
     }
 }

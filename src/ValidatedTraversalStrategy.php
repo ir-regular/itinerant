@@ -16,11 +16,6 @@ class ValidatedTraversalStrategy extends TraversalStrategy
         self::ALL,
         self::ONE,
         self::ADHOC,
-        self::CHOICE_INTERMEDIATE,
-        self::SEQ_INTERMEDIATE,
-        self::ALL_INTERMEDIATE,
-        self::ONE_INTERMEDIATE,
-        self::NOP
     ];
     protected const STRATEGY_VALIDATE = 'validate';
     const STRATEGY_VALIDATE_REGISTERED = 'validate_registered';
@@ -57,6 +52,11 @@ class ValidatedTraversalStrategy extends TraversalStrategy
         parent::registerStrategy($key, $expansion, $argCount);
     }
 
+    /**
+     * @param array|string $s
+     * @param mixed $datum
+     * @return mixed
+     */
     public function apply($s, $datum)
     {
         $s = $this->validateAndSanitise($s);
@@ -105,7 +105,8 @@ class ValidatedTraversalStrategy extends TraversalStrategy
     /**
      * Witness the ultimate coolness: TraversalStrategy is self-validating!
      *
-     * @param mixed $strategy
+     * @param array|string $strategy
+     * @return array
      * @throws \InvalidArgumentException if $strategy is found invalid
      */
     private function validateAndSanitise($strategy)

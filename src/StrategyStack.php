@@ -25,14 +25,11 @@ class StrategyStack
         return array_pop($this->stack);
     }
 
-    public function push($strategy, $datum = null, ?array $unprocessed = null, ?array $processed = null): void
+    public function push(array $strategy, $datum = null, ?array $unprocessed = null, ?array $processed = null): void
     {
-        $stratKey = array_shift($strategy);
-        $stratArgs = $strategy;
-
         // strat, datum, childrenUnprocessed, childrenProcessed
         $this->stack[] = [
-            'strat' => [$stratKey, $stratArgs],
+            'strat' => $strategy,
             'input' => [$datum, $unprocessed],
             'result' => [null, $processed]
         ];
@@ -44,10 +41,10 @@ class StrategyStack
 
     public function getCurrentStratArguments()
     {
-        return $this->stack[$this->last]['strat'][1];
+        return array_slice($this->stack[$this->last]['strat'], 1);
     }
 
-    public function getCurrentStratKey()
+    public function getCurrentStrat()
     {
         return $this->stack[$this->last]['strat'][0];
     }

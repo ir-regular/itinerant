@@ -236,6 +236,9 @@ class TraversalStrategyTest extends TestCase
 
         $this->ts->registerStrategy('attr', ['adhoc', ['fail'], $action], 0);
 
+        $action->setCurrentSearch('2'); // look for node with name == '2'
+        $this->assertEquals($secondNode, $this->ts->apply(['attr'], $secondNode)); // yep, it matches
+
         // register strategy that traverses the graph top-down and return the first element that successfully fulfils
         // whatever strategy was provided as 1st arg
 
@@ -243,7 +246,6 @@ class TraversalStrategyTest extends TestCase
 
         // perform the actual test: search for an element with name == '2'
 
-        $action->setCurrentSearch('2');
         $result = $this->ts->apply(['once_td', ['attr']], $ordNodeOfNodes);
         $this->assertEquals($secondNode, $result);
     }

@@ -54,7 +54,7 @@ class ValidatedTraversalStrategyTest extends TestCase
         $this->assertEquals(['root node', ['whatever', 'whatever']], $this->ts->apply(['all', 'meh'], $nodes));
     }
 
-        public function testApplyStrategyValidation()
+    public function testApplyStrategyValidation()
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessageRegExp("/Invalid argument structure for the strategy: .+/");
@@ -76,6 +76,6 @@ class ValidatedTraversalStrategyTest extends TestCase
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessageRegExp("/Cannot overwrite inbuilt strategy key: .+/");
-        $this->ts->registerStrategy('nop', ['fail'], 0);
+        $this->ts->registerStrategy('id', ['fail'], 0);
     }
 }
