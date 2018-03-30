@@ -2,6 +2,7 @@
 
 namespace JaneOlszewska\Itinerant\Strategy;
 
+use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 use JaneOlszewska\Itinerant\StrategyStack;
 
 class UserDefined
@@ -22,7 +23,7 @@ class UserDefined
         $this->strategy = $strategy;
     }
 
-    public function __invoke($previousResult, ...$args)
+    public function __invoke(NodeAdapterInterface $previousResult, ...$args)
     {
         $strategy = $this->fillPlaceholders($this->strategy, $args);
 

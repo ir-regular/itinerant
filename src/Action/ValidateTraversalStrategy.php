@@ -2,7 +2,8 @@
 
 namespace JaneOlszewska\Itinerant\Action;
 
-use JaneOlszewska\Itinerant\ChildHandler\ChildHandlerInterface;
+use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
+use JaneOlszewska\Itinerant\NodeAdapter\RestOfElements;
 use JaneOlszewska\Itinerant\TraversalStrategy;
 
 /**
@@ -10,22 +11,11 @@ use JaneOlszewska\Itinerant\TraversalStrategy;
  */
 class ValidateTraversalStrategy
 {
-    /** @var ChildHandlerInterface */
-    protected $childHandler;
-
     /** @var int[] */
     protected $argumentCountsPerStrategyKey;
 
     /** @var string|null */
     protected $lastError;
-
-    /**
-     * @param ChildHandlerInterface $childHandler
-     */
-    public function __construct(ChildHandlerInterface $childHandler)
-    {
-        $this->childHandler = $childHandler;
-    }
 
     /**
      * @param int[] $argumentCountsPerStrategyKey
@@ -43,7 +33,7 @@ class ValidateTraversalStrategy
         return $this->lastError;
     }
 
-    public function __invoke($d)
+    public function __invoke(NodeAdapterInterface $d): ?NodeAdapterInterface
     {
         $isValid = true;
 
@@ -65,52 +55,56 @@ class ValidateTraversalStrategy
     }
 
     /**
-     * @param mixed $d
+     * @param NodeAdapterInterface $d
      * @return bool
      */
-    protected function isZeroArgumentNode($d): bool
+    protected function isZeroArgumentNode(NodeAdapterInterface $d): bool
     {
-        return is_string($d)
+        $strategy = $d->getValue();
+
+        return is_string($strategy)
             // inbuilt zero-argument strategies
-            && (TraversalStrategy::FAIL == $d
-                || TraversalStrategy::ID == $d
+            && (TraversalStrategy::FAIL == $strategy
+                || TraversalStrategy::ID == $strategy
                 // user-registered 0-argument strategies
-                || (isset($this->argumentCountsPerStrategyKey[$d])
-                    && 0 == $this->argumentCountsPerStrategyKey[$d]));
+                || (isset($this->argumentCountsPerStrategyKey[$strategy])
+                    && 0 == $this->argumentCountsPerStrategyKey[$strategy]));
     }
 
     /**
-     * @param mixed $d
+     * @param NodeAdapterInterface $d
      * @return bool
      */
-    protected function isAction($d): bool
+    protected function isAction(NodeAdapterInterface $d): bool
     {
-        return is_callable($d);
+        return is_callable($d->getValue());
     }
 
     /**
-     * @param $d
+     * @param NodeAdapterInterface $d
      * @return bool
      */
-    protected function isValidStrategy($d): bool
+    protected function isValidStrategy(NodeAdapterInterface $d): bool
     {
         $valid = false;
 
-        // a node is a valid strategy if it is an array
-        if (is_array($d)) {
-            // ...and its key (first element) is included in the list of valid strategies
-            if (isset($this->argumentCountsPerStrategyKey[$d[0]])) {
-                // ...and its argument count matches the
-                $argCount = $this->argumentCountsPerStrategyKey[$d[0]];
-                $valid = ($argCount == count($this->childHandler->getChildren($d)));
-            }
+        // a node is a valid strategy if...
+        $strategy = $d->getValue();
+
+        // ...its main node (key) is included in the list of valid strategies
+        if (isset($this->argumentCountsPerStrategyKey[$strategy])) {
+            // ...and the count of its children (arguments) count matches the registered count
+            $argCount = $this->argumentCountsPerStrategyKey[$strategy];
+            $arguments = $d->getChildren();
+            $valid = ($argCount == iterator_count($arguments));
         }
 
         return $valid;
     }
 
-    protected function sanitiseZeroArgumentNode($d)
+    protected function sanitiseZeroArgumentNode(NodeAdapterInterface $d)
     {
-        return [$d];
+        $sanitisedNode = [$d->getValue()];
+        return new RestOfElements($sanitisedNode);
     }
 }

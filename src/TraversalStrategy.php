@@ -2,7 +2,7 @@
 
 namespace JaneOlszewska\Itinerant;
 
-use JaneOlszewska\Itinerant\ChildHandler\ChildHandlerInterface;
+use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 use JaneOlszewska\Itinerant\Strategy\Adhoc;
 use JaneOlszewska\Itinerant\Strategy\All;
 use JaneOlszewska\Itinerant\Strategy\Choice;
@@ -22,42 +22,28 @@ class TraversalStrategy
     const ONE = 'one';
     const ADHOC = 'adhoc';
 
-    /** @var ChildHandlerInterface */
-    private $childHandler;
-
     /** @var array */
     private $strategies = [];
 
     /** @var StrategyStack */
     private $stack;
 
-    /** @var mixed */
+    /** @var NodeAdapterInterface */
     private $fail;
 
     /**
-     * TraversalStrategy constructor.
-     * @param ChildHandlerInterface $childHandler
      * @param mixed $fail A representation of "fail", valid for whatever nodes/adhoc methods will be used
      */
-    public function __construct(ChildHandlerInterface $childHandler, $fail)
+    public function __construct(NodeAdapterInterface $fail)
     {
         $this->stack = new StrategyStack();
-        $this->childHandler = $childHandler;
         $this->fail = $fail;
     }
 
     /**
-     * @return ChildHandlerInterface
+     * @return NodeAdapterInterface
      */
-    public function getChildHandler(): ChildHandlerInterface
-    {
-        return $this->childHandler;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getFail()
+    public function getFail(): NodeAdapterInterface
     {
         return $this->fail;
     }
@@ -90,9 +76,9 @@ class TraversalStrategy
             case self::CHOICE:
                 return new Choice($this->stack, $this->fail);
             case self::ALL:
-                return new All($this->stack, $this->fail, $this->childHandler);
+                return new All($this->stack, $this->fail);
             case self::ONE:
-                return new One($this->stack, $this->fail, $this->childHandler);
+                return new One($this->stack, $this->fail);
             case self::ADHOC:
                 return new Adhoc($this->stack);
             default:
@@ -104,10 +90,10 @@ class TraversalStrategy
 
     /**
      * @param array $s
-     * @param mixed $datum
-     * @return mixed
+     * @param NodeAdapterInterface $datum
+     * @return NodeAdapterInterface|null
      */
-    public function apply($s, $datum)
+    public function apply($s, NodeAdapterInterface $datum): ?NodeAdapterInterface
     {
         $this->stack->push($s, $datum);
         $currentDatum = $datum;

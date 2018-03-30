@@ -2,7 +2,9 @@
 
 namespace JaneOlszewska\Tests\Itinerant;
 
-use JaneOlszewska\Itinerant\ChildHandler\ViaGetter;
+use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
+use JaneOlszewska\Itinerant\NodeAdapter\RestOfElements;
+use JaneOlszewska\Itinerant\NodeAdapter\ViaGetter;
 use JaneOlszewska\Itinerant\TraversalStrategy;
 use PHPUnit\Framework\TestCase;
 
@@ -24,10 +26,9 @@ class TraversalStrategyTest extends TestCase
     {
         parent::setUp();
 
-        $childHandler = new ViaGetter();
         $this->fail = $this->getNodeDatum('fail');
 
-        $this->ts = new TraversalStrategy($childHandler, $this->fail);
+        $this->ts = new TraversalStrategy($this->fail);
     }
 
     public function testFail()
@@ -91,7 +92,8 @@ class TraversalStrategyTest extends TestCase
         $modifiedNode = $this->getNodeDatum($newName);
         $modifiedNodes = $this->getNodeArrayDatum($this->getNodes(2, $newName));
 
-        // adhoc on its own, not applying action and defaulting to 'fail' strategy
+        // adhoc on its own, not applying action (because only applicable to nodes with 'getName')
+        // and thus defaulting to 'fail' strategy
 
         $nodes = $this->getNodeArrayDatum([]);
         $this->assertEquals($this->fail, $this->ts->apply(['adhoc', ['fail'], $modifyAction], $nodes));
@@ -126,19 +128,19 @@ class TraversalStrategyTest extends TestCase
     {
         $nodeOfNodes = $this->getNodeArrayDatum(
             [
-                $this->getNodeArrayDatum($this->getNodes(2)),
-                $this->getNodeArrayDatum($this->getNodes(2)),
+                $this->getUnwrappedNodeArrayDatum($this->getNodes(2)),
+                $this->getUnwrappedNodeArrayDatum($this->getNodes(2)),
             ]
         );
         $ordNodeOfNodes = $this->getNodeArrayDatum(
             [
-                $this->getNodeArrayDatum([
-                    $this->getNodeDatum('1'),
-                    $this->getNodeDatum('2')
+                $this->getUnwrappedNodeArrayDatum([
+                    $this->getUnwrappedNodeDatum('1'),
+                    $this->getUnwrappedNodeDatum('2')
                 ]),
-                $this->getNodeArrayDatum([
-                    $this->getNodeDatum('3'),
-                    $this->getNodeDatum('4')
+                $this->getUnwrappedNodeArrayDatum([
+                    $this->getUnwrappedNodeDatum('3'),
+                    $this->getUnwrappedNodeDatum('4')
                 ])
             ]
         );
@@ -154,8 +156,8 @@ class TraversalStrategyTest extends TestCase
     public function testAdhocWithCallableAction()
     {
         $newName = 'modified!';
-        $modifyAction = function ($node) use ($newName) {
-            $node->setName($newName);
+        $modifyAction = function (NodeAdapterInterface $node) use ($newName) {
+            $node->getNode()->setName($newName);
             return $node;
         };
 
@@ -178,9 +180,9 @@ class TraversalStrategyTest extends TestCase
         $this->assertEquals($modifiedNodes, $result);
     }
 
-    public function callableAction($node)
+    public function callableAction(NodeAdapterInterface $node)
     {
-        $node->setName('modified!');
+        $node->getNode()->setName('modified!');
         return $node;
     }
 
@@ -198,19 +200,21 @@ class TraversalStrategyTest extends TestCase
 
     public function testAdhocSelectOneByAttribute()
     {
-        $secondNode = $this->getNodeDatum('2');
+        $secondNode = $this->getUnwrappedNodeDatum('2');
         $ordNodeOfNodes = $this->getNodeArrayDatum(
             [
-                $this->getNodeArrayDatum([
-                    $this->getNodeDatum('1'),
+                $this->getUnwrappedNodeArrayDatum([
+                    $this->getUnwrappedNodeDatum('1'),
                     $secondNode
                 ]),
-                $this->getNodeArrayDatum([
-                    $this->getNodeDatum('3'),
-                    $this->getNodeDatum('4')
+                $this->getUnwrappedNodeArrayDatum([
+                    $this->getUnwrappedNodeDatum('3'),
+                    $this->getUnwrappedNodeDatum('4')
                 ])
             ]
         );
+        // to use it as an argument on its own, I need to wrap it
+        $secondNode = new ViaGetter($secondNode);
 
         // register 'attr' strategy: this is a rather roundabout way of creating a node-by-attribute selector.
 
@@ -224,9 +228,11 @@ class TraversalStrategyTest extends TestCase
                 $this->currentSearch = $s;
             }
 
-            public function __invoke($d)
+            public function __invoke(NodeAdapterInterface $d)
             {
-                if (method_exists($d, 'getName') && ($d->getName() == $this->currentSearch)) {
+                if (method_exists($d->getNode(), 'getName')
+                    && ($d->getNode()->getName() == $this->currentSearch)
+                ) {
                     return $d;
                 }
 
@@ -252,10 +258,17 @@ class TraversalStrategyTest extends TestCase
 
     /**
      * @param string $name
+     * @param array  $children
      *
-     * @return object
+     * @return NodeAdapterInterface
      */
-    private function getNodeDatum(string $name = 'node')
+    private function getNodeDatum(string $name = 'node'): NodeAdapterInterface
+    {
+        $node = $this->getUnwrappedNodeDatum($name);
+        return new ViaGetter($node);
+    }
+
+    private function getUnwrappedNodeDatum(string $name)
     {
         return new class($name)
         {
@@ -277,6 +290,11 @@ class TraversalStrategyTest extends TestCase
                 // intentionally left empty
             }
 
+            public function getValue()
+            {
+                return $this->getName();
+            }
+
             public function getName()
             {
                 return $this->name;
@@ -294,17 +312,26 @@ class TraversalStrategyTest extends TestCase
         $nodes = [];
 
         for ($i = 0; $i < $nodeCount; $i++) {
-            $nodes[] = $this->getNodeDatum($nodeName);
+            $nodes[] = $this->getUnwrappedNodeDatum($nodeName);
         }
 
         return $nodes;
     }
 
+    private function getNodeArrayDatum(array $children): NodeAdapterInterface
+    {
+        $n = $this->getUnwrappedNodeArrayDatum($children);
+
+        return new ViaGetter($n);
+    }
+
     /**
+     * Does not have 'setName', on purpose, so that adhoc actions do not apply to it
+     *
      * @param array $children
      * @return object
      */
-    private function getNodeArrayDatum(array $children)
+    private function getUnwrappedNodeArrayDatum(array $children)
     {
         $n = new class
         {
@@ -320,6 +347,11 @@ class TraversalStrategyTest extends TestCase
             public function setChildren(array $children = []): void
             {
                 $this->children = $children;
+            }
+
+            public function getValue()
+            {
+                return $this->name;
             }
         };
 
@@ -339,10 +371,10 @@ class TraversalStrategyTest extends TestCase
                 $this->newName = $newName;
             }
 
-            public function __invoke($d)
+            public function __invoke(NodeAdapterInterface $d)
             {
-                if (method_exists($d, 'setName')) {
-                    $d->setName($this->newName);
+                if (method_exists($d->getNode(), 'setName')) {
+                    $d->getNode()->setName($this->newName);
                     return $d;
                 }
 
@@ -357,10 +389,10 @@ class TraversalStrategyTest extends TestCase
         {
             private static $ord = 1;
 
-            public function __invoke($d)
+            public function __invoke(NodeAdapterInterface $d)
             {
-                if (method_exists($d, 'setName')) {
-                    $d->setName(self::$ord++);
+                if (method_exists($d->getNode(), 'setName')) {
+                    $d->getNode()->setName(self::$ord++);
                     return $d;
                 }
 

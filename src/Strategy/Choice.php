@@ -2,6 +2,7 @@
 
 namespace JaneOlszewska\Itinerant\Strategy;
 
+use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 use JaneOlszewska\Itinerant\StrategyStack;
 
 class Choice
@@ -13,15 +14,18 @@ class Choice
      */
     private $stack;
 
+    /**
+     * @var NodeAdapterInterface
+     */
     private $failValue;
 
-    public function __construct(StrategyStack $stack, $failValue)
+    public function __construct(StrategyStack $stack, NodeAdapterInterface $failValue)
     {
         $this->stack = $stack;
         $this->failValue = $failValue;
     }
 
-    public function __invoke($previousResult, $s1, $s2)
+    public function __invoke(NodeAdapterInterface $previousResult, $s1, $s2): ?NodeAdapterInterface
     {
         $result = $this->firstPhase
             ? $this->choice($previousResult, $s1, $s2)
@@ -30,7 +34,7 @@ class Choice
         return $result;
     }
 
-    private function choice($previousResult, $s1, $s2)
+    private function choice(NodeAdapterInterface $previousResult, $s1, $s2)
     {
         $this->stack->pop(); // remove self
 
@@ -45,7 +49,7 @@ class Choice
         return null; // always non-terminal
     }
 
-    private function choiceIntermediate($previousResult)
+    private function choiceIntermediate(NodeAdapterInterface $previousResult): ?NodeAdapterInterface
     {
         $res = $this->stack->getOriginalDatum();
 

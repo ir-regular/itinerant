@@ -2,7 +2,7 @@
 
 namespace JaneOlszewska\Itinerant\Tests;
 
-use JaneOlszewska\Itinerant\ChildHandler\SecondElement;
+use JaneOlszewska\Itinerant\NodeAdapter\SecondElement;
 use JaneOlszewska\Itinerant\TraversalStrategy;
 use JaneOlszewska\Itinerant\ValidatedTraversalStrategy;
 use PHPUnit\Framework\TestCase;
@@ -19,15 +19,16 @@ class ValidatedTraversalStrategyTest extends TestCase
     {
         parent::setUp();
 
-        $childHandler = new SecondElement();
-        $this->fail = ['nope', []];
+        $fail = ['nope', []];
+        $this->fail = new SecondElement($fail);
 
-        $this->ts = new ValidatedTraversalStrategy($childHandler, $this->fail);
+        $this->ts = new ValidatedTraversalStrategy($this->fail);
     }
 
     public function testSanitisationForInbuiltSingleArgumentNodes()
     {
         $node = ['good node', []];
+        $node = new SecondElement($node);
 
         // note we no longer have to enclose zero-argument strategies in arrays
 
@@ -38,7 +39,8 @@ class ValidatedTraversalStrategyTest extends TestCase
     public function testSanitisationForRegisteredSingleArgumentNodes()
     {
         $action = function () {
-            return 'whatever';
+            $value = 'whatever';
+            return new SecondElement($value);
         };
 
         $nodes = [
@@ -47,18 +49,22 @@ class ValidatedTraversalStrategyTest extends TestCase
                 ['good node', []],
             ]
         ];
+        $nodes = new SecondElement($nodes);
 
         // note we don't have to enclose either 'fail' or 'meh' in []
 
         $this->ts->registerStrategy('meh', ['adhoc', 'fail', $action], 0);
-        $this->assertEquals(['root node', ['whatever', 'whatever']], $this->ts->apply(['all', 'meh'], $nodes));
+        $result = $this->ts->apply(['all', 'meh'], $nodes);
+        $this->assertEquals(['root node', ['whatever', 'whatever']], $result->getNode());
     }
 
     public function testApplyStrategyValidation()
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessageRegExp("/Invalid argument structure for the strategy: .+/");
-        $this->ts->apply('all', null);
+
+        $node = null;
+        $this->ts->apply('all', new SecondElement($node));
 
         // todo: we could test all ways the validation should work... this is just the initial test
     }

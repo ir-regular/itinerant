@@ -2,7 +2,7 @@
 
 namespace JaneOlszewska\Itinerant\Strategy;
 
-use JaneOlszewska\Itinerant\ChildHandler\ChildHandlerInterface;
+use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 use JaneOlszewska\Itinerant\StrategyStack;
 use JaneOlszewska\Itinerant\TraversalStrategy;
 
@@ -15,21 +15,18 @@ class One
      */
     private $stack;
 
+    /**
+     * @var NodeAdapterInterface
+     */
     private $failValue;
 
-    /**
-     * @var ChildHandlerInterface
-     */
-    private $childHandler;
-
-    public function __construct(StrategyStack $stack, $failValue, ChildHandlerInterface $childHandler)
+    public function __construct(StrategyStack $stack, NodeAdapterInterface $failValue)
     {
         $this->stack = $stack;
         $this->failValue = $failValue;
-        $this->childHandler = $childHandler;
     }
 
-    public function __invoke($previousResult, $s)
+    public function __invoke($previousResult, $s): ?NodeAdapterInterface
     {
         $result = $this->firstPhase
             ? $this->one($previousResult, $s)
@@ -38,11 +35,13 @@ class One
         return $result;
     }
 
-    private function one($previousResult, $s1)
+    private function one(NodeAdapterInterface $previousResult, $s1): ?NodeAdapterInterface
     {
         // if $d has no children: fail, strategy terminal independent of what $s1 actually is
         $res = $this->failValue;
-        $unprocessed = $this->childHandler->getChildren($previousResult);
+        $unprocessed = $previousResult->getChildren();
+        // @TODO: in the next step, modify how this is stored on the stack
+        $unprocessed = iterator_to_array($unprocessed);
 
         if ($unprocessed) {
             $this->stack->pop();
@@ -59,7 +58,7 @@ class One
         return $res;
     }
 
-    private function oneIntermediate($previousResult, $s1)
+    private function oneIntermediate(NodeAdapterInterface $previousResult, $s1): ?NodeAdapterInterface
     {
         $res = $previousResult;
 

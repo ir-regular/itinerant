@@ -2,6 +2,7 @@
 
 namespace JaneOlszewska\Itinerant\Strategy;
 
+use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 use JaneOlszewska\Itinerant\StrategyStack;
 
 class Seq
@@ -13,15 +14,18 @@ class Seq
      */
     private $stack;
 
+    /**
+     * @var NodeAdapterInterface
+     */
     private $failValue;
 
-    public function __construct(StrategyStack $stack, $failValue)
+    public function __construct(StrategyStack $stack, NodeAdapterInterface $failValue)
     {
         $this->stack = $stack;
         $this->failValue = $failValue;
     }
 
-    public function __invoke($previousResult, $s1, $s2)
+    public function __invoke(NodeAdapterInterface $previousResult, $s1, $s2): ?NodeAdapterInterface
     {
         $result = $this->firstPhase
             ? $this->seq($previousResult, $s1, $s2)
@@ -30,7 +34,7 @@ class Seq
         return $result;
     }
 
-    private function seq($previousResult, $s1, $s2)
+    private function seq(NodeAdapterInterface $previousResult, $s1, $s2)
     {
         $this->firstPhase = false;
 
@@ -44,7 +48,7 @@ class Seq
         return null; // always non-terminal
     }
 
-    private function seqIntermediate($previousResult, $s2)
+    private function seqIntermediate(NodeAdapterInterface $previousResult, $s2): ?NodeAdapterInterface
     {
         $res = $previousResult;
 

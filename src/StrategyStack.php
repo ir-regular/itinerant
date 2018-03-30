@@ -2,6 +2,8 @@
 
 namespace JaneOlszewska\Itinerant;
 
+use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
+
 class StrategyStack
 {
     /**
@@ -25,8 +27,19 @@ class StrategyStack
         return array_pop($this->stack);
     }
 
-    public function push(array $strategy, $datum = null, ?array $unprocessed = null, ?array $processed = null): void
-    {
+    /**
+     * @param array $strategy
+     * @param NodeAdapterInterface|null $datum
+     * @param NodeAdapterInterface[]|null $unprocessed
+     * @param NodeAdapterInterface[]|null $processed
+     * @return void
+     */
+    public function push(
+        array $strategy,
+        NodeAdapterInterface $datum = null,
+        ?array $unprocessed = null,
+        ?array $processed = null
+    ): void {
         // strat, datum, childrenUnprocessed, childrenProcessed
         $this->stack[] = [
             'strat' => $strategy,
@@ -49,16 +62,22 @@ class StrategyStack
         return $this->stack[$this->last]['strat'][0];
     }
 
-    public function getOriginalDatum()
+    public function getOriginalDatum(): NodeAdapterInterface
     {
         return $this->stack[$this->last]['input'][0];
     }
 
+    /**
+     * @return NodeAdapterInterface[]|null
+     */
     public function getUnprocessedChildren(): ?array
     {
         return $this->stack[$this->last]['input'][1];
     }
 
+    /**
+     * @return NodeAdapterInterface[]|null
+     */
     public function getProcessedChildren(): ?array
     {
         return $this->stack[$this->last]['result'][1];

@@ -4,7 +4,8 @@ namespace JaneOlszewska\Itinerant;
 
 use JaneOlszewska\Itinerant\Action\ValidateTraversalStrategy;
 use JaneOlszewska\Itinerant\Action\ValidateUserRegisteredTraversalStrategy;
-use JaneOlszewska\Itinerant\ChildHandler\RestOfElements;
+use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
+use JaneOlszewska\Itinerant\NodeAdapter\RestOfElements;
 
 class ValidatedTraversalStrategy extends TraversalStrategy
 {
@@ -42,7 +43,8 @@ class ValidatedTraversalStrategy extends TraversalStrategy
     /** @var TraversalStrategy */
     private $ts;
 
-    private $validationFailValue = false;
+    /** @var NodeAdapterInterface */
+    private $validationFailValue;
 
     public function registerStrategy(string $key, array $expansion, int $argCount): void
     {
@@ -54,10 +56,10 @@ class ValidatedTraversalStrategy extends TraversalStrategy
 
     /**
      * @param array|string $s
-     * @param mixed $datum
-     * @return mixed
+     * @param NodeAdapterInterface $datum
+     * @return NodeAdapterInterface|null
      */
-    public function apply($s, $datum)
+    public function apply($s, NodeAdapterInterface $datum): ?NodeAdapterInterface
     {
         $s = $this->validateAndSanitise($s);
         return parent::apply($s, $datum);
@@ -69,10 +71,12 @@ class ValidatedTraversalStrategy extends TraversalStrategy
     private function getInternalValidationTS()
     {
         if (!isset($this->ts)) {
-            $childHandler = new RestOfElements();
-            $this->ts = new TraversalStrategy($childHandler, $this->validationFailValue);
-            $this->validatePreApplicationAction = new ValidateTraversalStrategy($childHandler);
-            $this->validatePreRegistrationAction = new ValidateUserRegisteredTraversalStrategy($childHandler);
+            $internalFail = false;
+            $this->validationFailValue = new RestOfElements($internalFail);
+
+            $this->ts = new TraversalStrategy($this->validationFailValue);
+            $this->validatePreApplicationAction = new ValidateTraversalStrategy();
+            $this->validatePreRegistrationAction = new ValidateUserRegisteredTraversalStrategy();
 
             $isNotCallableArray = function ($d) {
                 return (is_array($d) && is_callable($d)) ? null : $d;
@@ -116,12 +120,14 @@ class ValidatedTraversalStrategy extends TraversalStrategy
         $this->validatePreApplicationAction->setStrategyArgumentCounts($this->argCounts);
 
         // apply without validation to avoid infinite recursion
-        $result = $ts->apply([self::STRATEGY_VALIDATE], $strategy);
+        $result = $ts->apply([self::STRATEGY_VALIDATE], new RestOfElements($strategy));
 
         if ($result === $this->validationFailValue) {
             $error = $this->validatePreApplicationAction->getLastError();
             throw new \InvalidArgumentException("Invalid argument structure for the strategy: {$error}");
         }
+
+        $result = $result->getNode();
 
         return $result;
     }
@@ -146,12 +152,14 @@ class ValidatedTraversalStrategy extends TraversalStrategy
         );
 
         // apply without validation to avoid infinite recursion
-        $result = $ts->apply([self::STRATEGY_VALIDATE_REGISTERED], $strategy);
+        $result = $ts->apply([self::STRATEGY_VALIDATE_REGISTERED], new RestOfElements($strategy));
 
         if ($result === $this->validationFailValue) {
             $error = $this->validatePreRegistrationAction->getLastError();
             throw new \InvalidArgumentException("Invalid argument structure for the strategy: {$error}");
         }
+
+        $result = $result->getNode();
 
         return $result;
     }

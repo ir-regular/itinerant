@@ -2,9 +2,8 @@
 
 namespace JaneOlszewska\Itinerant\Strategy;
 
-use JaneOlszewska\Itinerant\ChildHandler\ChildHandlerInterface;
+use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 use JaneOlszewska\Itinerant\StrategyStack;
-use JaneOlszewska\Itinerant\TraversalStrategy;
 
 class All
 {
@@ -15,21 +14,18 @@ class All
      */
     private $stack;
 
+    /**
+     * @var NodeAdapterInterface
+     */
     private $failValue;
 
-    /**
-     * @var ChildHandlerInterface
-     */
-    private $childHandler;
-
-    public function __construct(StrategyStack $stack, $failValue, ChildHandlerInterface $childHandler)
+    public function __construct(StrategyStack $stack, NodeAdapterInterface $failValue)
     {
         $this->stack = $stack;
         $this->failValue = $failValue;
-        $this->childHandler = $childHandler;
     }
 
-    public function __invoke($previousResult, $s)
+    public function __invoke(NodeAdapterInterface $previousResult, $s): ?NodeAdapterInterface
     {
         $result = $this->firstPhase
             ? $this->all($previousResult, $s)
@@ -38,11 +34,13 @@ class All
         return $result;
     }
 
-    private function all($previousResult, $s1)
+    private function all(NodeAdapterInterface $previousResult, $s1): ?NodeAdapterInterface
     {
         // if $d has no children: return $d, strategy terminal independent of what $s1 actually is
         $res = $previousResult;
-        $unprocessed = $this->childHandler->getChildren($previousResult);
+        $unprocessed = $previousResult->getChildren();
+        // @TODO: in the next step, modify how this is stored on the stack
+        $unprocessed = iterator_to_array($unprocessed);
 
         if ($unprocessed) {
             $this->stack->pop();
@@ -58,7 +56,7 @@ class All
         return $res;
     }
 
-    private function allIntermediate($previousResult, $s1)
+    private function allIntermediate(NodeAdapterInterface $previousResult, $s1): ?NodeAdapterInterface
     {
         $res = $previousResult;
 
@@ -80,7 +78,7 @@ class All
                 $this->stack->push([null]); // only here to be popped
                 $res = $unprocessed[0];
             } else {
-                $this->childHandler->setChildren($originalResult, $processed);
+                $originalResult->setChildren($processed);
                 $res = $originalResult;
             }
         }
