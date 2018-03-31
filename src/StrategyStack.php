@@ -2,8 +2,6 @@
 
 namespace JaneOlszewska\Itinerant;
 
-use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
-
 class StrategyStack
 {
     /**
@@ -29,18 +27,12 @@ class StrategyStack
 
     /**
      * @param array $strategy
-     * @param NodeAdapterInterface|null $datum
      * @return void
      */
-    public function push(
-        array $strategy,
-        NodeAdapterInterface $datum = null
-    ): void {
-        // strat, datum, childrenUnprocessed, childrenProcessed
+    public function push(array $strategy): void {
         $this->stack[] = [
             'strategy' => $strategy[0],
             'arguments' => array_slice($strategy, 1),
-            'input' => $datum,
         ];
 
         $this->last++;
@@ -54,10 +46,5 @@ class StrategyStack
     public function getCurrentStrat()
     {
         return $this->stack[$this->last]['strategy'];
-    }
-
-    public function getOriginalDatum(): NodeAdapterInterface
-    {
-        return $this->stack[$this->last]['input'];
     }
 }

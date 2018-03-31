@@ -19,6 +19,11 @@ class Choice
      */
     private $failValue;
 
+    /**
+     * @var NodeAdapterInterface
+     */
+    private $node;
+
     public function __construct(StrategyStack $stack, NodeAdapterInterface $failValue)
     {
         $this->stack = $stack;
@@ -36,13 +41,15 @@ class Choice
 
     private function choice(NodeAdapterInterface $previousResult, $s1, $s2)
     {
+        $this->node = $previousResult;
+
         $this->stack->pop(); // remove self
 
-        $this->stack->push($s2, $this->failValue);
+        $this->stack->push($s2);
         // re-push self, but next time will execute second phase, see below
         // also note that it's important to have the same number of args because see __invoke signature
-        $this->stack->push([$this, null, null], $previousResult);
-        $this->stack->push($s1, $previousResult);
+        $this->stack->push([$this, null, null]);
+        $this->stack->push($s1);
 
         $this->firstPhase = false;
 
@@ -51,13 +58,11 @@ class Choice
 
     private function choiceIntermediate(NodeAdapterInterface $previousResult): ?NodeAdapterInterface
     {
-        $res = $this->stack->getOriginalDatum();
-
         if ($this->failValue !== $previousResult) {
             $this->stack->pop(); // pop self; $s2 will be auto-popped
-            $res = $previousResult; // pass $s1 result
+            return $previousResult; // pass $s1 result
         }
 
-        return $res;
+        return $this->node;
     }
 }

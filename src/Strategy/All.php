@@ -64,8 +64,8 @@ class All
 
             $this->stack->pop();
 
-            $this->stack->push([$this, $s1], $this->node);
-            $this->stack->push($s1, $child);
+            $this->stack->push([$this, $s1]);
+            $this->stack->push($s1);
             $this->stack->push([null]); // only here to be immediately popped
 
             $this->firstPhase = false;
@@ -89,8 +89,8 @@ class All
 
                 $this->stack->pop();
 
-                $this->stack->push([$this, $s1], $this->node);
-                $this->stack->push($s1, $child);
+                $this->stack->push([$this, $s1]);
+                $this->stack->push($s1);
                 $this->stack->push([null]); // only here to be popped
                 $res = $child;
             } else {

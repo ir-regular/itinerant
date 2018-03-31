@@ -42,8 +42,8 @@ class Seq
 
         // re-push self, but next time will execute second phase, see below
         // also note that it's important to have the same number of args because see __invoke signature
-        $this->stack->push([$this, null, $s2], $this->failValue);
-        $this->stack->push($s1, $previousResult);
+        $this->stack->push([$this, null, $s2]);
+        $this->stack->push($s1);
 
         return null; // always non-terminal
     }
@@ -54,7 +54,7 @@ class Seq
 
         if ($this->failValue !== $previousResult) {
             $this->stack->pop();
-            $this->stack->push($s2, $previousResult);
+            $this->stack->push($s2);
             $res = null;
         }
 

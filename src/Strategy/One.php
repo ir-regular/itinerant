@@ -59,8 +59,8 @@ class One
             $this->stack->pop();
 
             // not interested in preserving previously processed results: thus null
-            $this->stack->push([$this, $s1], null);
-            $this->stack->push($s1, $child);
+            $this->stack->push([$this, $s1]);
+            $this->stack->push($s1);
             $this->stack->push([null]); // only here to be popped
             $res = $child;
 
@@ -82,8 +82,8 @@ class One
                 $this->stack->pop();
 
                 // not interested in previously processed results: thus null
-                $this->stack->push([$this, $s1], null);
-                $this->stack->push($s1, $child);
+                $this->stack->push([$this, $s1]);
+                $this->stack->push($s1);
                 $this->stack->push([null]); // only here to be popped
                 $res = $child;
             }

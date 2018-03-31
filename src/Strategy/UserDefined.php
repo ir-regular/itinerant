@@ -28,7 +28,7 @@ class UserDefined
         $strategy = $this->fillPlaceholders($this->strategy, $args);
 
         $this->stack->pop();
-        $this->stack->push($strategy, $previousResult);
+        $this->stack->push($strategy);
 
         return null; // always non-terminal
     }

@@ -36,7 +36,7 @@ class Adhoc
             }
         } else {
             $this->stack->pop(); // remove self, fully resolved
-            $this->stack->push($s, $previousResult); // resolve strategy $s with $previousResult
+            $this->stack->push($s); // resolve strategy $s with $previousResult
         }
 
         return $res;

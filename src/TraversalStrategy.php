@@ -95,7 +95,7 @@ class TraversalStrategy
      */
     public function apply($s, NodeAdapterInterface $datum): ?NodeAdapterInterface
     {
-        $this->stack->push($s, $datum);
+        $this->stack->push($s);
         $currentDatum = $datum;
 
         do {
