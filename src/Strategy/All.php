@@ -19,6 +19,21 @@ class All
      */
     private $failValue;
 
+    /**
+     * @var NodeAdapterInterface
+     */
+    private $node;
+
+    /**
+     * @var NodeAdapterInterface[]
+     */
+    private $unprocessed;
+
+    /**
+     * @var NodeAdapterInterface[]
+     */
+    private $processed;
+
     public function __construct(StrategyStack $stack, NodeAdapterInterface $failValue)
     {
         $this->stack = $stack;
@@ -38,19 +53,24 @@ class All
     {
         // if $d has no children: return $d, strategy terminal independent of what $s1 actually is
         $res = $previousResult;
-        $unprocessed = $previousResult->getChildren();
-        // @TODO: in the next step, modify how this is stored on the stack
-        $unprocessed = iterator_to_array($unprocessed);
 
-        if ($unprocessed) {
+        $this->node = $previousResult;
+        $unprocessed = $this->node->getChildren();
+        $this->unprocessed = iterator_to_array($unprocessed);
+        $this->processed = [];
+
+        if ($this->unprocessed) {
+            $child = array_shift($this->unprocessed);
+
             $this->stack->pop();
 
-            $this->stack->push([$this, $s1], $previousResult, $unprocessed, []);
-            $this->stack->push($s1, $unprocessed[0]);
+            $this->stack->push([$this, $s1], $this->node);
+            $this->stack->push($s1, $child);
             $this->stack->push([null]); // only here to be immediately popped
-            $res = $unprocessed[0];
 
             $this->firstPhase = false;
+
+            $res = $child;
         }
 
         return $res;
@@ -60,26 +80,22 @@ class All
     {
         $res = $previousResult;
 
+        // if the result of the last child resolution wasn't fail, continue
         if ($this->failValue !== $previousResult) {
-            $originalResult = $this->stack->getOriginalDatum();
+            $this->processed[] = $previousResult;
 
-            // if the result of the last child resolution wasn't fail, continue
-            $unprocessed = $this->stack->getUnprocessedChildren();
-            array_shift($unprocessed);
+            if ($this->unprocessed) { // there's more to process
+                $child = array_shift($this->unprocessed);
 
-            $processed = $this->stack->getProcessedChildren();
-            $processed[] = $previousResult;
-
-            if ($unprocessed) { // there's more to process
                 $this->stack->pop();
 
-                $this->stack->push([$this, $s1], $originalResult, $unprocessed, $processed);
-                $this->stack->push($s1, $unprocessed[0]);
+                $this->stack->push([$this, $s1], $this->node);
+                $this->stack->push($s1, $child);
                 $this->stack->push([null]); // only here to be popped
-                $res = $unprocessed[0];
+                $res = $child;
             } else {
-                $originalResult->setChildren($processed);
-                $res = $originalResult;
+                $this->node->setChildren($this->processed);
+                $res = $this->node;
             }
         }
 

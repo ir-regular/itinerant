@@ -30,56 +30,34 @@ class StrategyStack
     /**
      * @param array $strategy
      * @param NodeAdapterInterface|null $datum
-     * @param NodeAdapterInterface[]|null $unprocessed
-     * @param NodeAdapterInterface[]|null $processed
      * @return void
      */
     public function push(
         array $strategy,
-        NodeAdapterInterface $datum = null,
-        ?array $unprocessed = null,
-        ?array $processed = null
+        NodeAdapterInterface $datum = null
     ): void {
         // strat, datum, childrenUnprocessed, childrenProcessed
         $this->stack[] = [
-            'strat' => $strategy,
-            'input' => [$datum, $unprocessed],
-            'result' => [null, $processed]
+            'strategy' => $strategy[0],
+            'arguments' => array_slice($strategy, 1),
+            'input' => $datum,
         ];
 
         $this->last++;
     }
 
-    // todo: I don't quite like how processed/unprocessed children are stored, but I don't want to think of it now
-
     public function getCurrentStratArguments()
     {
-        return array_slice($this->stack[$this->last]['strat'], 1);
+        return $this->stack[$this->last]['arguments'];
     }
 
     public function getCurrentStrat()
     {
-        return $this->stack[$this->last]['strat'][0];
+        return $this->stack[$this->last]['strategy'];
     }
 
     public function getOriginalDatum(): NodeAdapterInterface
     {
-        return $this->stack[$this->last]['input'][0];
-    }
-
-    /**
-     * @return NodeAdapterInterface[]|null
-     */
-    public function getUnprocessedChildren(): ?array
-    {
-        return $this->stack[$this->last]['input'][1];
-    }
-
-    /**
-     * @return NodeAdapterInterface[]|null
-     */
-    public function getProcessedChildren(): ?array
-    {
-        return $this->stack[$this->last]['result'][1];
+        return $this->stack[$this->last]['input'];
     }
 }
