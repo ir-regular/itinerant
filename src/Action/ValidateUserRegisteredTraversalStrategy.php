@@ -7,7 +7,7 @@ use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 class ValidateUserRegisteredTraversalStrategy extends ValidateTraversalStrategy
 {
     /**
-     * @param mixed $d
+     * @param NodeAdapterInterface $d
      * @return bool
      */
     protected function isZeroArgumentNode(NodeAdapterInterface $d): bool

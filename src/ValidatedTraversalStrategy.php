@@ -57,9 +57,9 @@ class ValidatedTraversalStrategy extends TraversalStrategy
     /**
      * @param array|string $s
      * @param NodeAdapterInterface $datum
-     * @return NodeAdapterInterface|null
+     * @return NodeAdapterInterface
      */
-    public function apply($s, NodeAdapterInterface $datum): ?NodeAdapterInterface
+    public function apply($s, NodeAdapterInterface $datum): NodeAdapterInterface
     {
         $s = $this->validateAndSanitise($s);
         return parent::apply($s, $datum);

@@ -19,9 +19,9 @@ interface NodeAdapterInterface
     public function getValue();
 
     /**
-     * Get node children, wrapped in adapters.
+     * Get node children, wrapped in objects implementing NodeAdapterInterface.
      *
-     * @return NodeAdapterInterface[]
+     * @return \Iterator
      */
     public function getChildren(): \Iterator;
 

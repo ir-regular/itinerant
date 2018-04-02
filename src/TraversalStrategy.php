@@ -32,7 +32,7 @@ class TraversalStrategy
     private $fail;
 
     /**
-     * @param mixed $fail A representation of "fail", valid for whatever nodes/adhoc methods will be used
+     * @param NodeAdapterInterface $fail A representation of "fail", valid for whatever nodes/adhoc methods will be used
      */
     public function __construct(NodeAdapterInterface $fail)
     {
@@ -91,9 +91,9 @@ class TraversalStrategy
     /**
      * @param array $s
      * @param NodeAdapterInterface $datum
-     * @return NodeAdapterInterface|null
+     * @return NodeAdapterInterface
      */
-    public function apply($s, NodeAdapterInterface $datum): ?NodeAdapterInterface
+    public function apply($s, NodeAdapterInterface $datum): NodeAdapterInterface
     {
         $this->stack->push($s);
         $currentDatum = $datum;
