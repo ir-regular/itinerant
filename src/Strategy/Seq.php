@@ -18,18 +18,32 @@ class Seq
      * @var NodeAdapterInterface
      */
     private $failValue;
+    /**
+     * @var NodeAdapterInterface
+     */
+    private $node;
+    private $initialStrategy;
+    private $followupStrategy;
 
-    public function __construct(StrategyStack $stack, NodeAdapterInterface $failValue)
-    {
+    public function __construct(
+        StrategyStack $stack,
+        NodeAdapterInterface $failValue,
+        NodeAdapterInterface $node,
+        $initialStrategy,
+        $followupStrategy
+    ) {
         $this->stack = $stack;
         $this->failValue = $failValue;
+        $this->node = $node;
+        $this->initialStrategy = $initialStrategy;
+        $this->followupStrategy = $followupStrategy;
     }
 
-    public function __invoke(NodeAdapterInterface $previousResult, $s1, $s2): ?NodeAdapterInterface
+    public function __invoke(NodeAdapterInterface $previousResult): ?NodeAdapterInterface
     {
         $result = $this->firstPhase
-            ? $this->seq($previousResult, $s1, $s2)
-            : $this->seqIntermediate($previousResult, $s2);
+            ? $this->seq($this->node, $this->initialStrategy, $this->followupStrategy)
+            : $this->seqIntermediate($previousResult, $this->followupStrategy);
 
         return $result;
     }

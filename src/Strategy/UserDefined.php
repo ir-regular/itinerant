@@ -17,18 +17,19 @@ class UserDefined
      */
     private $strategy;
 
-    public function __construct(StrategyStack $stack, $strategy)
-    {
+    public function __construct(
+        StrategyStack $stack,
+        $strategy,
+        $args
+    ) {
         $this->stack = $stack;
-        $this->strategy = $strategy;
+        $this->strategy = $this->fillPlaceholders($strategy, $args);
     }
 
-    public function __invoke(NodeAdapterInterface $previousResult, ...$args)
+    public function __invoke()
     {
-        $strategy = $this->fillPlaceholders($this->strategy, $args);
-
         $this->stack->pop();
-        $this->stack->push($strategy);
+        $this->stack->push($this->strategy);
 
         return null; // always non-terminal
     }

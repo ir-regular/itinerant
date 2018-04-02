@@ -28,18 +28,25 @@ class One
      * @var NodeAdapterInterface[]
      */
     private $unprocessed;
+    private $childStrategy;
 
-    public function __construct(StrategyStack $stack, NodeAdapterInterface $failValue)
-    {
+    public function __construct(
+        StrategyStack $stack,
+        NodeAdapterInterface $failValue,
+        NodeAdapterInterface $node,
+        $childStrategy
+    ) {
         $this->stack = $stack;
         $this->failValue = $failValue;
+        $this->childStrategy = $childStrategy;
+        $this->node = $node;
     }
 
-    public function __invoke($previousResult, $s): ?NodeAdapterInterface
+    public function __invoke($previousResult): ?NodeAdapterInterface
     {
         $result = $this->firstPhase
-            ? $this->one($previousResult, $s)
-            : $this->oneIntermediate($previousResult, $s);
+            ? $this->one($this->node, $this->childStrategy)
+            : $this->oneIntermediate($previousResult, $this->childStrategy);
 
         return $result;
     }
@@ -49,7 +56,6 @@ class One
         // if $d has no children: fail, strategy terminal independent of what $s1 actually is
         $res = $this->failValue;
 
-        $this->node = $previousResult;
         $unprocessed = $this->node->getChildren();
         $this->unprocessed = iterator_to_array($unprocessed);
         $this->processed = [];

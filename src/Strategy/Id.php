@@ -6,8 +6,18 @@ use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 
 class Id
 {
-    public function __invoke(NodeAdapterInterface $node): NodeAdapterInterface
+    /**
+     * @var NodeAdapterInterface
+     */
+    private $node;
+
+    public function __construct(NodeAdapterInterface $node)
     {
-        return $node;
+        $this->node = $node;
+    }
+
+    public function __invoke(): NodeAdapterInterface
+    {
+        return $this->node;
     }
 }

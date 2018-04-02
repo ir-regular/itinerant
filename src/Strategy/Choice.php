@@ -24,16 +24,28 @@ class Choice
      */
     private $node;
 
-    public function __construct(StrategyStack $stack, NodeAdapterInterface $failValue)
-    {
+    private $initialStrategy;
+
+    private $alternativeStrategy;
+
+    public function __construct(
+        StrategyStack $stack,
+        NodeAdapterInterface $failValue,
+        NodeAdapterInterface $node,
+        $initialStrategy,
+        $alternativeStrategy
+    ) {
         $this->stack = $stack;
         $this->failValue = $failValue;
+        $this->node = $node;
+        $this->initialStrategy = $initialStrategy;
+        $this->alternativeStrategy = $alternativeStrategy;
     }
 
-    public function __invoke(NodeAdapterInterface $previousResult, $s1, $s2): ?NodeAdapterInterface
+    public function __invoke(NodeAdapterInterface $previousResult): ?NodeAdapterInterface
     {
         $result = $this->firstPhase
-            ? $this->choice($previousResult, $s1, $s2)
+            ? $this->choice($this->node, $this->initialStrategy, $this->alternativeStrategy)
             : $this->choiceIntermediate($previousResult);
 
         return $result;
@@ -41,8 +53,6 @@ class Choice
 
     private function choice(NodeAdapterInterface $previousResult, $s1, $s2)
     {
-        $this->node = $previousResult;
-
         $this->stack->pop(); // remove self
 
         $this->stack->push($s2);

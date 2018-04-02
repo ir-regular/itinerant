@@ -34,17 +34,25 @@ class All
      */
     private $processed;
 
-    public function __construct(StrategyStack $stack, NodeAdapterInterface $failValue)
-    {
+    private $childStrategy;
+
+    public function __construct(
+        StrategyStack $stack,
+        NodeAdapterInterface $failValue,
+        NodeAdapterInterface $node,
+        $childStrategy
+    ) {
         $this->stack = $stack;
         $this->failValue = $failValue;
+        $this->childStrategy = $childStrategy;
+        $this->node = $node;
     }
 
-    public function __invoke(NodeAdapterInterface $previousResult, $s): ?NodeAdapterInterface
+    public function __invoke(NodeAdapterInterface $previousResult): ?NodeAdapterInterface
     {
         $result = $this->firstPhase
-            ? $this->all($previousResult, $s)
-            : $this->allIntermediate($previousResult, $s);
+            ? $this->all($this->node, $this->childStrategy)
+            : $this->allIntermediate($previousResult, $this->childStrategy);
 
         return $result;
     }
@@ -52,9 +60,8 @@ class All
     private function all(NodeAdapterInterface $previousResult, $s1): ?NodeAdapterInterface
     {
         // if $d has no children: return $d, strategy terminal independent of what $s1 actually is
-        $res = $previousResult;
+        $res = $this->node;
 
-        $this->node = $previousResult;
         $unprocessed = $this->node->getChildren();
         $this->unprocessed = iterator_to_array($unprocessed);
         $this->processed = [];

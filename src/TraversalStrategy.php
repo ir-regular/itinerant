@@ -64,26 +64,26 @@ class TraversalStrategy
         return isset($this->strategies[$key]);
     }
 
-    private function getStrategy($key)
+    private function getStrategy($key, $datum, $args)
     {
         switch ($key) {
             case self::ID:
-                return new Id();
+                return new Id($datum);
             case self::FAIL:
                 return new Fail($this->fail);
             case self::SEQ:
-                return new Seq($this->stack, $this->fail);
+                return new Seq($this->stack, $this->fail, $datum, ...$args);
             case self::CHOICE:
-                return new Choice($this->stack, $this->fail);
+                return new Choice($this->stack, $this->fail, $datum, ...$args);
             case self::ALL:
-                return new All($this->stack, $this->fail);
+                return new All($this->stack, $this->fail, $datum, ...$args);
             case self::ONE:
-                return new One($this->stack, $this->fail);
+                return new One($this->stack, $this->fail, $datum, ...$args);
             case self::ADHOC:
-                return new Adhoc($this->stack);
+                return new Adhoc($this->stack, $datum, ...$args);
             default:
                 return $this->strategies[$key]
-                    ? new UserDefined($this->stack, $this->strategies[$key])
+                    ? new UserDefined($this->stack, $this->strategies[$key], $args)
                     : null;
         }
     }
@@ -103,7 +103,7 @@ class TraversalStrategy
             $args = $this->stack->getCurrentStratArguments();
 
             if (is_string($strategy)) {
-                if (!$strategy = $this->getStrategy($strategy)) {
+                if (!$strategy = $this->getStrategy($strategy, $currentDatum, $args)) {
                     /*
                      * That means null/NOP.
                      *
@@ -116,7 +116,7 @@ class TraversalStrategy
                 }
             }
 
-            $result = $strategy($currentDatum, ...$args);
+            $result = $strategy($currentDatum);
 
             if ($result === null) {
                 // strategy non-terminal, continue applying it to the same datum
