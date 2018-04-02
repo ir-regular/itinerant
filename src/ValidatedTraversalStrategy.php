@@ -78,6 +78,7 @@ class ValidatedTraversalStrategy extends TraversalStrategy
             $this->validatePreApplicationAction = new ValidateTraversalStrategy();
             $this->validatePreRegistrationAction = new ValidateUserRegisteredTraversalStrategy();
 
+            // Check for whether we encountered an adhoc action, callback formatted like an array
             $isNotCallableArray = function ($d) {
                 return (is_array($d) && is_callable($d)) ? null : $d;
             };

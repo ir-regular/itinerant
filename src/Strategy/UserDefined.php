@@ -3,35 +3,31 @@
 namespace JaneOlszewska\Itinerant\Strategy;
 
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
-use JaneOlszewska\Itinerant\StrategyStack;
 
 class UserDefined
 {
-    /**
-     * @var StrategyStack
-     */
-    private $stack;
-
     /**
      * @var array
      */
     private $strategy;
 
+    /**
+     * @var NodeAdapterInterface
+     */
+    private $node;
+
     public function __construct(
-        StrategyStack $stack,
         $strategy,
-        $args
+        $args,
+        NodeAdapterInterface $node
     ) {
-        $this->stack = $stack;
         $this->strategy = $this->fillPlaceholders($strategy, $args);
+        $this->node = $node;
     }
 
     public function __invoke()
     {
-        $this->stack->pop();
-        $this->stack->push($this->strategy);
-
-        return null; // always non-terminal
+        return [[$this->strategy, $this->node]];
     }
 
     private function fillPlaceholders($strategy, $args)

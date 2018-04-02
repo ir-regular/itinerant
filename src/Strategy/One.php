@@ -3,16 +3,10 @@
 namespace JaneOlszewska\Itinerant\Strategy;
 
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
-use JaneOlszewska\Itinerant\StrategyStack;
 
 class One
 {
     private $firstPhase = true;
-
-    /**
-     * @var StrategyStack
-     */
-    private $stack;
 
     /**
      * @var NodeAdapterInterface
@@ -28,30 +22,34 @@ class One
      * @var NodeAdapterInterface[]
      */
     private $unprocessed;
+
+    /**
+     * @var NodeAdapterInterface[]
+     */
+    private $processed;
+
     private $childStrategy;
 
     public function __construct(
-        StrategyStack $stack,
         NodeAdapterInterface $failValue,
         NodeAdapterInterface $node,
         $childStrategy
     ) {
-        $this->stack = $stack;
         $this->failValue = $failValue;
         $this->childStrategy = $childStrategy;
         $this->node = $node;
     }
 
-    public function __invoke($previousResult): ?NodeAdapterInterface
+    public function __invoke($previousResult)
     {
         $result = $this->firstPhase
-            ? $this->one($this->node, $this->childStrategy)
-            : $this->oneIntermediate($previousResult, $this->childStrategy);
+            ? $this->one()
+            : $this->oneIntermediate($previousResult);
 
         return $result;
     }
 
-    private function one(NodeAdapterInterface $previousResult, $s1): ?NodeAdapterInterface
+    private function one()
     {
         // if $d has no children: fail, strategy terminal independent of what $s1 actually is
         $res = $this->failValue;
@@ -61,22 +59,20 @@ class One
         $this->processed = [];
 
         if ($this->unprocessed) {
-            $child = array_shift($this->unprocessed);
-            $this->stack->pop();
-
-            // not interested in preserving previously processed results: thus null
-            $this->stack->push([$this, $s1]);
-            $this->stack->push($s1);
-            $this->stack->push([null]); // only here to be popped
-            $res = $child;
-
             $this->firstPhase = false;
+
+            $child = array_shift($this->unprocessed);
+
+            return [
+                [$this, null],
+                [$this->childStrategy, $child]
+            ];
         }
 
         return $res;
     }
 
-    private function oneIntermediate(NodeAdapterInterface $previousResult, $s1): ?NodeAdapterInterface
+    private function oneIntermediate(NodeAdapterInterface $previousResult)
     {
         $res = $previousResult;
 
@@ -85,13 +81,11 @@ class One
 
             if ($this->unprocessed) { // fail, but there's more to process
                 $child = array_shift($this->unprocessed);
-                $this->stack->pop();
 
-                // not interested in previously processed results: thus null
-                $this->stack->push([$this, $s1]);
-                $this->stack->push($s1);
-                $this->stack->push([null]); // only here to be popped
-                $res = $child;
+                return [
+                    [$this, null],
+                    [$this->childStrategy, $child]
+                ];
             }
 
             // else: well we processed everything and nothing succeeded so: FAIL ($res === $previousResult === FAIL)

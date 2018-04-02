@@ -29,7 +29,8 @@ class StrategyStack
      * @param array $strategy
      * @return void
      */
-    public function push(array $strategy): void {
+    public function push(array $strategy): void
+    {
         $this->stack[] = [
             'strategy' => $strategy[0],
             'arguments' => array_slice($strategy, 1),
