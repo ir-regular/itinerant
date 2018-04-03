@@ -57,15 +57,15 @@ class TraversalStrategy
             case self::FAIL:
                 return new Fail();
             case self::SEQ:
-                return new Seq($datum, ...$args);
+                return new Seq($args[0], $args[1], $datum);
             case self::CHOICE:
-                return new Choice($datum, ...$args);
+                return new Choice($args[0], $args[1], $datum);
             case self::ALL:
-                return new All($datum, ...$args);
+                return new All($args[0], $datum);
             case self::ONE:
-                return new One($datum, ...$args);
+                return new One($args[0], $datum);
             case self::ADHOC:
-                return new Adhoc($datum, ...$args);
+                return new Adhoc($args[0], $args[1], $datum);
             default:
                 return $this->strategies[$key]
                     ? new UserDefined($this->strategies[$key], $args, $datum)

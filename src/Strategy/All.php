@@ -26,24 +26,31 @@ class All
     private $childStrategy;
 
     public function __construct(
-        NodeAdapterInterface $node,
-        $childStrategy
+        $childStrategy,
+        NodeAdapterInterface $node = null
     ) {
         $this->childStrategy = $childStrategy;
-        $this->node = $node;
+
+        if ($node) {
+            $this->node = $node;
+        }
     }
 
     public function __invoke(NodeAdapterInterface $previousResult)
     {
         $result = $this->firstPhase
-            ? $this->all()
+            ? $this->all($previousResult)
             : $this->allIntermediate($previousResult);
 
         return $result;
     }
 
-    private function all()
+    private function all(NodeAdapterInterface $node)
     {
+        if (!$this->node) {
+            $this->node = $node;
+        }
+
         // if $d has no children: return $d, strategy terminal independent of what $s1 actually is
         $res = $this->node;
 

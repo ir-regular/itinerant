@@ -19,15 +19,18 @@ class UserDefined
     public function __construct(
         $strategy,
         $args,
-        NodeAdapterInterface $node
+        NodeAdapterInterface $node = null
     ) {
         $this->strategy = $this->fillPlaceholders($strategy, $args);
-        $this->node = $node;
+
+        if ($node) {
+            $this->node = $node;
+        }
     }
 
-    public function __invoke()
+    public function __invoke(NodeAdapterInterface $node)
     {
-        return [[$this->strategy, $this->node]];
+        return [[$this->strategy, $this->node ?: $node]];
     }
 
     private function fillPlaceholders($strategy, $args)
@@ -36,7 +39,7 @@ class UserDefined
         // @TODO: yep, it's ugly, and it doesn't validate the index
         array_walk_recursive($strategy, function (&$value) use ($args) {
             if (is_numeric($value)) {
-                $value = $args[(int) $value];
+                $value = $args[(int)$value];
             }
         });
 

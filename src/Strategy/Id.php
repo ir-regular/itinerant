@@ -11,13 +11,15 @@ class Id
      */
     private $node;
 
-    public function __construct(NodeAdapterInterface $node)
+    public function __construct(NodeAdapterInterface $node = null)
     {
-        $this->node = $node;
+        if ($node) {
+            $this->node = $node;
+        }
     }
 
-    public function __invoke(): NodeAdapterInterface
+    public function __invoke(NodeAdapterInterface $node): NodeAdapterInterface
     {
-        return $this->node;
+        return $this->node ?: $node;
     }
 }

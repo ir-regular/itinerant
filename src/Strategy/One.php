@@ -26,24 +26,31 @@ class One
     private $childStrategy;
 
     public function __construct(
-        NodeAdapterInterface $node,
-        $childStrategy
+        $childStrategy,
+        NodeAdapterInterface $node = null
     ) {
         $this->childStrategy = $childStrategy;
-        $this->node = $node;
+
+        if ($node) {
+            $this->node = $node;
+        }
     }
 
     public function __invoke($previousResult)
     {
         $result = $this->firstPhase
-            ? $this->one()
+            ? $this->one($previousResult)
             : $this->oneIntermediate($previousResult);
 
         return $result;
     }
 
-    private function one()
+    private function one(NodeAdapterInterface $node)
     {
+        if (!$this->node) {
+            $this->node = $node;
+        }
+
         // if $d has no children: fail, strategy terminal independent of what $s1 actually is
         $res = Fail::fail();
 

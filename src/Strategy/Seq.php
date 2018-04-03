@@ -16,11 +16,14 @@ class Seq
     private $followupStrategy;
 
     public function __construct(
-        NodeAdapterInterface $node,
         $initialStrategy,
-        $followupStrategy
+        $followupStrategy,
+        NodeAdapterInterface $node = null
     ) {
-        $this->node = $node;
+        if ($node) {
+            $this->node = $node;
+        }
+
         $this->initialStrategy = $initialStrategy;
         $this->followupStrategy = $followupStrategy;
     }
@@ -28,14 +31,18 @@ class Seq
     public function __invoke(NodeAdapterInterface $previousResult)
     {
         $result = $this->firstPhase
-            ? $this->seq()
+            ? $this->seq($previousResult)
             : $this->seqIntermediate($previousResult);
 
         return $result;
     }
 
-    private function seq()
+    private function seq(NodeAdapterInterface $node)
     {
+        if (!$this->node) {
+            $this->node = $node;
+        }
+
         $this->firstPhase = false;
 
         return [

@@ -18,11 +18,14 @@ class Choice
     private $alternativeStrategy;
 
     public function __construct(
-        NodeAdapterInterface $node,
         $initialStrategy,
-        $alternativeStrategy
+        $alternativeStrategy,
+        NodeAdapterInterface $node = null
     ) {
-        $this->node = $node;
+        if ($node) {
+            $this->node = $node;
+        }
+
         $this->initialStrategy = $initialStrategy;
         $this->alternativeStrategy = $alternativeStrategy;
     }
@@ -30,14 +33,18 @@ class Choice
     public function __invoke(NodeAdapterInterface $previousResult)
     {
         $result = $this->firstPhase
-            ? $this->choice()
+            ? $this->choice($previousResult)
             : $this->choiceIntermediate($previousResult);
 
         return $result;
     }
 
-    private function choice()
+    private function choice(NodeAdapterInterface $node)
     {
+        if (!$this->node) {
+            $this->node = $node;
+        }
+
         $this->firstPhase = false;
 
         return [

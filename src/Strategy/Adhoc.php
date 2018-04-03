@@ -14,17 +14,24 @@ class Adhoc
     private $node;
 
     public function __construct(
-        NodeAdapterInterface $node,
         $strategyIfInapplicable,
-        $action
+        $action,
+        NodeAdapterInterface $node = null
     ) {
         $this->strategyIfInapplicable = $strategyIfInapplicable;
         $this->action = $action;
-        $this->node = $node;
+
+        if ($node) {
+            $this->node = $node;
+        }
     }
 
-    public function __invoke()
+    public function __invoke(NodeAdapterInterface $node)
     {
+        if (!$this->node) {
+            $this->node = $node;
+        }
+
         if (is_callable($this->action)) {
             // strategy resolved to applied action; terminal unless null returned
             // @TODO: document this clearly somewhere
