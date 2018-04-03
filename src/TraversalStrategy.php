@@ -28,24 +28,9 @@ class TraversalStrategy
     /** @var StrategyStack */
     private $stack;
 
-    /** @var NodeAdapterInterface */
-    private $fail;
-
-    /**
-     * @param NodeAdapterInterface $fail A representation of "fail", valid for whatever nodes/adhoc methods will be used
-     */
-    public function __construct(NodeAdapterInterface $fail)
+    public function __construct()
     {
         $this->stack = new StrategyStack();
-        $this->fail = $fail;
-    }
-
-    /**
-     * @return NodeAdapterInterface
-     */
-    public function getFail(): NodeAdapterInterface
-    {
-        return $this->fail;
     }
 
     /**
@@ -70,15 +55,15 @@ class TraversalStrategy
             case self::ID:
                 return new Id($datum);
             case self::FAIL:
-                return new Fail($this->fail);
+                return new Fail();
             case self::SEQ:
-                return new Seq($this->fail, $datum, ...$args);
+                return new Seq($datum, ...$args);
             case self::CHOICE:
-                return new Choice($this->fail, $datum, ...$args);
+                return new Choice($datum, ...$args);
             case self::ALL:
-                return new All($this->fail, $datum, ...$args);
+                return new All($datum, ...$args);
             case self::ONE:
-                return new One($this->fail, $datum, ...$args);
+                return new One($datum, ...$args);
             case self::ADHOC:
                 return new Adhoc($datum, ...$args);
             default:

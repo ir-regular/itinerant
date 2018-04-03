@@ -6,6 +6,7 @@ use JaneOlszewska\Itinerant\Action\ValidateTraversalStrategy;
 use JaneOlszewska\Itinerant\Action\ValidateUserRegisteredTraversalStrategy;
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 use JaneOlszewska\Itinerant\NodeAdapter\RestOfElements;
+use JaneOlszewska\Itinerant\Strategy\Fail;
 
 class ValidatedTraversalStrategy extends TraversalStrategy
 {
@@ -43,9 +44,6 @@ class ValidatedTraversalStrategy extends TraversalStrategy
     /** @var TraversalStrategy */
     private $ts;
 
-    /** @var NodeAdapterInterface */
-    private $validationFailValue;
-
     public function registerStrategy(string $key, array $expansion, int $argCount): void
     {
         $this->argCounts[$key] = $argCount;
@@ -71,10 +69,7 @@ class ValidatedTraversalStrategy extends TraversalStrategy
     private function getInternalValidationTS()
     {
         if (!isset($this->ts)) {
-            $internalFail = false;
-            $this->validationFailValue = new RestOfElements($internalFail);
-
-            $this->ts = new TraversalStrategy($this->validationFailValue);
+            $this->ts = new TraversalStrategy();
             $this->validatePreApplicationAction = new ValidateTraversalStrategy();
             $this->validatePreRegistrationAction = new ValidateUserRegisteredTraversalStrategy();
 
@@ -123,7 +118,7 @@ class ValidatedTraversalStrategy extends TraversalStrategy
         // apply without validation to avoid infinite recursion
         $result = $ts->apply([self::STRATEGY_VALIDATE], new RestOfElements($strategy));
 
-        if ($result === $this->validationFailValue) {
+        if (Fail::fail() === $result) {
             $error = $this->validatePreApplicationAction->getLastError();
             throw new \InvalidArgumentException("Invalid argument structure for the strategy: {$error}");
         }
@@ -139,6 +134,7 @@ class ValidatedTraversalStrategy extends TraversalStrategy
      * @param string $strategyKey
      * @param array $strategy
      * @param int $argCount
+     * @return array
      */
     private function validateAndSanitiseBeforeRegistering(string $strategyKey, array $strategy, int $argCount)
     {
@@ -155,7 +151,7 @@ class ValidatedTraversalStrategy extends TraversalStrategy
         // apply without validation to avoid infinite recursion
         $result = $ts->apply([self::STRATEGY_VALIDATE_REGISTERED], new RestOfElements($strategy));
 
-        if ($result === $this->validationFailValue) {
+        if (Fail::fail() === $result) {
             $error = $this->validatePreRegistrationAction->getLastError();
             throw new \InvalidArgumentException("Invalid argument structure for the strategy: {$error}");
         }

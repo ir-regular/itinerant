@@ -11,11 +11,6 @@ class One
     /**
      * @var NodeAdapterInterface
      */
-    private $failValue;
-
-    /**
-     * @var NodeAdapterInterface
-     */
     private $node;
 
     /**
@@ -31,11 +26,9 @@ class One
     private $childStrategy;
 
     public function __construct(
-        NodeAdapterInterface $failValue,
         NodeAdapterInterface $node,
         $childStrategy
     ) {
-        $this->failValue = $failValue;
         $this->childStrategy = $childStrategy;
         $this->node = $node;
     }
@@ -52,7 +45,7 @@ class One
     private function one()
     {
         // if $d has no children: fail, strategy terminal independent of what $s1 actually is
-        $res = $this->failValue;
+        $res = Fail::fail();
 
         $unprocessed = $this->node->getChildren();
         $this->unprocessed = iterator_to_array($unprocessed);
@@ -76,7 +69,7 @@ class One
     {
         $res = $previousResult;
 
-        if ($this->failValue === $previousResult) {
+        if (Fail::fail() === $previousResult) {
             // if the result of the last child resolution was fail, need to try with the next one (if exists)
 
             if ($this->unprocessed) { // fail, but there's more to process

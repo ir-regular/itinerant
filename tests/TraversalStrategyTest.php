@@ -5,6 +5,7 @@ namespace JaneOlszewska\Tests\Itinerant;
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 use JaneOlszewska\Itinerant\NodeAdapter\RestOfElements;
 use JaneOlszewska\Itinerant\NodeAdapter\ViaGetter;
+use JaneOlszewska\Itinerant\Strategy\Fail;
 use JaneOlszewska\Itinerant\TraversalStrategy;
 use PHPUnit\Framework\TestCase;
 
@@ -26,9 +27,9 @@ class TraversalStrategyTest extends TestCase
     {
         parent::setUp();
 
-        $this->fail = $this->getNodeDatum('fail');
+        $this->fail = Fail::fail();
 
-        $this->ts = new TraversalStrategy($this->fail);
+        $this->ts = new TraversalStrategy();
     }
 
     public function testFail()

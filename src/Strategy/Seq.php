@@ -11,21 +11,15 @@ class Seq
     /**
      * @var NodeAdapterInterface
      */
-    private $failValue;
-    /**
-     * @var NodeAdapterInterface
-     */
     private $node;
     private $initialStrategy;
     private $followupStrategy;
 
     public function __construct(
-        NodeAdapterInterface $failValue,
         NodeAdapterInterface $node,
         $initialStrategy,
         $followupStrategy
     ) {
-        $this->failValue = $failValue;
         $this->node = $node;
         $this->initialStrategy = $initialStrategy;
         $this->followupStrategy = $followupStrategy;
@@ -54,7 +48,7 @@ class Seq
     {
         $res = $previousResult;
 
-        if ($this->failValue !== $previousResult) {
+        if (Fail::fail() !== $previousResult) {
             return [
                 // $this->node could have been transformed by $this->initialStrategy into $previousResult
                 [$this->followupStrategy, $previousResult]

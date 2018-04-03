@@ -3,6 +3,7 @@
 namespace JaneOlszewska\Itinerant\Tests;
 
 use JaneOlszewska\Itinerant\NodeAdapter\SecondElement;
+use JaneOlszewska\Itinerant\Strategy\Fail;
 use JaneOlszewska\Itinerant\TraversalStrategy;
 use JaneOlszewska\Itinerant\ValidatedTraversalStrategy;
 use PHPUnit\Framework\TestCase;
@@ -19,10 +20,9 @@ class ValidatedTraversalStrategyTest extends TestCase
     {
         parent::setUp();
 
-        $fail = ['nope', []];
-        $this->fail = new SecondElement($fail);
+        $this->fail = Fail::fail();
 
-        $this->ts = new ValidatedTraversalStrategy($this->fail);
+        $this->ts = new ValidatedTraversalStrategy();
     }
 
     public function testSanitisationForInbuiltSingleArgumentNodes()

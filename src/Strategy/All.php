@@ -11,11 +11,6 @@ class All
     /**
      * @var NodeAdapterInterface
      */
-    private $failValue;
-
-    /**
-     * @var NodeAdapterInterface
-     */
     private $node;
 
     /**
@@ -31,11 +26,9 @@ class All
     private $childStrategy;
 
     public function __construct(
-        NodeAdapterInterface $failValue,
         NodeAdapterInterface $node,
         $childStrategy
     ) {
-        $this->failValue = $failValue;
         $this->childStrategy = $childStrategy;
         $this->node = $node;
     }
@@ -76,7 +69,7 @@ class All
         $res = $previousResult;
 
         // if the result of the last child resolution wasn't fail, continue
-        if ($this->failValue !== $previousResult) {
+        if (Fail::fail() !== $previousResult) {
             $this->processed[] = $previousResult;
 
             if ($this->unprocessed) { // there's more to process

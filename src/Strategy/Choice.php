@@ -11,11 +11,6 @@ class Choice
     /**
      * @var NodeAdapterInterface
      */
-    private $failValue;
-
-    /**
-     * @var NodeAdapterInterface
-     */
     private $node;
 
     private $initialStrategy;
@@ -23,12 +18,10 @@ class Choice
     private $alternativeStrategy;
 
     public function __construct(
-        NodeAdapterInterface $failValue,
         NodeAdapterInterface $node,
         $initialStrategy,
         $alternativeStrategy
     ) {
-        $this->failValue = $failValue;
         $this->node = $node;
         $this->initialStrategy = $initialStrategy;
         $this->alternativeStrategy = $alternativeStrategy;
@@ -55,7 +48,7 @@ class Choice
 
     private function choiceIntermediate(NodeAdapterInterface $previousResult)
     {
-        if ($this->failValue !== $previousResult) {
+        if (Fail::fail() !== $previousResult) {
             return $previousResult; // pass $s1 result
         }
 
