@@ -49,8 +49,11 @@ class TraversalStrategy
         return isset($this->strategies[$key]);
     }
 
-    private function getStrategy($key, $datum, $args)
+    private function resolveStrategy($strategy, $datum)
     {
+        $key = array_shift($strategy);
+        $args = $strategy;
+
         switch ($key) {
             case self::ID:
                 return new Id($datum);
@@ -84,16 +87,15 @@ class TraversalStrategy
         $currentDatum = $datum;
 
         do {
-            $strategy = $this->stack->getCurrentStrat();
-            $args = $this->stack->getCurrentStratArguments();
+            $strategy = $this->stack->pop();
 
-            if (is_string($strategy)) {
-                if (!$strategy = $this->getStrategy($strategy, $currentDatum, $args)) {
+            if (is_string($strategy[0])) {
+                if (!$strategy = $this->resolveStrategy($strategy, $currentDatum)) {
                     throw new \DomainException('Invalid strategy: validation process failed');
                 }
+            } else {
+                $strategy = $strategy[0];
             }
-
-            $this->stack->pop();
 
             $result = $strategy($currentDatum);
 
@@ -105,7 +107,7 @@ class TraversalStrategy
                 // strategy non-terminal, continue applying further instructions to the same datum
                 foreach ($result as [$nextStrategy, $nextDatum]) {
                     if (is_array($nextStrategy) && is_string($nextStrategy[0])) {
-                        $nextStrategy = $this->getStrategy($nextStrategy[0], $nextDatum, array_slice($nextStrategy, 1));
+                        $nextStrategy = $this->resolveStrategy($nextStrategy, $nextDatum);
                     }
 
                     $this->stack->push([$nextStrategy]);
