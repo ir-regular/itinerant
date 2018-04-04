@@ -5,7 +5,7 @@ namespace JaneOlszewska\Tests\Itinerant\Strategy;
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 use JaneOlszewska\Itinerant\NodeAdapter\SecondElement;
 use JaneOlszewska\Itinerant\Strategy\All;
-use JaneOlszewska\Itinerant\Strategy\Fail;
+use JaneOlszewska\Itinerant\NodeAdapter\Fail;
 use PHPUnit\Framework\TestCase;
 
 class AllTest extends TestCase

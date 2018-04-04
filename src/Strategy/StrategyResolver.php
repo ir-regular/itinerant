@@ -12,16 +12,6 @@ class StrategyResolver
     const ONE = 'one';
     const ADHOC = 'adhoc';
 
-    public const INBUILT_STRATEGIES = [
-        self::ID,
-        self::FAIL,
-        self::SEQ,
-        self::CHOICE,
-        self::ALL,
-        self::ONE,
-        self::ADHOC,
-    ];
-
     /** @var array */
     private $strategies = [];
 
@@ -36,10 +26,6 @@ class StrategyResolver
         $args = $strategy;
 
         switch ($key) {
-            case self::ID:
-                return new Id();
-            case self::FAIL:
-                return new Fail();
             case self::SEQ:
                 return new Seq($args[0], $args[1]);
             case self::CHOICE:

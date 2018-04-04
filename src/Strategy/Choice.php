@@ -2,6 +2,7 @@
 
 namespace JaneOlszewska\Itinerant\Strategy;
 
+use JaneOlszewska\Itinerant\NodeAdapter\Fail;
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 
 class Choice implements StrategyInterface

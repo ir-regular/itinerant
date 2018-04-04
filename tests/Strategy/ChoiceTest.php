@@ -4,7 +4,7 @@ namespace JaneOlszewska\Tests\Itinerant\Strategy;
 
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 use JaneOlszewska\Itinerant\NodeAdapter\SecondElement;
-use JaneOlszewska\Itinerant\Strategy\Fail;
+use JaneOlszewska\Itinerant\NodeAdapter\Fail;
 use JaneOlszewska\Itinerant\Strategy\Choice;
 use PHPUnit\Framework\TestCase;
 

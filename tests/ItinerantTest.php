@@ -3,7 +3,7 @@
 namespace JaneOlszewska\Tests\Itinerant;
 
 use JaneOlszewska\Itinerant\NodeAdapter\SecondElement;
-use JaneOlszewska\Itinerant\Strategy\Fail;
+use JaneOlszewska\Itinerant\NodeAdapter\Fail;
 use JaneOlszewska\Itinerant\Strategy\StrategyResolver;
 use JaneOlszewska\Itinerant\Itinerant;
 use PHPUnit\Framework\TestCase;

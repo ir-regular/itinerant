@@ -2,6 +2,7 @@
 
 namespace JaneOlszewska\Itinerant;
 
+use JaneOlszewska\Itinerant\NodeAdapter\Fail;
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 use JaneOlszewska\Itinerant\Strategy\StrategyResolver;
 
@@ -42,9 +43,18 @@ class StrategyStack
             [$strategy, $node] = $this->pop();
 
             if (is_array($strategy)) {
-                $strategy = $this->resolver->resolve($strategy);
-                $continuation = $strategy->apply($node);
-                $result = $continuation->current();
+                // speed things up by insta-resolving 'id' and 'fail' strategies
+                if ($strategy[0] == StrategyResolver::ID) {
+                    $result = $node;
+                    continue;
+                } elseif ($strategy[0] == StrategyResolver::FAIL) {
+                    $result = Fail::fail();
+                    continue;
+                } else {
+                    $strategy = $this->resolver->resolve($strategy);
+                    $continuation = $strategy->apply($node);
+                    $result = $continuation->current();
+                }
             } else {
                 $continuation = $strategy;
                 // apply continuation to result of previous strategy
