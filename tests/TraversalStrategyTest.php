@@ -90,14 +90,19 @@ class TraversalStrategyTest extends TestCase
         $newName = 'modified!';
         $modifyAction = $this->getSetNameAction($newName);
 
+        $unwrappedNode = $this->getUnwrappedNodeDatum('original');
+        $node = new ViaGetter($unwrappedNode);
         $modifiedNode = $this->getNodeDatum($newName);
+
+        $unwrappedNodes = $this->getUnwrappedNodeArrayDatum($this->getNodes());
+        $nodes = new ViaGetter($unwrappedNodes);
         $modifiedNodes = $this->getNodeArrayDatum($this->getNodes(2, $newName));
 
         // adhoc on its own, not applying action (because only applicable to nodes with 'getName')
         // and thus defaulting to 'fail' strategy
 
-        $nodes = $this->getNodeArrayDatum([]);
-        $this->assertEquals($this->fail, $this->ts->apply(['adhoc', ['fail'], $modifyAction], $nodes));
+        $result = $this->ts->apply(['adhoc', ['fail'], $modifyAction], $this->getNodeArrayDatum([]));
+        $this->assertEquals($this->fail, $result);
 
         // adhoc on its own, not applying action and defaulting to 'id' strategy
 
@@ -105,24 +110,52 @@ class TraversalStrategyTest extends TestCase
 
         // adhoc on its own, applying action
 
-        $node = $this->getNodeDatum();
-        $this->assertEquals($modifiedNode, $this->ts->apply(['adhoc', ['fail'], $modifyAction], $node));
+        $result = $this->ts->apply(['adhoc', ['fail'], $modifyAction], $node);
+        $this->assertEquals($modifiedNode, $result);
+        $this->assertNotEquals($unwrappedNode, $result->getNode()); // original data was not modified in the process
 
         // todo: test adhoc where it substitutes with strategy (id/fail)
 
         // adhoc with all
 
-        $nodes = $this->getNodeArrayDatum($this->getNodes());
-
         $result = $this->ts->apply(['all', ['adhoc', ['fail'], $modifyAction]], $nodes);
         $this->assertEquals($modifiedNodes, $result);
+        $this->assertNotEquals($unwrappedNodes, $result->getNode()); // original data was not modified in the process
 
         // adhoc with one
 
-        $nodes = $this->getNodeArrayDatum($this->getNodes());
-
         $result = $this->ts->apply(['one', ['adhoc', ['fail'], $modifyAction]], $nodes);
         $this->assertEquals($modifiedNode, $result);
+        $this->assertNotEquals($unwrappedNodes, $result->getNode()); // original data was not modified in the process
+    }
+
+    public function testModificationStoppedHalfway()
+    {
+        $nodes = $this->getNodeArrayDatum($this->getNodes());
+        $modifyAction = function (NodeAdapterInterface $d) {
+            static $counter = 0;
+
+            if (method_exists($d->getNode(), 'setName')) {
+                if (++$counter == 2) {
+                    return null; // "doesn't apply" to 2nd child
+                }
+                $d->getNode()->setName('modified!');
+                return $d;
+            }
+
+            return null;
+        };
+
+        $result = $this->ts->apply(['choice',
+            // modify action "doesn't apply" on 2nd child,
+            // thus adhoc calls 'fail' on 2nd child
+            // thus all fails
+            ['all', ['adhoc', ['fail'], $modifyAction]],
+            // therefore, return the original node provided to 'choice'
+            ['id']
+        ], $nodes);
+
+        $this->assertEquals($nodes, $result); // check that result is unmodified
     }
 
     public function testRegisterCustomStrategy()

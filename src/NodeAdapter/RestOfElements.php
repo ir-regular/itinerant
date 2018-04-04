@@ -9,12 +9,12 @@ class RestOfElements implements NodeAdapterInterface
      */
     private $node;
 
-    public function __construct(&$node)
+    public function __construct($node)
     {
         $this->node = $node;
     }
 
-    public function &getNode()
+    public function getNode()
     {
         return $this->node;
     }

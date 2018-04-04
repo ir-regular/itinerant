@@ -25,7 +25,7 @@ class ViaGetter implements NodeAdapterInterface
     private $setChildren;
 
     public function __construct(
-        &$node,
+        $node,
         string $getValue = 'getValue',
         string $getChildren = 'getChildren',
         string $setChildren = 'setChildren'
@@ -39,13 +39,13 @@ class ViaGetter implements NodeAdapterInterface
             );
         }
 
-        $this->node = $node;
+        $this->node = clone $node;
         $this->getValue = $getValue;
         $this->getChildren = $getChildren;
         $this->setChildren = $setChildren;
     }
 
-    public function &getNode()
+    public function getNode()
     {
         return $this->node;
     }

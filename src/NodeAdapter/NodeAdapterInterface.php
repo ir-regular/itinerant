@@ -9,7 +9,7 @@ interface NodeAdapterInterface
      *
      * @return mixed
      */
-    public function &getNode();
+    public function getNode();
 
     /**
      * Get node value.
