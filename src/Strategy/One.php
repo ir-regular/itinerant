@@ -6,91 +6,33 @@ use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 
 class One
 {
-    private $firstPhase = true;
-
-    /**
-     * @var NodeAdapterInterface
-     */
-    private $node;
-
-    /**
-     * @var NodeAdapterInterface[]
-     */
-    private $unprocessed;
-
-    /**
-     * @var NodeAdapterInterface[]
-     */
-    private $processed;
-
+    /** @var array */
     private $childStrategy;
 
     public function __construct(
-        $childStrategy,
-        NodeAdapterInterface $node = null
+        array $childStrategy
     ) {
         $this->childStrategy = $childStrategy;
-
-        if ($node) {
-            $this->node = $node;
-        }
     }
 
-    public function __invoke($previousResult)
+    public function __invoke(NodeAdapterInterface $node)
     {
-        $result = $this->firstPhase
-            ? $this->one($previousResult)
-            : $this->oneIntermediate($previousResult);
+        // if $node has no children: fail by default
+        $result = Fail::fail();
 
-        return $result;
-    }
+        $unprocessed = $node->getChildren();
+        $unprocessed = iterator_to_array($unprocessed);
 
-    private function one(NodeAdapterInterface $node)
-    {
-        if (!$this->node) {
-            $this->node = $node;
-        }
+        if ($unprocessed) {
+            while ($child = array_shift($unprocessed)) {
+                $result = yield [$this->childStrategy, $child];
 
-        // if $d has no children: fail, strategy terminal independent of what $s1 actually is
-        $res = Fail::fail();
-
-        $unprocessed = $this->node->getChildren();
-        $this->unprocessed = iterator_to_array($unprocessed);
-        $this->processed = [];
-
-        if ($this->unprocessed) {
-            $this->firstPhase = false;
-
-            $child = array_shift($this->unprocessed);
-
-            return [
-                [$this, null],
-                [$this->childStrategy, $child]
-            ];
-        }
-
-        return $res;
-    }
-
-    private function oneIntermediate(NodeAdapterInterface $previousResult)
-    {
-        $res = $previousResult;
-
-        if (Fail::fail() === $previousResult) {
-            // if the result of the last child resolution was fail, need to try with the next one (if exists)
-
-            if ($this->unprocessed) { // fail, but there's more to process
-                $child = array_shift($this->unprocessed);
-
-                return [
-                    [$this, null],
-                    [$this->childStrategy, $child]
-                ];
+                if (Fail::fail() !== $result) {
+                    break;
+                }
             }
-
-            // else: well we processed everything and nothing succeeded so: FAIL ($res === $previousResult === FAIL)
         }
 
-        return $res;
+        yield $result;
     }
 }

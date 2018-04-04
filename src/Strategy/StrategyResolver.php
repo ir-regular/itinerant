@@ -27,29 +27,29 @@ class StrategyResolver
     /** @var array */
     private $strategies = [];
 
-    public function resolve(array $strategy, NodeAdapterInterface $datum)
+    public function resolve(array $strategy)
     {
         $key = array_shift($strategy);
         $args = $strategy;
 
         switch ($key) {
             case self::ID:
-                return new Id($datum);
+                return new Id();
             case self::FAIL:
                 return new Fail();
             case self::SEQ:
-                return new Seq($args[0], $args[1], $datum);
+                return new Seq($args[0], $args[1]);
             case self::CHOICE:
-                return new Choice($args[0], $args[1], $datum);
+                return new Choice($args[0], $args[1]);
             case self::ALL:
-                return new All($args[0], $datum);
+                return new All($args[0]);
             case self::ONE:
-                return new One($args[0], $datum);
+                return new One($args[0]);
             case self::ADHOC:
-                return new Adhoc($args[0], $args[1], $datum);
+                return new Adhoc($args[0], $args[1]);
             default:
                 return $this->strategies[$key]
-                    ? new UserDefined($this->strategies[$key], $args, $datum)
+                    ? new UserDefined($this->strategies[$key], $args)
                     : null;
         }
     }

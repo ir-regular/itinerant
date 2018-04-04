@@ -6,92 +6,41 @@ use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 
 class All
 {
-    private $firstPhase = true;
-
-    /**
-     * @var NodeAdapterInterface
-     */
-    private $node;
-
-    /**
-     * @var NodeAdapterInterface[]
-     */
-    private $unprocessed;
-
-    /**
-     * @var NodeAdapterInterface[]
-     */
-    private $processed;
-
+    /** @var array */
     private $childStrategy;
 
     public function __construct(
-        $childStrategy,
-        NodeAdapterInterface $node = null
+        array $childStrategy
     ) {
         $this->childStrategy = $childStrategy;
-
-        if ($node) {
-            $this->node = $node;
-        }
     }
 
-    public function __invoke(NodeAdapterInterface $previousResult)
+    public function __invoke(NodeAdapterInterface $node)
     {
-        $result = $this->firstPhase
-            ? $this->all($previousResult)
-            : $this->allIntermediate($previousResult);
+        // if $node has no children: return $node by default
+        $result = $node;
 
-        return $result;
-    }
+        $unprocessed = $node->getChildren();
+        $unprocessed = iterator_to_array($unprocessed);
+        $processed = [];
 
-    private function all(NodeAdapterInterface $node)
-    {
-        if (!$this->node) {
-            $this->node = $node;
-        }
+        if ($unprocessed) {
+            while ($child = array_shift($unprocessed)) {
+                $result = yield [$this->childStrategy, $child];
 
-        // if $d has no children: return $d, strategy terminal independent of what $s1 actually is
-        $res = $this->node;
+                if (Fail::fail() === $result) {
+                    break;
+                }
 
-        $unprocessed = $this->node->getChildren();
-        $this->unprocessed = iterator_to_array($unprocessed);
-        $this->processed = [];
+                $processed[] = $result;
+            }
 
-        if ($this->unprocessed) {
-            $this->firstPhase = false;
-            $child = array_shift($this->unprocessed);
-
-            return [
-                [$this, null],
-                [$this->childStrategy, $child]
-            ];
-        }
-
-        return $res;
-    }
-
-    private function allIntermediate(NodeAdapterInterface $previousResult)
-    {
-        $res = $previousResult;
-
-        // if the result of the last child resolution wasn't fail, continue
-        if (Fail::fail() !== $previousResult) {
-            $this->processed[] = $previousResult;
-
-            if ($this->unprocessed) { // there's more to process
-                $child = array_shift($this->unprocessed);
-
-                return [
-                    [$this, null],
-                    [$this->childStrategy, $child]
-                ];
-            } else {
-                $this->node->setChildren($this->processed);
-                $res = $this->node;
+            if (Fail::fail() !== $result) {
+                $node->setChildren($processed);
+                $result = $node;
             }
         }
 
-        return $res;
+        yield $result;
     }
 }

@@ -6,34 +6,23 @@ use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 
 class UserDefined
 {
-    /**
-     * @var array
-     */
+    /** @var array */
     private $strategy;
 
-    /**
-     * @var NodeAdapterInterface
-     */
-    private $node;
-
     public function __construct(
-        $strategy,
-        $args,
-        NodeAdapterInterface $node = null
+        array $strategy,
+        array $args
     ) {
         $this->strategy = $this->fillPlaceholders($strategy, $args);
-
-        if ($node) {
-            $this->node = $node;
-        }
     }
 
     public function __invoke(NodeAdapterInterface $node)
     {
-        return [[$this->strategy, $this->node ?: $node]];
+        $result = yield [$this->strategy, $node];
+        yield $result;
     }
 
-    private function fillPlaceholders($strategy, $args)
+    private function fillPlaceholders(array $strategy, array $args): array
     {
         // substitute numeric placeholders with the actual arguments
         // @TODO: yep, it's ugly, and it doesn't validate the index

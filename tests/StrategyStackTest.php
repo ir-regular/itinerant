@@ -199,7 +199,7 @@ class StrategyStackTest extends TestCase
 
         $nodes = $this->getNodeArrayDatum($this->getNodes());
 
-        $result = $this->stack->apply(['all', ['adhoc', 'fail', $modifyAction]], $nodes);
+        $result = $this->stack->apply(['all', ['adhoc', ['fail'], $modifyAction]], $nodes);
         $this->assertEquals($modifiedNodes, $result);
     }
 
@@ -210,7 +210,7 @@ class StrategyStackTest extends TestCase
 
         $nodes = $this->getNodeArrayDatum($this->getNodes());
 
-        $result = $this->stack->apply(['all', ['adhoc', 'fail', $modifyAction]], $nodes);
+        $result = $this->stack->apply(['all', ['adhoc', ['fail'], $modifyAction]], $nodes);
         $this->assertEquals($modifiedNodes, $result);
     }
 

@@ -6,61 +6,28 @@ use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 
 class Choice
 {
-    private $firstPhase = true;
-
-    /**
-     * @var NodeAdapterInterface
-     */
-    private $node;
-
+    /** @var array */
     private $initialStrategy;
 
+    /** @var array */
     private $alternativeStrategy;
 
     public function __construct(
-        $initialStrategy,
-        $alternativeStrategy,
-        NodeAdapterInterface $node = null
+        array $initialStrategy,
+        array $alternativeStrategy
     ) {
-        if ($node) {
-            $this->node = $node;
-        }
-
         $this->initialStrategy = $initialStrategy;
         $this->alternativeStrategy = $alternativeStrategy;
     }
 
-    public function __invoke(NodeAdapterInterface $previousResult)
+    public function __invoke(NodeAdapterInterface $node)
     {
-        $result = $this->firstPhase
-            ? $this->choice($previousResult)
-            : $this->choiceIntermediate($previousResult);
+        $result = yield [$this->initialStrategy, $node];
 
-        return $result;
-    }
-
-    private function choice(NodeAdapterInterface $node)
-    {
-        if (!$this->node) {
-            $this->node = $node;
+        if (Fail::fail() === $result) {
+            $result = yield [$this->alternativeStrategy, $node];
         }
 
-        $this->firstPhase = false;
-
-        return [
-            [$this, null],
-            [$this->initialStrategy, $this->node]
-        ];
-    }
-
-    private function choiceIntermediate(NodeAdapterInterface $previousResult)
-    {
-        if (Fail::fail() !== $previousResult) {
-            return $previousResult; // pass $s1 result
-        }
-
-        return [
-            [$this->alternativeStrategy, $this->node]
-        ];
+        yield $result;
     }
 }

@@ -6,20 +6,8 @@ use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 
 class Id
 {
-    /**
-     * @var NodeAdapterInterface
-     */
-    private $node;
-
-    public function __construct(NodeAdapterInterface $node = null)
+    public function __invoke(NodeAdapterInterface $node)
     {
-        if ($node) {
-            $this->node = $node;
-        }
-    }
-
-    public function __invoke(NodeAdapterInterface $node): NodeAdapterInterface
-    {
-        return $this->node ?: $node;
+        yield $node;
     }
 }

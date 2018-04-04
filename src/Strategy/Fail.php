@@ -27,7 +27,7 @@ class Fail
 
                 public function getValue()
                 {
-                    return null;
+                    return 'FAIL'; // just so you can tell this is the node
                 }
 
                 public function getChildren(): \Iterator
@@ -45,9 +45,9 @@ class Fail
         return self::$failValue;
     }
 
-    public function __invoke(): NodeAdapterInterface
+    public function __invoke(NodeAdapterInterface $node)
     {
         // ignore arguments and return terminating value 'fail'
-        return self::fail();
+        yield self::fail();
     }
 }

@@ -36,7 +36,7 @@ class StrategyResolverTest extends TestCase
 
         $this->resolver->registerStrategy('meh', ['adhoc', 'fail', $action]);
 
-        $result = $this->resolver->resolve(['meh'], new SecondElement([1, [2, 3]]));
+        $result = $this->resolver->resolve(['meh']);
         $this->assertInstanceOf(UserDefined::class, $result);
     }
 }

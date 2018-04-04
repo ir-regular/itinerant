@@ -23,42 +23,40 @@ class StrategyStack
     }
 
     /**
-     * @param array $s
-     * @param NodeAdapterInterface $datum
+     * @param array $strategy
+     * @param NodeAdapterInterface $node
      * @return NodeAdapterInterface
      */
-    public function apply($s, NodeAdapterInterface $datum): NodeAdapterInterface
+    public function apply(array $strategy, NodeAdapterInterface $node): NodeAdapterInterface
     {
-        $this->push($s);
-        $currentDatum = $datum;
+        $this->push([$strategy, $node]);
+        $result = null;
 
         do {
-            $strategy = $this->pop();
+            [$strategy, $node] = $this->pop();
 
-            if (is_string($strategy[0])) {
-                if (!$strategy = $this->resolver->resolve($strategy, $currentDatum)) {
+            if (is_array($strategy)) {
+                if (!$strategy = $this->resolver->resolve($strategy)) {
                     throw new \DomainException('Invalid strategy: validation process failed');
                 }
+
+                $continuation = $strategy($node);
+                $result = $continuation->current();
             } else {
-                $strategy = $strategy[0];
+                $continuation = $strategy;
+                // apply continuation to result of previous strategy
+                $result = $continuation->send($result);
             }
 
-            $result = $strategy($currentDatum);
-
-            if ($result instanceof NodeAdapterInterface) {
-                // strategy terminal: $currentDatum transformed into $result
-                // pass the result into the strategy lower on the stack
-                $currentDatum = $result;
-            } else {
-                // strategy non-terminal, continue applying further instructions to the same datum
-                foreach ($result as [$nextStrategy, $nextDatum]) {
-                    if (is_array($nextStrategy) && is_string($nextStrategy[0])) {
-                        $nextStrategy = $this->resolver->resolve($nextStrategy, $nextDatum);
-                    }
-
-                    $this->push([$nextStrategy]);
-                }
+            if (!($result instanceof NodeAdapterInterface)) {
+                // strategy non-terminal, preserve current state
+                $this->push([$continuation, null]);
+                // ...and queue up a new instruction
+                $this->push($result);
             }
+
+            // else: strategy terminal. $currentDatum transformed into $result
+            // pass the result into the strategy lower on the stack
         } while (!$this->isEmpty());
 
         return $result;
