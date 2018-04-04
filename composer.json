@@ -21,8 +21,12 @@
   },
   "autoload": {
     "psr-4": {
-      "JaneOlszewska\\Itinerant\\": "src/",
-      "JaneOlszewska\\Itinerant\\Tests\\": "tests/"
+      "JaneOlszewska\\Itinerant\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "JaneOlszewska\\Tests\\Itinerant\\": "tests/"
     }
   },
   "minimum-stability": "stable",

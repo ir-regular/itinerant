@@ -1,6 +1,6 @@
 <?php
 
-namespace JaneOlszewska\Tests\Itinerant\ChildHandler;
+namespace JaneOlszewska\Tests\Itinerant\NodeAdapter;
 
 use JaneOlszewska\Itinerant\NodeAdapter\SecondElement;
 use PHPUnit\Framework\TestCase;

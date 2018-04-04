@@ -1,6 +1,6 @@
 <?php
 
-namespace JaneOlszewska\Itinerant\Tests;
+namespace JaneOlszewska\Tests\Itinerant;
 
 use JaneOlszewska\Itinerant\NodeAdapter\SecondElement;
 use JaneOlszewska\Itinerant\Strategy\Fail;

@@ -1,6 +1,6 @@
 <?php
 
-namespace JaneOlszewska\Tests\Itinerant\ChildHandler;
+namespace JaneOlszewska\Tests\Itinerant\NodeAdapter;
 
 use JaneOlszewska\Itinerant\NodeAdapter\ViaGetter;
 use PHPUnit\Framework\TestCase;
