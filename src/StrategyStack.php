@@ -8,7 +8,7 @@ use JaneOlszewska\Itinerant\Strategy\StrategyResolver;
 class StrategyStack
 {
     /**
-     * @var array
+     * @var array|\Ds\Stack
      */
     private $stack = [];
 
@@ -19,6 +19,12 @@ class StrategyStack
 
     public function __construct(StrategyResolver $resolver)
     {
+        if (class_exists('\Ds\Stack')) {
+            $this->stack = new \Ds\Stack();
+        } else {
+            $this->stack = [];
+        }
+
         $this->resolver = $resolver;
     }
 
@@ -64,12 +70,20 @@ class StrategyStack
 
     private function isEmpty(): bool
     {
-        return empty($this->stack);
+        if (is_array($this->stack)) {
+            return empty($this->stack);
+        } else {
+            return $this->stack->isEmpty();
+        }
     }
 
     private function pop(): array
     {
-        return array_pop($this->stack);
+        if (is_array($this->stack)) {
+            return array_pop($this->stack);
+        } else {
+            return $this->stack->pop();
+        }
     }
 
     /**
@@ -78,6 +92,10 @@ class StrategyStack
      */
     private function push(array $strategy): void
     {
-        $this->stack[] = $strategy;
+        if (is_array($this->stack)) {
+            $this->stack[] = $strategy;
+        } else {
+            $this->stack->push($strategy);
+        }
     }
 }
