@@ -27,7 +27,7 @@ class StrategyResolver
     /** @var array */
     private $strategies = [];
 
-    public function resolve(array $strategy)
+    public function resolve(array $strategy): ?StrategyInterface
     {
         $key = array_shift($strategy);
         $args = $strategy;

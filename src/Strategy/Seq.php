@@ -4,7 +4,7 @@ namespace JaneOlszewska\Itinerant\Strategy;
 
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 
-class Seq
+class Seq implements StrategyInterface
 {
     /** @var array */
     private $initialStrategy;
@@ -20,7 +20,7 @@ class Seq
         $this->followupStrategy = $followupStrategy;
     }
 
-    public function __invoke(NodeAdapterInterface $node): \Generator
+    public function apply(NodeAdapterInterface $node): \Generator
     {
         $result = yield [$this->initialStrategy, $node];
 

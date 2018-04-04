@@ -16,9 +16,7 @@ class IdTest extends TestCase
         $node = new SecondElement([1, [2, 3]]);
         $id = new Id();
 
-        /** @var \Generator $continuation */
-        $continuation = $id($node);
-        $this->assertInstanceOf(\Generator::class, $continuation);
+        $continuation = $id->apply($node);
 
         $result = $continuation->current();
         $this->assertEquals($node, $result);

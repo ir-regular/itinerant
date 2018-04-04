@@ -4,7 +4,7 @@ namespace JaneOlszewska\Itinerant\Strategy;
 
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 
-class All
+class All implements StrategyInterface
 {
     /** @var array */
     private $childStrategy;
@@ -15,7 +15,7 @@ class All
         $this->childStrategy = $childStrategy;
     }
 
-    public function __invoke(NodeAdapterInterface $node)
+    public function apply(NodeAdapterInterface $node): \Generator
     {
         // if $node has no children: return $node by default
         $result = $node;

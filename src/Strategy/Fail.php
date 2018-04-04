@@ -4,7 +4,7 @@ namespace JaneOlszewska\Itinerant\Strategy;
 
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 
-class Fail
+class Fail implements StrategyInterface
 {
     /**
      * @var NodeAdapterInterface
@@ -45,7 +45,7 @@ class Fail
         return self::$failValue;
     }
 
-    public function __invoke(NodeAdapterInterface $node)
+    public function apply(NodeAdapterInterface $node): \Generator
     {
         // ignore arguments and return terminating value 'fail'
         yield self::fail();

@@ -2,6 +2,7 @@
 
 namespace JaneOlszewska\Tests\Itinerant\Strategy;
 
+use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 use JaneOlszewska\Itinerant\NodeAdapter\SecondElement;
 use JaneOlszewska\Itinerant\Strategy\Fail;
 use JaneOlszewska\Itinerant\Strategy\Seq;
@@ -11,7 +12,11 @@ class SeqTest extends TestCase
 {
     private $initialInstruction = ['initial'];
     private $followupInstruction = ['followup'];
+
+    /** @var NodeAdapterInterface */
     private $node;
+
+    /** @var Seq */
     private $seq;
 
     protected function setUp()
@@ -22,9 +27,7 @@ class SeqTest extends TestCase
 
     public function testExecutesFollowupWhenInitialSucceeded()
     {
-        /** @var \Generator $continuation */
-        $continuation = ($this->seq)($this->node);
-        $this->assertInstanceOf(\Generator::class, $continuation);
+        $continuation = $this->seq->apply($this->node);
 
         $result = $continuation->current();
         $this->assertEquals([$this->initialInstruction, $this->node], $result);
@@ -48,9 +51,7 @@ class SeqTest extends TestCase
 
     public function testSkipsFollowupWhenInitialFailed()
     {
-        /** @var \Generator $continuation */
-        $continuation = ($this->seq)($this->node);
-        $this->assertInstanceOf(\Generator::class, $continuation);
+        $continuation = $this->seq->apply($this->node);
 
         $result = $continuation->current();
         $this->assertEquals([$this->initialInstruction, $this->node], $result);

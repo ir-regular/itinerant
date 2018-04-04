@@ -4,9 +4,9 @@ namespace JaneOlszewska\Itinerant\Strategy;
 
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 
-class Id
+class Id implements StrategyInterface
 {
-    public function __invoke(NodeAdapterInterface $node)
+    public function apply(NodeAdapterInterface $node): \Generator
     {
         yield $node;
     }

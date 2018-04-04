@@ -16,9 +16,7 @@ class FailTest extends TestCase
         $node = new SecondElement([1, [2, 3]]);
         $fail = new Fail();
 
-        /** @var \Generator $continuation */
-        $continuation = $fail($node);
-        $this->assertInstanceOf(\Generator::class, $continuation);
+        $continuation = $fail->apply($node);
 
         $result = $continuation->current();
         $this->assertEquals(Fail::fail(), $result);

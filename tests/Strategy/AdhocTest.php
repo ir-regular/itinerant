@@ -25,9 +25,7 @@ class AdhocTest extends TestCase
         };
         $adhoc = new Adhoc($this->fallbackInstruction, $action);
 
-        /** @var \Generator $continuation */
-        $continuation = $adhoc($this->node);
-        $this->assertInstanceOf(\Generator::class, $continuation);
+        $continuation = $adhoc->apply($this->node);
 
         $result = $continuation->current();
         $this->assertEquals($this->node, $result);
@@ -40,9 +38,7 @@ class AdhocTest extends TestCase
         };
         $adhoc = new Adhoc($this->fallbackInstruction, $action);
 
-        /** @var \Generator $continuation */
-        $continuation = $adhoc($this->node);
-        $this->assertInstanceOf(\Generator::class, $continuation);
+        $continuation = $adhoc->apply($this->node);
 
         $result = $continuation->current();
         $this->assertEquals([$this->fallbackInstruction, $this->node], $result);

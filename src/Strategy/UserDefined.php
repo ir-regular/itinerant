@@ -4,7 +4,7 @@ namespace JaneOlszewska\Itinerant\Strategy;
 
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 
-class UserDefined
+class UserDefined implements StrategyInterface
 {
     /** @var array */
     private $strategy;
@@ -16,7 +16,7 @@ class UserDefined
         $this->strategy = $this->fillPlaceholders($strategy, $args);
     }
 
-    public function __invoke(NodeAdapterInterface $node)
+    public function apply(NodeAdapterInterface $node): \Generator
     {
         $result = yield [$this->strategy, $node];
         yield $result;

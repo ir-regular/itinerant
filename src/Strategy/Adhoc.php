@@ -4,7 +4,7 @@ namespace JaneOlszewska\Itinerant\Strategy;
 
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 
-class Adhoc
+class Adhoc implements StrategyInterface
 {
     /** @var array */
     private $strategyIfInapplicable;
@@ -20,7 +20,7 @@ class Adhoc
         $this->action = $action;
     }
 
-    public function __invoke(NodeAdapterInterface $node)
+    public function apply(NodeAdapterInterface $node): \Generator
     {
         // strategy resolved to applied action
         $result = ($this->action)($node);

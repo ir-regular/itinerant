@@ -2,6 +2,7 @@
 
 namespace JaneOlszewska\Tests\Itinerant\Strategy;
 
+use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 use JaneOlszewska\Itinerant\NodeAdapter\SecondElement;
 use JaneOlszewska\Itinerant\Strategy\Fail;
 use JaneOlszewska\Itinerant\Strategy\One;
@@ -10,7 +11,11 @@ use PHPUnit\Framework\TestCase;
 class OneTest extends TestCase
 {
     private $childInstruction = ['resolve-child'];
+
+    /** @var NodeAdapterInterface */
     private $node;
+
+    /** @var One */
     private $one;
 
     protected function setUp()
@@ -21,9 +26,7 @@ class OneTest extends TestCase
 
     public function testFailsIfAllChildrenFailed()
     {
-        /** @var \Generator $continuation */
-        $continuation = ($this->one)($this->node);
-        $this->assertInstanceOf(\Generator::class, $continuation);
+        $continuation = $this->one->apply($this->node);
 
         $result = $continuation->current();
         $this->assertEquals($this->childInstruction, $result[0]);
@@ -51,9 +54,7 @@ class OneTest extends TestCase
     {
         $success = new SecondElement([2, [99]]);
 
-        /** @var \Generator $continuation */
-        $continuation = ($this->one)($this->node);
-        $this->assertInstanceOf(\Generator::class, $continuation);
+        $continuation = $this->one->apply($this->node);
 
         $result = $continuation->current();
         $this->assertEquals($this->childInstruction, $result[0]);
@@ -76,10 +77,8 @@ class OneTest extends TestCase
     {
         $node = new SecondElement([2]);
 
-        /** @var \Generator $continuation */
-        $continuation = ($this->one)($node);
+        $continuation = $this->one->apply($node);
 
-        $this->assertInstanceOf(\Generator::class, $continuation);
         $result = $continuation->current();
         $this->assertEquals(Fail::fail(), $result);
     }

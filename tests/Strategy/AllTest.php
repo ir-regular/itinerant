@@ -2,6 +2,7 @@
 
 namespace JaneOlszewska\Tests\Itinerant\Strategy;
 
+use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 use JaneOlszewska\Itinerant\NodeAdapter\SecondElement;
 use JaneOlszewska\Itinerant\Strategy\All;
 use JaneOlszewska\Itinerant\Strategy\Fail;
@@ -10,7 +11,11 @@ use PHPUnit\Framework\TestCase;
 class AllTest extends TestCase
 {
     private $childInstruction = ['resolve-child'];
+
+    /** @var NodeAdapterInterface */
     private $node;
+
+    /** @var All */
     private $all;
 
     protected function setUp()
@@ -21,9 +26,7 @@ class AllTest extends TestCase
 
     public function testReturnsNodeWhenAllChildrenSucceeded()
     {
-        /** @var \Generator $continuation */
-        $continuation = ($this->all)($this->node);
-        $this->assertInstanceOf(\Generator::class, $continuation);
+        $continuation = $this->all->apply($this->node);
 
         $result = $continuation->current();
         $this->assertEquals($this->childInstruction, $result[0]);
@@ -49,9 +52,7 @@ class AllTest extends TestCase
 
     public function testFailsWhenOneChildFailed()
     {
-        /** @var \Generator $continuation */
-        $continuation = ($this->all)($this->node);
-        $this->assertInstanceOf(\Generator::class, $continuation);
+        $continuation = $this->all->apply($this->node);
 
         $result = $continuation->current();
         $this->assertEquals($this->childInstruction, $result[0]);
@@ -74,10 +75,8 @@ class AllTest extends TestCase
     {
         $node = new SecondElement([2]);
 
-        /** @var \Generator $continuation */
-        $continuation = ($this->all)($node);
+        $continuation = $this->all->apply($node);
 
-        $this->assertInstanceOf(\Generator::class, $continuation);
         $result = $continuation->current();
         $this->assertEquals($node, $result);
     }

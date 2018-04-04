@@ -46,7 +46,7 @@ class StrategyStack
                     throw new \DomainException('Invalid strategy: validation process failed');
                 }
 
-                $continuation = $strategy($node);
+                $continuation = $strategy->apply($node);
                 $result = $continuation->current();
             } else {
                 $continuation = $strategy;

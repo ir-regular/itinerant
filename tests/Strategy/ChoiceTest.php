@@ -2,6 +2,7 @@
 
 namespace JaneOlszewska\Tests\Itinerant\Strategy;
 
+use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 use JaneOlszewska\Itinerant\NodeAdapter\SecondElement;
 use JaneOlszewska\Itinerant\Strategy\Fail;
 use JaneOlszewska\Itinerant\Strategy\Choice;
@@ -11,7 +12,11 @@ class ChoiceTest extends TestCase
 {
     private $initialInstruction = ['initial'];
     private $followupInstruction = ['followup'];
+
+    /** @var NodeAdapterInterface */
     private $node;
+
+    /** @var Choice */
     private $choice;
 
     protected function setUp()
@@ -22,9 +27,7 @@ class ChoiceTest extends TestCase
 
     public function testExecutesFollowupWhenFirstStrategyFails()
     {
-        /** @var \Generator $continuation */
-        $continuation = ($this->choice)($this->node);
-        $this->assertInstanceOf(\Generator::class, $continuation);
+        $continuation = $this->choice->apply($this->node);
 
         $result = $continuation->current();
         $this->assertEquals([$this->initialInstruction, $this->node], $result);
@@ -48,9 +51,7 @@ class ChoiceTest extends TestCase
 
     public function testSkipsFollowupWhenFirstStrategySucceeds()
     {
-        /** @var \Generator $continuation */
-        $continuation = ($this->choice)($this->node);
-        $this->assertInstanceOf(\Generator::class, $continuation);
+        $continuation = $this->choice->apply($this->node);
 
         $result = $continuation->current();
         $this->assertEquals([$this->initialInstruction, $this->node], $result);

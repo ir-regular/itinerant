@@ -14,9 +14,7 @@ class UserDefinedTest extends TestCase
         $node = new SecondElement([1, [2, 3]]);
         $userDefined = new UserDefined($expansion, ['id', 'fail']);
 
-        /** @var \Generator $continuation */
-        $continuation = $userDefined($node);
-        $this->assertInstanceOf(\Generator::class, $continuation);
+        $continuation = $userDefined->apply($node);
 
         $result = $continuation->current();
         $this->assertEquals([['seq', ['id', 'fail']], $node], $result);
