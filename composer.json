@@ -8,7 +8,11 @@
     "phpunit/phpunit": "^6.0",
     "squizlabs/php_codesniffer": "^2.8",
     "phpstan/phpstan": "^0.9.2",
-    "phpmetrics/phpmetrics": "^2.3"
+    "phpmetrics/phpmetrics": "^2.3",
+    "php-ds/php-ds": "^1.2"
+  },
+  "suggest": {
+    "ext-ds": "StrategyStack performance improves when \\Ds\\Stack is available"
   },
   "scripts": {
     "ci": [
