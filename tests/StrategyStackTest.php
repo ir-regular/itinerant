@@ -3,10 +3,10 @@
 namespace JaneOlszewska\Tests\Itinerant;
 
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
-use JaneOlszewska\Itinerant\NodeAdapter\RestOfElements;
 use JaneOlszewska\Itinerant\NodeAdapter\ViaGetter;
 use JaneOlszewska\Itinerant\Strategy\Fail;
-use JaneOlszewska\Itinerant\TraversalStrategy;
+use JaneOlszewska\Itinerant\Strategy\StrategyResolver;
+use JaneOlszewska\Itinerant\StrategyStack;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -15,10 +15,10 @@ use PHPUnit\Framework\TestCase;
  * fail = seq(fail, s) = seq(s, fail) = one(fail)
  * id = choice(id, s) = all(id)
  */
-class TraversalStrategyTest extends TestCase
+class StrategyStackTest extends TestCase
 {
-    /** @var TraversalStrategy */
-    private $ts;
+    /** @var StrategyStack */
+    private $stack;
 
     /** @var object */
     private $fail;
@@ -29,40 +29,42 @@ class TraversalStrategyTest extends TestCase
 
         $this->fail = Fail::fail();
 
-        $this->ts = new TraversalStrategy();
+        $resolver = $this->getInitialisedStrategyResolver();
+
+        $this->stack = new StrategyStack($resolver);
     }
 
     public function testFail()
     {
         $node = $this->getNodeDatum();
 
-        $this->assertEquals($this->fail, $this->ts->apply(['fail'], $node));
+        $this->assertEquals($this->fail, $this->stack->apply(['fail'], $node));
     }
 
     public function testId()
     {
         $node = $this->getNodeDatum();
 
-        $this->assertEquals($node, $this->ts->apply(['id'], $node));
+        $this->assertEquals($node, $this->stack->apply(['id'], $node));
     }
 
     public function testSeq()
     {
         $node = $this->getNodeDatum();
 
-        $this->assertEquals($this->fail, $this->ts->apply(['seq', ['fail'], ['id']], $node));
-        $this->assertEquals($this->fail, $this->ts->apply(['seq', ['id'], ['fail']], $node));
-        $this->assertEquals($node, $this->ts->apply(['seq', ['id'], ['id']], $node));
+        $this->assertEquals($this->fail, $this->stack->apply(['seq', ['fail'], ['id']], $node));
+        $this->assertEquals($this->fail, $this->stack->apply(['seq', ['id'], ['fail']], $node));
+        $this->assertEquals($node, $this->stack->apply(['seq', ['id'], ['id']], $node));
     }
 
     public function testChoice()
     {
         $node = $this->getNodeDatum();
 
-        $this->assertEquals($node, $this->ts->apply(['choice', ['fail'], ['id']], $node));
-        $this->assertEquals($node, $this->ts->apply(['choice', ['id'], ['fail']], $node));
-        $this->assertEquals($node, $this->ts->apply(['choice', ['id'], ['id']], $node));
-        $this->assertEquals($this->fail, $this->ts->apply(['choice', ['fail'], ['fail']], $node));
+        $this->assertEquals($node, $this->stack->apply(['choice', ['fail'], ['id']], $node));
+        $this->assertEquals($node, $this->stack->apply(['choice', ['id'], ['fail']], $node));
+        $this->assertEquals($node, $this->stack->apply(['choice', ['id'], ['id']], $node));
+        $this->assertEquals($this->fail, $this->stack->apply(['choice', ['fail'], ['fail']], $node));
     }
 
     public function testAll()
@@ -70,9 +72,9 @@ class TraversalStrategyTest extends TestCase
         $node = $this->getNodeDatum();
         $nodes = $this->getNodeArrayDatum($this->getNodes());
 
-        $this->assertEquals($node, $this->ts->apply(['all', ['id']], $node));
-        $this->assertEquals($nodes, $this->ts->apply(['all', ['id']], $nodes));
-        $this->assertEquals($this->fail, $this->ts->apply(['all', ['fail']], $nodes));
+        $this->assertEquals($node, $this->stack->apply(['all', ['id']], $node));
+        $this->assertEquals($nodes, $this->stack->apply(['all', ['id']], $nodes));
+        $this->assertEquals($this->fail, $this->stack->apply(['all', ['fail']], $nodes));
     }
 
     public function testOne()
@@ -80,9 +82,9 @@ class TraversalStrategyTest extends TestCase
         $node = $this->getNodeDatum();
         $nodes = $this->getNodeArrayDatum($this->getNodes());
 
-        $this->assertEquals($this->fail, $this->ts->apply(['one', ['fail']], $node));
-        $this->assertEquals($this->fail, $this->ts->apply(['one', ['fail']], $nodes));
-        $this->assertEquals($node, $this->ts->apply(['one', ['id']], $nodes));
+        $this->assertEquals($this->fail, $this->stack->apply(['one', ['fail']], $node));
+        $this->assertEquals($this->fail, $this->stack->apply(['one', ['fail']], $nodes));
+        $this->assertEquals($node, $this->stack->apply(['one', ['id']], $nodes));
     }
 
     public function testAdhoc()
@@ -101,16 +103,16 @@ class TraversalStrategyTest extends TestCase
         // adhoc on its own, not applying action (because only applicable to nodes with 'getName')
         // and thus defaulting to 'fail' strategy
 
-        $result = $this->ts->apply(['adhoc', ['fail'], $modifyAction], $this->getNodeArrayDatum([]));
+        $result = $this->stack->apply(['adhoc', ['fail'], $modifyAction], $this->getNodeArrayDatum([]));
         $this->assertEquals($this->fail, $result);
 
         // adhoc on its own, not applying action and defaulting to 'id' strategy
 
-        $this->assertEquals($nodes, $this->ts->apply(['adhoc', ['id'], $modifyAction], $nodes));
+        $this->assertEquals($nodes, $this->stack->apply(['adhoc', ['id'], $modifyAction], $nodes));
 
         // adhoc on its own, applying action
 
-        $result = $this->ts->apply(['adhoc', ['fail'], $modifyAction], $node);
+        $result = $this->stack->apply(['adhoc', ['fail'], $modifyAction], $node);
         $this->assertEquals($modifiedNode, $result);
         $this->assertNotEquals($unwrappedNode, $result->getNode()); // original data was not modified in the process
 
@@ -118,13 +120,13 @@ class TraversalStrategyTest extends TestCase
 
         // adhoc with all
 
-        $result = $this->ts->apply(['all', ['adhoc', ['fail'], $modifyAction]], $nodes);
+        $result = $this->stack->apply(['all', ['adhoc', ['fail'], $modifyAction]], $nodes);
         $this->assertEquals($modifiedNodes, $result);
         $this->assertNotEquals($unwrappedNodes, $result->getNode()); // original data was not modified in the process
 
         // adhoc with one
 
-        $result = $this->ts->apply(['one', ['adhoc', ['fail'], $modifyAction]], $nodes);
+        $result = $this->stack->apply(['one', ['adhoc', ['fail'], $modifyAction]], $nodes);
         $this->assertEquals($modifiedNode, $result);
         $this->assertNotEquals($unwrappedNodes, $result->getNode()); // original data was not modified in the process
     }
@@ -146,7 +148,7 @@ class TraversalStrategyTest extends TestCase
             return null;
         };
 
-        $result = $this->ts->apply(['choice',
+        $result = $this->stack->apply(['choice',
             // modify action "doesn't apply" on 2nd child,
             // thus adhoc calls 'fail' on 2nd child
             // thus all fails
@@ -158,7 +160,7 @@ class TraversalStrategyTest extends TestCase
         $this->assertEquals($nodes, $result); // check that result is unmodified
     }
 
-    public function testRegisterCustomStrategy()
+    public function testUserDefinedStrategy()
     {
         $nodeOfNodes = $this->getNodeArrayDatum(
             [
@@ -181,9 +183,7 @@ class TraversalStrategyTest extends TestCase
 
         $ordAction = $this->getLabelWithOrdAction();
 
-        // full_td(s) = seq(s, all(full_td(s)))
-        $this->ts->registerStrategy('full_td', ['seq', '0', ['all', ['full_td', '0']]], 1);
-        $result = $this->ts->apply(['full_td', ['adhoc', ['id'], $ordAction]], $nodeOfNodes);
+        $result = $this->stack->apply(['full_td', ['adhoc', ['id'], $ordAction]], $nodeOfNodes);
         $this->assertEquals($ordNodeOfNodes, $result);
     }
 
@@ -199,7 +199,7 @@ class TraversalStrategyTest extends TestCase
 
         $nodes = $this->getNodeArrayDatum($this->getNodes());
 
-        $result = $this->ts->apply(['all', ['adhoc', 'fail', $modifyAction]], $nodes);
+        $result = $this->stack->apply(['all', ['adhoc', 'fail', $modifyAction]], $nodes);
         $this->assertEquals($modifiedNodes, $result);
     }
 
@@ -210,7 +210,7 @@ class TraversalStrategyTest extends TestCase
 
         $nodes = $this->getNodeArrayDatum($this->getNodes());
 
-        $result = $this->ts->apply(['all', ['adhoc', 'fail', $modifyAction]], $nodes);
+        $result = $this->stack->apply(['all', ['adhoc', 'fail', $modifyAction]], $nodes);
         $this->assertEquals($modifiedNodes, $result);
     }
 
@@ -228,7 +228,7 @@ class TraversalStrategyTest extends TestCase
 
         $nodes = $this->getNodeArrayDatum($this->getNodes());
 
-        $result = $this->ts->apply(['all', ['adhoc', ['fail'], $nonApplicableAction]], $nodes);
+        $result = $this->stack->apply(['all', ['adhoc', ['fail'], $nonApplicableAction]], $nodes);
         $this->assertEquals($this->fail, $result);
     }
 
@@ -250,49 +250,17 @@ class TraversalStrategyTest extends TestCase
         // to use it as an argument on its own, I need to wrap it
         $secondNode = new ViaGetter($secondNode);
 
-        // register 'attr' strategy: this is a rather roundabout way of creating a node-by-attribute selector.
+        $this->assertEquals($secondNode, $this->stack->apply(['attr'], $secondNode)); // yep, it matches
 
-        $action = new class
-        {
-            /** @var string */
-            private $currentSearch;
-
-            public function setCurrentSearch($s)
-            {
-                $this->currentSearch = $s;
-            }
-
-            public function __invoke(NodeAdapterInterface $d)
-            {
-                if (method_exists($d->getNode(), 'getName')
-                    && ($d->getNode()->getName() == $this->currentSearch)
-                ) {
-                    return $d;
-                }
-
-                return null;
-            }
-        };
-
-        $this->ts->registerStrategy('attr', ['adhoc', ['fail'], $action], 0);
-
-        $action->setCurrentSearch('2'); // look for node with name == '2'
-        $this->assertEquals($secondNode, $this->ts->apply(['attr'], $secondNode)); // yep, it matches
-
-        // register strategy that traverses the graph top-down and return the first element that successfully fulfils
-        // whatever strategy was provided as 1st arg
-
-        $this->ts->registerStrategy('once_td', ['choice', '0', ['one', ['once_td', '0']]], 1);
 
         // perform the actual test: search for an element with name == '2'
 
-        $result = $this->ts->apply(['once_td', ['attr']], $ordNodeOfNodes);
+        $result = $this->stack->apply(['once_td', ['attr']], $ordNodeOfNodes);
         $this->assertEquals($secondNode, $result);
     }
 
     /**
      * @param string $name
-     * @param array  $children
      *
      * @return NodeAdapterInterface
      */
@@ -433,5 +401,54 @@ class TraversalStrategyTest extends TestCase
                 return null;
             }
         };
+    }
+
+    private function getNameMatchAction()
+    {
+        return new class
+        {
+            /** @var string */
+            private $currentSearch;
+
+            public function setCurrentSearch($s)
+            {
+                $this->currentSearch = $s;
+            }
+
+            public function __invoke(NodeAdapterInterface $d)
+            {
+                if (method_exists($d->getNode(), 'getName')
+                    && ($d->getNode()->getName() == $this->currentSearch)
+                ) {
+                    return $d;
+                }
+
+                return null;
+            }
+        };
+    }
+
+    /**
+     * @return StrategyResolver
+     */
+    private function getInitialisedStrategyResolver(): StrategyResolver
+    {
+        $resolver = new StrategyResolver();
+
+        // full_td(s) = seq(s, all(full_td(s)))
+
+        $resolver->registerStrategy('full_td', ['seq', '0', ['all', ['full_td', '0']]]);
+
+        // register 'attr' strategy: this is a rather roundabout way of creating a node-by-attribute selector.
+
+        $action = $this->getNameMatchAction();
+        $action->setCurrentSearch('2'); // look for node with name == '2'
+        $resolver->registerStrategy('attr', ['adhoc', ['fail'], $action]);
+
+        // register strategy that traverses the graph top-down and return the first element that successfully fulfils
+        // whatever strategy was provided as 1st arg
+
+        $resolver->registerStrategy('once_td', ['choice', '0', ['one', ['once_td', '0']]]);
+        return $resolver;
     }
 }

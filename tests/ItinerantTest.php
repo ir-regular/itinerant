@@ -4,13 +4,13 @@ namespace JaneOlszewska\Tests\Itinerant;
 
 use JaneOlszewska\Itinerant\NodeAdapter\SecondElement;
 use JaneOlszewska\Itinerant\Strategy\Fail;
-use JaneOlszewska\Itinerant\TraversalStrategy;
-use JaneOlszewska\Itinerant\ValidatedTraversalStrategy;
+use JaneOlszewska\Itinerant\Strategy\StrategyResolver;
+use JaneOlszewska\Itinerant\Itinerant;
 use PHPUnit\Framework\TestCase;
 
-class ValidatedTraversalStrategyTest extends TestCase
+class ItinerantTest extends TestCase
 {
-    /** @var ValidatedTraversalStrategy */
+    /** @var Itinerant */
     private $ts;
 
     /** @var object */
@@ -22,7 +22,7 @@ class ValidatedTraversalStrategyTest extends TestCase
 
         $this->fail = Fail::fail();
 
-        $this->ts = new ValidatedTraversalStrategy();
+        $this->ts = new Itinerant();
     }
 
     public function testSanitisationForInbuiltSingleArgumentNodes()
@@ -32,8 +32,8 @@ class ValidatedTraversalStrategyTest extends TestCase
 
         // note we no longer have to enclose zero-argument strategies in arrays
 
-        $this->assertEquals($this->fail, $this->ts->apply(TraversalStrategy::FAIL, $node));
-        $this->assertEquals($node, $this->ts->apply(TraversalStrategy::ID, $node));
+        $this->assertEquals($this->fail, $this->ts->apply(StrategyResolver::FAIL, $node));
+        $this->assertEquals($node, $this->ts->apply(StrategyResolver::ID, $node));
     }
 
     public function testSanitisationForRegisteredSingleArgumentNodes()
@@ -81,7 +81,7 @@ class ValidatedTraversalStrategyTest extends TestCase
     public function testCannotReRegisterInbuiltStrategy()
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessageRegExp("/Cannot overwrite inbuilt strategy key: .+/");
+        $this->expectExceptionMessageRegExp("/Cannot overwrite registered strategy key: .+/");
         $this->ts->registerStrategy('id', ['fail'], 0);
     }
 }

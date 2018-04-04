@@ -4,6 +4,7 @@ namespace JaneOlszewska\Itinerant\Action;
 
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 use JaneOlszewska\Itinerant\NodeAdapter\RestOfElements;
+use JaneOlszewska\Itinerant\Strategy\StrategyResolver;
 use JaneOlszewska\Itinerant\TraversalStrategy;
 
 /**
@@ -64,8 +65,8 @@ class ValidateTraversalStrategy
 
         return is_string($strategy)
             // inbuilt zero-argument strategies
-            && (TraversalStrategy::FAIL == $strategy
-                || TraversalStrategy::ID == $strategy
+            && (StrategyResolver::FAIL == $strategy
+                || StrategyResolver::ID == $strategy
                 // user-registered 0-argument strategies
                 || (isset($this->argumentCountsPerStrategyKey[$strategy])
                     && 0 == $this->argumentCountsPerStrategyKey[$strategy]));
