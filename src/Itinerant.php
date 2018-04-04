@@ -2,8 +2,8 @@
 
 namespace JaneOlszewska\Itinerant;
 
-use JaneOlszewska\Itinerant\Action\ValidateTraversalStrategy;
-use JaneOlszewska\Itinerant\Action\ValidateUserRegisteredTraversalStrategy;
+use JaneOlszewska\Itinerant\Action\SanitiseAppliedAction;
+use JaneOlszewska\Itinerant\Action\SanitiseRegisteredAction;
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 use JaneOlszewska\Itinerant\NodeAdapter\RestOfElements;
 use JaneOlszewska\Itinerant\Strategy\Fail;
@@ -11,8 +11,8 @@ use JaneOlszewska\Itinerant\Strategy\StrategyResolver;
 
 class Itinerant
 {
-    private const VALIDATE_APPLIED = 'validate_applied';
-    private const VALIDATE_REGISTERED = 'validate_registered';
+    private const SANITISE_APPLIED = 'sanitise_applied';
+    private const SANITISE_REGISTERED = 'sanitise_registered';
 
     /** @var int[] */
     private $argCounts = [
@@ -23,14 +23,14 @@ class Itinerant
         StrategyResolver::ALL => 1,
         StrategyResolver::ONE => 1,
         StrategyResolver::ADHOC => 2,
-        self::VALIDATE_APPLIED => 0,
-        self::VALIDATE_REGISTERED => 0
+        self::SANITISE_APPLIED => 0,
+        self::SANITISE_REGISTERED => 0
     ];
 
-    /** @var ValidateTraversalStrategy */
+    /** @var SanitiseAppliedAction */
     private $sanitiseAppliedAction;
 
-    /** @var ValidateUserRegisteredTraversalStrategy */
+    /** @var SanitiseRegisteredAction */
     private $sanitiseRegisteredAction;
 
     /** @var StrategyResolver */
@@ -79,8 +79,8 @@ class Itinerant
 
     private function registerValidationStrategies(StrategyResolver $resolver)
     {
-        $this->sanitiseAppliedAction = new ValidateTraversalStrategy();
-        $this->sanitiseRegisteredAction = new ValidateUserRegisteredTraversalStrategy();
+        $this->sanitiseAppliedAction = new SanitiseAppliedAction();
+        $this->sanitiseRegisteredAction = new SanitiseRegisteredAction();
 
         // Check for whether we encountered an adhoc action, callback formatted like an array
         $isNotCallableArray = function ($d) {
@@ -89,13 +89,13 @@ class Itinerant
 
         // register without validation to avoid infinite recursion
         $resolver->registerStrategy(
-            self::VALIDATE_APPLIED,
+            self::SANITISE_APPLIED,
             ['choice',
                 ['seq',
                     // if doesn't fail, safe to nest further
                     ['adhoc', ['fail'], $isNotCallableArray],
                     // top-down application of $this->sanitiseAppliedAction
-                    ['seq', ['adhoc', ['fail'], $this->sanitiseAppliedAction], ['all', [self::VALIDATE_APPLIED]]],
+                    ['seq', ['adhoc', ['fail'], $this->sanitiseAppliedAction], ['all', [self::SANITISE_APPLIED]]],
                 ],
                 // just validate without nesting
                 ['adhoc', ['fail'], $this->sanitiseAppliedAction]
@@ -104,13 +104,13 @@ class Itinerant
 
         // register without validation to avoid infinite recursion
         $resolver->registerStrategy(
-            self::VALIDATE_REGISTERED,
+            self::SANITISE_REGISTERED,
             // top-down application of $this->sanitiseRegisteredAction
-            ['seq', ['adhoc', ['fail'], $this->sanitiseRegisteredAction], ['all', [self::VALIDATE_REGISTERED]]]
+            ['seq', ['adhoc', ['fail'], $this->sanitiseRegisteredAction], ['all', [self::SANITISE_REGISTERED]]]
         );
 
-        $this->argCounts[self::VALIDATE_APPLIED] = 0;
-        $this->argCounts[self::VALIDATE_REGISTERED] = 0;
+        $this->argCounts[self::SANITISE_APPLIED] = 0;
+        $this->argCounts[self::SANITISE_REGISTERED] = 0;
     }
 
     /**
@@ -125,7 +125,7 @@ class Itinerant
         $this->sanitiseAppliedAction->setStrategyArgumentCounts($this->argCounts);
 
         // apply without validation to avoid infinite recursion
-        $result = $this->stack->apply([self::VALIDATE_APPLIED], new RestOfElements($strategy));
+        $result = $this->stack->apply([self::SANITISE_APPLIED], new RestOfElements($strategy));
 
         if (Fail::fail() === $result) {
             $error = $this->sanitiseAppliedAction->getLastError();
@@ -156,7 +156,7 @@ class Itinerant
         );
 
         // apply without validation to avoid infinite recursion
-        $result = $this->stack->apply([self::VALIDATE_REGISTERED], new RestOfElements($strategy));
+        $result = $this->stack->apply([self::SANITISE_REGISTERED], new RestOfElements($strategy));
 
         if (Fail::fail() === $result) {
             $error = $this->sanitiseRegisteredAction->getLastError();

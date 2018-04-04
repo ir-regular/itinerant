@@ -5,12 +5,11 @@ namespace JaneOlszewska\Itinerant\Action;
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 use JaneOlszewska\Itinerant\NodeAdapter\RestOfElements;
 use JaneOlszewska\Itinerant\Strategy\StrategyResolver;
-use JaneOlszewska\Itinerant\TraversalStrategy;
 
 /**
  * Action internal to library: validates every node of a traversal strategy supplied to TraversalStrategy::apply()
  */
-class ValidateTraversalStrategy
+class SanitiseAppliedAction
 {
     /** @var int[] */
     protected $argumentCountsPerStrategyKey;

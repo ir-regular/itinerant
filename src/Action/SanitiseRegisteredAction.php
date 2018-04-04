@@ -4,7 +4,7 @@ namespace JaneOlszewska\Itinerant\Action;
 
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 
-class ValidateUserRegisteredTraversalStrategy extends ValidateTraversalStrategy
+class SanitiseRegisteredAction extends SanitiseAppliedAction
 {
     /**
      * @param NodeAdapterInterface $d
