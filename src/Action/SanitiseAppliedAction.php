@@ -7,7 +7,17 @@ use JaneOlszewska\Itinerant\NodeAdapter\RestOfElements;
 use JaneOlszewska\Itinerant\Strategy\StrategyResolver;
 
 /**
- * Action internal to library: validates every node of a traversal strategy supplied to TraversalStrategy::apply()
+ * Internal library action: validates and sanitises instructions given to Itinerant::apply()
+ *
+ * SanitiseAppliedAction validates every node of the instructions by checking that:
+ *   - the node is an array
+ *   - its first element is a string key, on the list of registered actions
+ *   - array element count equals (registered argument count + 1)
+ *
+ * For readability, the above ruleset has an exception. Zero-argument strategies can be represented
+ * as strings (keys) instead of single-element arrays.
+ *
+ * SanitiseAppliedAction sanitises such strings by converting them into single-element arrays.
  */
 class SanitiseAppliedAction
 {
