@@ -32,4 +32,12 @@ class SecondElementTest extends TestCase
         $adapter->setChildren([new SecondElement($v1), new SecondElement($v2)]);
         $this->assertEquals([1, [4, 5]], $adapter->getNode());
     }
+
+    public function testNoChildren()
+    {
+        $a = [1];
+        $adapter = new SecondElement($a);
+
+        $this->assertFalse($adapter->getChildren()->valid());
+    }
 }

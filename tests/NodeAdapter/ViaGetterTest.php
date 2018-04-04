@@ -44,6 +44,14 @@ class ViaGetterTest extends TestCase
         $this->assertEquals(5, $children[1]->v);
     }
 
+    public function testNoChildren()
+    {
+        $a = $this->getDatum(1, []);
+        $adapter = new ViaGetter($a);
+
+        $this->assertFalse($adapter->getChildren()->valid());
+    }
+
     /**
      * @param array $children
      * @return object[]

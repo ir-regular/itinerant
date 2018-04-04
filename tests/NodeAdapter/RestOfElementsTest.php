@@ -34,4 +34,13 @@ class RestOfElementsTest extends TestCase
 
         $this->assertEquals([1, 4, 5], $adapter->getNode());
     }
+
+
+    public function testNoChildren()
+    {
+        $a = [1];
+        $adapter = new RestOfElements($a);
+
+        $this->assertFalse($adapter->getChildren()->valid());
+    }
 }

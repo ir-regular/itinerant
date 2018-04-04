@@ -21,11 +21,10 @@ class All
         $result = $node;
 
         $unprocessed = $node->getChildren();
-        $unprocessed = iterator_to_array($unprocessed);
         $processed = [];
 
-        if ($unprocessed) {
-            while ($child = array_shift($unprocessed)) {
+        if ($unprocessed->valid()) {
+            foreach ($unprocessed as $child) {
                 $result = yield [$this->childStrategy, $child];
 
                 if (Fail::fail() === $result) {
