@@ -42,10 +42,7 @@ class StrategyStack
             [$strategy, $node] = $this->pop();
 
             if (is_array($strategy)) {
-                if (!$strategy = $this->resolver->resolve($strategy)) {
-                    throw new \DomainException('Invalid strategy: validation process failed');
-                }
-
+                $strategy = $this->resolver->resolve($strategy);
                 $continuation = $strategy->apply($node);
                 $result = $continuation->current();
             } else {

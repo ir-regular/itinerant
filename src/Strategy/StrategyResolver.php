@@ -2,8 +2,6 @@
 
 namespace JaneOlszewska\Itinerant\Strategy;
 
-use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
-
 class StrategyResolver
 {
     const ID = 'id';
@@ -27,7 +25,12 @@ class StrategyResolver
     /** @var array */
     private $strategies = [];
 
-    public function resolve(array $strategy): ?StrategyInterface
+    /**
+     * @param array $strategy
+     * @return StrategyInterface
+     * @throws \DomainException when first element of $strategy is an unregistered strategy key
+     */
+    public function resolve(array $strategy): StrategyInterface
     {
         $key = array_shift($strategy);
         $args = $strategy;
@@ -48,9 +51,11 @@ class StrategyResolver
             case self::ADHOC:
                 return new Adhoc($args[0], $args[1]);
             default:
-                return $this->strategies[$key]
-                    ? new UserDefined($this->strategies[$key], $args)
-                    : null;
+                if (isset($this->strategies[$key])) {
+                    return new UserDefined($this->strategies[$key], $args);
+                } else {
+                    throw new \DomainException('Invalid strategy: validation process failed');
+                }
         }
     }
 
