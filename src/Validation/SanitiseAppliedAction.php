@@ -1,6 +1,6 @@
 <?php
 
-namespace JaneOlszewska\Itinerant\Action;
+namespace JaneOlszewska\Itinerant\Validation;
 
 use JaneOlszewska\Itinerant\NodeAdapter\Fail;
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;

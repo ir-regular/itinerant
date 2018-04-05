@@ -2,8 +2,8 @@
 
 namespace JaneOlszewska\Itinerant;
 
-use JaneOlszewska\Itinerant\Action\SanitiseAppliedAction;
-use JaneOlszewska\Itinerant\Action\SanitiseRegisteredAction;
+use JaneOlszewska\Itinerant\Validation\SanitiseAppliedAction;
+use JaneOlszewska\Itinerant\Validation\SanitiseRegisteredAction;
 use JaneOlszewska\Itinerant\NodeAdapter\Fail;
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 use JaneOlszewska\Itinerant\NodeAdapter\RestOfElements;
