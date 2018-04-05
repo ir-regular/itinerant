@@ -89,31 +89,26 @@ it to be an `adhoc` action that executes a callback.
 
 ### Code example
 
-Work in progress: this is currently functional, but 
-
 ```php
 // root node of the tree
 $root = ...;
+// The root needs to be wrapped in a class implementing NodeAdapterInterface.
+// Let's assume the tree consists of objects that have methods 'getChildren', 'setChildren' and 'getValue'
+$node = new ViaGetter($root);
+
 // callback to be executed on every node
-$callback = function ($node) {
-    printf('Node %s has %d children', $node->getName(), count($node->getChildren());
+$callback = function (NodeAdapterInterface $node): ?NodeAdapterInterface {
+    printf('Node %s has %d children', $node->getName(), iterator_count($node->getChildren());
     return $node;
 };
 
-// Something that implements ChildHandlerInterface
-// ViaGetter means we're operating on nodes that implement getChildren and setChildren methods
-$childHandler = new ViaGetter();
-
-// Define a unique node representing the state of failure
-$fail = ...;
-
-$ts = new ValidatedTraversalStrategy($childHandler, $fail);
+$itinerant = new Itinerant();
 
 // Define how to perform depth-first traversal of all nodes
-$ts->registerStrategy('full_td', ['seq', '0', ['all', ['full_td', '0']]], 1);
+$itinerant->registerStrategy('full_td', ['seq', '0', ['all', ['full_td', '0']]], 1);
 
-// Perform depth-first traversal
-$result = $ts->apply(['full_td', ['adhoc', 'id', $callback]], $root);
+// Perform depth-first traversal, which will print out counts of all children
+$itinerant->apply(['full_td', ['adhoc', 'id', $callback]], $node);
 ```
 
 ## Source
@@ -126,9 +121,5 @@ comes from, by the way.
 
 ## TODO
 
-- giant refactoring
-- change terms used across the library (strategy and action)
 - make it easier to generate strategy definitions
-- is it necessary to instantiate `ValidatedTraversalStrategy`?
-- should strategies be registered per-instance or in a static variable?
 - how to provide a good number of preconfigured basic strategies?
