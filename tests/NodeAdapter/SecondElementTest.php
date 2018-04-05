@@ -18,7 +18,7 @@ class SecondElementTest extends TestCase
             return $node->getNode();
         }, iterator_to_array($children));
 
-        $this->assertEquals([2, 3], $children);
+        $this->assertEquals([[2], [3]], $children);
     }
 
     public function testSetChildren()
@@ -30,7 +30,7 @@ class SecondElementTest extends TestCase
         $adapter = new SecondElement($a);
 
         $adapter->setChildren([new SecondElement($v1), new SecondElement($v2)]);
-        $this->assertEquals([1, [4, 5]], $adapter->getNode());
+        $this->assertEquals([1, [[4], [5]]], $adapter->getNode());
     }
 
     public function testNoChildren()

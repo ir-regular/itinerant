@@ -41,8 +41,22 @@ class InstructionValidatorTest extends TestCase
         };
 
         $this->assertEquals(
-            ['adhoc', ['fail'], $action],
+            ['adhoc', ['fail'], [$action]],
             $this->validator->sanitiseRegistered('meh', ['adhoc', 'fail', $action], 0)
+        );
+    }
+
+    public function testValidatesArrayCallableActions()
+    {
+        $object = new class {
+            public function f(NodeAdapterInterface $node): ?NodeAdapterInterface {
+                return $node;
+            }
+        };
+
+        $this->assertEquals(
+            ['adhoc', ['fail'], [[$object, 'f']]],
+            $this->validator->sanitiseApplied(['adhoc', 'fail', [$object, 'f']])
         );
     }
 

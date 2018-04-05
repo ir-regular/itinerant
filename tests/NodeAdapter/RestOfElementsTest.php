@@ -19,7 +19,7 @@ class RestOfElementsTest extends TestCase
             return $node->getNode();
         }, iterator_to_array($children));
 
-        $this->assertEquals([2, 3], $children);
+        $this->assertEquals([[2], [3]], $children);
     }
 
     public function testSetChildren()
@@ -32,7 +32,7 @@ class RestOfElementsTest extends TestCase
         $adapter = new RestOfElements($a);
         $adapter->setChildren([new RestOfElements($v1), new RestOfElements($v2)]);
 
-        $this->assertEquals([1, 4, 5], $adapter->getNode());
+        $this->assertEquals([1, [4], [5]], $adapter->getNode());
     }
 
 

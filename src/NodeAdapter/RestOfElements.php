@@ -11,6 +11,10 @@ class RestOfElements implements NodeAdapterInterface
 
     public function __construct($node)
     {
+        if (!is_array($node) || is_callable($node)) {
+            $node = [$node];
+        }
+
         $this->node = $node;
     }
 
@@ -21,27 +25,19 @@ class RestOfElements implements NodeAdapterInterface
 
     public function getValue()
     {
-        return is_array($this->node) ? $this->node[0] : $this->node;
+        return $this->node[0];
     }
 
     public function getChildren(): \Iterator
     {
-        if (is_array($this->node)) {
-            foreach (array_slice($this->node, 1) as $child) {
-                // wrap
-                yield new RestOfElements($child);
-            }
+        foreach (array_slice($this->node, 1) as $child) {
+            // wrap
+            yield new RestOfElements($child);
         }
     }
 
     public function setChildren(array $children = []): void
     {
-        if (!is_array($this->node)) {
-            // yeah... let's hope this works as intended when gathering results
-            // might need to do something clever with references in getChildren wrt wrapping values
-            $this->node = [$this->node];
-        }
-
         // unwrap
         $children = array_map(function (RestOfElements $nodeAdapter) {
             return $nodeAdapter->getNode();
