@@ -151,6 +151,10 @@ class Itinerant
             throw new \InvalidArgumentException("Cannot overwrite registered strategy key: {$strategyKey}");
         }
 
+        if (is_numeric($strategyKey)) {
+            throw new \InvalidArgumentException("Cannot register strategy under a numeric key: {$strategyKey}");
+        }
+
         $this->sanitiseRegisteredAction->setStrategyArgumentCounts(
             array_merge([$strategyKey => $argCount], $this->argCounts)
         );

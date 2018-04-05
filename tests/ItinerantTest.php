@@ -110,4 +110,12 @@ class ItinerantTest extends TestCase
 
         $this->ts->registerStrategy('meh', ['adhoc', 'fail', $action], 0);
     }
+
+    public function testCannotRegisterStrategyWithNumericKey()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Cannot register strategy under a numeric key: 1');
+
+        $this->ts->registerStrategy('1', ['all', 'id'], 0);
+    }
 }
