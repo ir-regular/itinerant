@@ -45,15 +45,15 @@ class SanitiseAppliedAction
 
     public function __invoke(NodeAdapterInterface $d): ?NodeAdapterInterface
     {
-        $isValid = true;
-
-        if (!$this->isZeroArgumentNode($d)) { // is applicable to zero-argument nodes
-            if (!$this->isAction($d)) { // is applicable to actions
+        if ($this->isZeroArgumentNode($d)) { // is applicable to zero-argument nodes
+            return $this->sanitiseZeroArgumentNode($d);
+        } else {
+            if ($this->isAction($d)) { // is applicable to actions
+                $isValid = $this->isValidAction($d);
+            } else {
                 // ...if not a zero-argument node or action, check if valid strategy
                 $isValid = $this->isValidStrategy($d);
             }
-        } else {
-            return $this->sanitiseZeroArgumentNode($d);
         }
 
         if ($isValid) {
@@ -88,6 +88,39 @@ class SanitiseAppliedAction
     protected function isAction(NodeAdapterInterface $d): bool
     {
         return is_callable($d->getValue());
+    }
+
+    /**
+     * Handroll type checking *le sigh*
+     *
+     * @param NodeAdapterInterface $d
+     * @return bool
+     */
+    protected function isValidAction(NodeAdapterInterface $d): bool
+    {
+        $action = $d->getValue();
+
+        try {
+            if (is_array($action)) {
+                // expecting [$object, 'method]
+                $reflection = new \ReflectionMethod(...$action);
+            } else {
+                // closure or an object with function __invoke()
+                $reflection = new \ReflectionFunction($action);
+            }
+        } catch (\ReflectionException $e) {
+            return false; // Shouldn't happen, but, y'know ¯\_(ツ)_/¯
+        }
+
+        $returnTypeValid = ($returnType = $reflection->getReturnType())
+            && ($returnType == NodeAdapterInterface::class)
+            && ($returnType->allowsNull() == true);
+
+        $parametersValid = ($reflection->getNumberOfParameters() >= 1)
+            && ($parameterType = $reflection->getParameters()[0]->getType())
+            && ($parameterType == NodeAdapterInterface::class);
+
+        return $returnTypeValid && $parametersValid;
     }
 
     /**

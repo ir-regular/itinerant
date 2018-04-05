@@ -2,6 +2,7 @@
 
 namespace JaneOlszewska\Tests\Itinerant;
 
+use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 use JaneOlszewska\Itinerant\NodeAdapter\SecondElement;
 use JaneOlszewska\Itinerant\NodeAdapter\Fail;
 use JaneOlszewska\Itinerant\Strategy\StrategyResolver;
@@ -38,7 +39,7 @@ class ItinerantTest extends TestCase
 
     public function testSanitisationForRegisteredSingleArgumentNodes()
     {
-        $action = function () {
+        $action = function (NodeAdapterInterface $node): ?NodeAdapterInterface {
             $value = 'whatever';
             return new SecondElement($value);
         };
@@ -83,5 +84,30 @@ class ItinerantTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessageRegExp("/Cannot overwrite registered strategy key: .+/");
         $this->ts->registerStrategy('id', ['fail'], 0);
+    }
+
+    public function testCannotRegisterActionWithIncorrectParameters()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessageRegExp("/Invalid argument structure for the strategy: .+/");
+
+        $action = function (): ?NodeAdapterInterface {
+            return null;
+        };
+
+        $this->ts->registerStrategy('meh', ['adhoc', 'fail', $action], 0);
+    }
+
+    public function testCannotRegisterActionWithIncorrectReturnType()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessageRegExp("/Invalid argument structure for the strategy: .+/");
+
+        // note that implicit return type is ok, but it's not explicitly declared and that's why it breaks
+        $action = function (NodeAdapterInterface $node) {
+            return $node;
+        };
+
+        $this->ts->registerStrategy('meh', ['adhoc', 'fail', $action], 0);
     }
 }
