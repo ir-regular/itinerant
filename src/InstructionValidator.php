@@ -13,8 +13,7 @@ use JaneOlszewska\Itinerant\Strategy\InstructionResolver;
  */
 class InstructionValidator
 {
-    private const SANITISE_APPLIED = 'sanitise_applied';
-    private const SANITISE_REGISTERED = 'sanitise_registered';
+    private const TD_PRE = 'td_pre';
 
     /** @var int[] */
     private $argCounts = [
@@ -25,15 +24,7 @@ class InstructionValidator
         InstructionResolver::ALL => 1,
         InstructionResolver::ONE => 1,
         InstructionResolver::ADHOC => 2,
-        self::SANITISE_APPLIED => 0,
-        self::SANITISE_REGISTERED => 0
     ];
-
-    /** @var SanitiseAppliedAction */
-    private $sanitiseAppliedAction;
-
-    /** @var SanitiseRegisteredAction */
-    private $sanitiseRegisteredAction;
 
     /** @var InstructionResolver */
     private $resolver;
@@ -43,12 +34,14 @@ class InstructionValidator
 
     public function __construct()
     {
-        // Yes, this is the second copy of both classes (compared to Itinerant).
-        // This guarantees that SANITISE_* strategies won't conflict with user's strategies.
-        $this->resolver = new InstructionResolver();
-        $this->stack = new StrategyStack($this->resolver);
+        // Yes, both classes are instantiated twice (the 'original' instances are in Itinerant).
+        // This guarantees that TD_PRE strategy won't conflict with user's strategies.
+        $resolver = new InstructionResolver();
+        // top-down, depth first, prefix application
+        $resolver->registerStrategy(self::TD_PRE, ['seq', '0', ['all', [self::TD_PRE, '0']]]);
+        $this->resolver = $resolver;
 
-        $this->registerValidationStrategies($this->resolver);
+        $this->stack = new StrategyStack($this->resolver);
     }
 
     /**
@@ -60,13 +53,16 @@ class InstructionValidator
      */
     public function sanitiseApplied($instruction)
     {
-        $this->sanitiseAppliedAction->setStrategyArgumentCounts($this->argCounts);
+        $sanitiseAppliedAction = new SanitiseAppliedAction($this->argCounts);
 
         // apply without validation to avoid infinite recursion
-        $result = $this->stack->apply([self::SANITISE_APPLIED], new RestOfElements($instruction));
+        $result = $this->stack->apply(
+            [self::TD_PRE, ['adhoc', ['fail'], $sanitiseAppliedAction]],
+            new RestOfElements($instruction)
+        );
 
         if (Fail::fail() === $result) {
-            $error = $this->formatErrorMessage($this->sanitiseAppliedAction);
+            $error = $this->formatErrorMessage($sanitiseAppliedAction);
             throw new \InvalidArgumentException($error);
         }
 
@@ -96,15 +92,17 @@ class InstructionValidator
             throw new \InvalidArgumentException("Cannot register strategy under a numeric key: {$strategy}");
         }
 
-        $this->sanitiseRegisteredAction->setStrategyArgumentCounts(
+        $sanitiseRegisteredAction = new SanitiseRegisteredAction(
             array_merge([$strategy => $argCount], $this->argCounts)
         );
 
-        // apply without validation to avoid infinite recursion
-        $result = $this->stack->apply([self::SANITISE_REGISTERED], new RestOfElements($instruction));
+        $result = $this->stack->apply(
+            [self::TD_PRE, ['adhoc', ['fail'], $sanitiseRegisteredAction]],
+            new RestOfElements($instruction)
+        );
 
         if (Fail::fail() === $result) {
-            $error = $this->formatErrorMessage($this->sanitiseRegisteredAction);
+            $error = $this->formatErrorMessage($sanitiseRegisteredAction);
             throw new \InvalidArgumentException($error);
         }
 
@@ -129,41 +127,5 @@ class InstructionValidator
         }
 
         return $error;
-    }
-
-    private function registerValidationStrategies(InstructionResolver $resolver)
-    {
-        $this->sanitiseAppliedAction = new SanitiseAppliedAction();
-        $this->sanitiseRegisteredAction = new SanitiseRegisteredAction();
-
-        // Check for whether we encountered an adhoc action, callback formatted like an array
-        $isNotCallableArray = function ($d) {
-            return (is_array($d) && is_callable($d)) ? Fail::fail() : $d;
-        };
-
-        // register without validation to avoid infinite recursion
-        $resolver->registerStrategy(
-            self::SANITISE_APPLIED,
-            ['choice',
-                ['seq',
-                    // if doesn't fail, safe to nest further
-                    ['adhoc', ['fail'], $isNotCallableArray],
-                    // top-down application of $this->sanitiseAppliedAction
-                    ['seq', ['adhoc', ['fail'], $this->sanitiseAppliedAction], ['all', [self::SANITISE_APPLIED]]],
-                ],
-                // just validate without nesting
-                ['adhoc', ['fail'], $this->sanitiseAppliedAction]
-            ]
-        );
-
-        // register without validation to avoid infinite recursion
-        $resolver->registerStrategy(
-            self::SANITISE_REGISTERED,
-            // top-down application of $this->sanitiseRegisteredAction
-            ['seq', ['adhoc', ['fail'], $this->sanitiseRegisteredAction], ['all', [self::SANITISE_REGISTERED]]]
-        );
-
-        $this->argCounts[self::SANITISE_APPLIED] = 0;
-        $this->argCounts[self::SANITISE_REGISTERED] = 0;
     }
 }

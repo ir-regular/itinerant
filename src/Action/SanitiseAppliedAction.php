@@ -31,10 +31,7 @@ class SanitiseAppliedAction
     /** @var NodeAdapterInterface|null */
     private $invalidNode;
 
-    /**
-     * @param int[] $argumentCountsPerStrategyKey
-     */
-    public function setStrategyArgumentCounts(array $argumentCountsPerStrategyKey): void
+    public function __construct(array $argumentCountsPerStrategyKey = [])
     {
         $this->argumentCountsPerStrategyKey = $argumentCountsPerStrategyKey;
     }
