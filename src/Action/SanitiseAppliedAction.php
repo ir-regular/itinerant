@@ -2,6 +2,7 @@
 
 namespace JaneOlszewska\Itinerant\Action;
 
+use JaneOlszewska\Itinerant\NodeAdapter\Fail;
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 use JaneOlszewska\Itinerant\NodeAdapter\RestOfElements;
 use JaneOlszewska\Itinerant\Strategy\StrategyResolver;
@@ -25,7 +26,10 @@ class SanitiseAppliedAction
     protected $argumentCountsPerStrategyKey;
 
     /** @var string|null */
-    protected $lastError;
+    protected $validationError;
+
+    /** @var NodeAdapterInterface|null */
+    private $invalidNode;
 
     /**
      * @param int[] $argumentCountsPerStrategyKey
@@ -36,11 +40,19 @@ class SanitiseAppliedAction
     }
 
     /**
-     * @return string
+     * @return NodeAdapterInterface|null
      */
-    public function getLastError(): ?string
+    public function getInvalidNode(): ?NodeAdapterInterface
     {
-        return $this->lastError;
+        return $this->invalidNode;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getValidationError(): ?string
+    {
+        return $this->validationError;
     }
 
     public function __invoke(NodeAdapterInterface $d): ?NodeAdapterInterface
@@ -59,8 +71,8 @@ class SanitiseAppliedAction
         if ($isValid) {
             return $d;
         } else {
-            $this->lastError = print_r($d, true); // todo: better error reporting
-            return null;
+            $this->invalidNode = $d;
+            return Fail::fail();
         }
     }
 
@@ -105,22 +117,54 @@ class SanitiseAppliedAction
                 // expecting [$object, 'method]
                 $reflection = new \ReflectionMethod(...$action);
             } else {
-                // closure or an object with function __invoke()
+                // string (global function name), closure or an object with function __invoke()
                 $reflection = new \ReflectionFunction($action);
             }
         } catch (\ReflectionException $e) {
+            $this->validationError = 'Cannot reflect on provided action';
             return false; // Shouldn't happen, but, y'know ¯\_(ツ)_/¯
         }
 
+        return $this->isValidActionReturnType($reflection)
+            && $this->isActionArgumentValid($reflection);
+    }
+
+    /**
+     * @param \ReflectionFunctionAbstract $reflection
+     * @return bool
+     */
+    protected function isValidActionReturnType(\ReflectionFunctionAbstract $reflection): bool
+    {
         $returnTypeValid = ($returnType = $reflection->getReturnType())
             && ($returnType == NodeAdapterInterface::class)
             && ($returnType->allowsNull() == true);
 
-        $parametersValid = ($reflection->getNumberOfParameters() >= 1)
-            && ($parameterType = $reflection->getParameters()[0]->getType())
-            && ($parameterType == NodeAdapterInterface::class);
+        // You may be wondering why I didn't hardcode the class in the error messages.
+        // This way if I ever want to rename it, automatic refactoring tools will work correctly.
 
-        return $returnTypeValid && $parametersValid;
+        if (!$returnTypeValid) {
+            $this->validationError = 'Action must return type ?'
+                . NodeAdapterInterface::class;
+        }
+
+        return $returnTypeValid;
+    }
+
+    /**
+     * @param \ReflectionFunctionAbstract $reflection
+     * @return bool
+     */
+    protected function isActionArgumentValid(\ReflectionFunctionAbstract $reflection): bool
+    {
+        $argumentValid = ($reflection->getNumberOfParameters() >= 1)
+            && ($argumentType = $reflection->getParameters()[0]->getType())
+            && ($argumentType == NodeAdapterInterface::class);
+
+        if (!$argumentValid) {
+            $this->validationError = 'Action must accept at least one argument, and it must be of type '
+                . NodeAdapterInterface::class;
+        }
+        return $argumentValid;
     }
 
     /**
@@ -137,9 +181,19 @@ class SanitiseAppliedAction
         // ...its main node (key) is included in the list of valid strategies
         if (isset($this->argumentCountsPerStrategyKey[$strategy])) {
             // ...and the count of its children (arguments) count matches the registered count
-            $argCount = $this->argumentCountsPerStrategyKey[$strategy];
-            $arguments = $d->getChildren();
-            $valid = ($argCount == iterator_count($arguments));
+            $expectedCount = $this->argumentCountsPerStrategyKey[$strategy];
+            $actualCount = iterator_count($d->getChildren());
+            $valid = ($expectedCount == $actualCount);
+
+            if (!$valid) {
+                $expectedCount .= ($expectedCount < 2) ? ' argument' : ' arguments';
+
+                $this->validationError = "Strategy {$strategy} registered as accepting {$expectedCount}"
+                    . ", {$actualCount} provided";
+            }
+        } else {
+            // this shouldn't ever happen but just in case ¯\_(ツ)_/¯
+            $this->validationError = "Unregistered strategy: {$strategy}";
         }
 
         return $valid;

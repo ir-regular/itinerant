@@ -62,7 +62,7 @@ class ItinerantTest extends TestCase
     public function testApplyStrategyValidation()
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessageRegExp("/Invalid argument structure for the strategy: .+/");
+        $this->expectExceptionMessage('Strategy all registered as accepting 1 argument, 0 provided');
 
         $node = null;
         $this->ts->apply('all', new SecondElement($node));
@@ -73,7 +73,7 @@ class ItinerantTest extends TestCase
     public function testRegisterStrategyValidation()
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessageRegExp("/Invalid argument structure for the strategy: .+/");
+        $this->expectExceptionMessage('Unregistered strategy: does_not_work');
         $this->ts->registerStrategy('broken', ['does_not_work', 'because it is', 'broken'], 0);
 
         // todo: again we could test all ways the validation should work... this is just the initial test
@@ -82,14 +82,14 @@ class ItinerantTest extends TestCase
     public function testCannotReRegisterInbuiltStrategy()
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessageRegExp("/Cannot overwrite registered strategy key: .+/");
+        $this->expectExceptionMessage('Cannot overwrite registered strategy key: id');
         $this->ts->registerStrategy('id', ['fail'], 0);
     }
 
     public function testCannotRegisterActionWithIncorrectParameters()
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessageRegExp("/Invalid argument structure for the strategy: .+/");
+        $this->expectExceptionMessage('Action must accept at least one argument, and it must be of type JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface');
 
         $action = function (): ?NodeAdapterInterface {
             return null;
@@ -101,7 +101,7 @@ class ItinerantTest extends TestCase
     public function testCannotRegisterActionWithIncorrectReturnType()
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessageRegExp("/Invalid argument structure for the strategy: .+/");
+        $this->expectExceptionMessage('Action must return type ?JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface');
 
         // note that implicit return type is ok, but it's not explicitly declared and that's why it breaks
         $action = function (NodeAdapterInterface $node) {

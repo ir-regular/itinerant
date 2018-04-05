@@ -33,7 +33,7 @@ final class Fail implements NodeAdapterInterface
 
     public function getValue()
     {
-        throw new \RuntimeException('FAIL');
+        return 'FAIL';
     }
 
     public function getChildren(): \Iterator

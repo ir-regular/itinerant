@@ -128,8 +128,8 @@ class Itinerant
         $result = $this->stack->apply([self::SANITISE_APPLIED], new RestOfElements($strategy));
 
         if (Fail::fail() === $result) {
-            $error = $this->sanitiseAppliedAction->getLastError();
-            throw new \InvalidArgumentException("Invalid argument structure for the strategy: {$error}");
+            $error = $this->formatErrorMessage($this->sanitiseAppliedAction);
+            throw new \InvalidArgumentException($error);
         }
 
         $result = $result->getNode();
@@ -159,12 +159,30 @@ class Itinerant
         $result = $this->stack->apply([self::SANITISE_REGISTERED], new RestOfElements($strategy));
 
         if (Fail::fail() === $result) {
-            $error = $this->sanitiseRegisteredAction->getLastError();
-            throw new \InvalidArgumentException("Invalid argument structure for the strategy: {$error}");
+            $error = $this->formatErrorMessage($this->sanitiseRegisteredAction);
+            throw new \InvalidArgumentException($error);
         }
 
         $result = $result->getNode();
 
         return $result;
+    }
+
+    /**
+     * @param SanitiseAppliedAction $action
+     * @return string
+     */
+    private function formatErrorMessage(SanitiseAppliedAction $action): string
+    {
+        // (Neither node nor validation error should be null at this point)
+
+        $instruction = ($node = $action->getInvalidNode()) ? $node->getValue() : null;
+        $error = $action->getValidationError() ?: '';
+
+        if (is_array($instruction) && isset($instruction[0])) {
+            $error .= " (in {$instruction[0]})";
+        }
+
+        return $error;
     }
 }
