@@ -5,6 +5,7 @@ namespace JaneOlszewska\Itinerant;
 use JaneOlszewska\Itinerant\Action\SanitiseAppliedAction;
 use JaneOlszewska\Itinerant\Action\SanitiseRegisteredAction;
 use JaneOlszewska\Itinerant\NodeAdapter\Fail;
+use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 use JaneOlszewska\Itinerant\NodeAdapter\RestOfElements;
 use JaneOlszewska\Itinerant\Strategy\InstructionResolver;
 
@@ -79,36 +80,19 @@ class InstructionValidator
      *
      * @param string $strategy
      * @param array $instruction
-     * @param int $argCount
      * @return array
      */
-    public function sanitiseRegistered(string $strategy, array $instruction, int $argCount)
+    public function sanitiseRegistered(string $strategy, array $instruction)
     {
-        if (array_key_exists($strategy, $this->argCounts)) {
-            throw new \InvalidArgumentException("Cannot overwrite registered strategy key: {$strategy}");
-        }
+        $strategy = $this->validateStrategyKey($strategy);
+        $substitutions = $this->validateSubstitutions($strategy, $instruction);
+        $argCount = count($substitutions);
+        $result = $this->validateInstruction($strategy, $instruction, $argCount);
 
-        if (is_numeric($strategy)) {
-            throw new \InvalidArgumentException("Cannot register strategy under a numeric key: {$strategy}");
-        }
+        // successfully validated: save the arg count
+        $this->argCounts[$strategy] = $argCount;
 
-        $sanitiseRegisteredAction = new SanitiseRegisteredAction(
-            array_merge([$strategy => $argCount], $this->argCounts)
-        );
-
-        $result = $this->stack->apply(
-            [self::TD_PRE, ['adhoc', ['fail'], $sanitiseRegisteredAction]],
-            new RestOfElements($instruction)
-        );
-
-        if (Fail::fail() === $result) {
-            $error = $this->formatErrorMessage($sanitiseRegisteredAction);
-            throw new \InvalidArgumentException($error);
-        }
-
-        $result = $result->getNode();
-
-        return $result;
+        return $result->getNode();
     }
 
     /**
@@ -127,5 +111,87 @@ class InstructionValidator
         }
 
         return $error;
+    }
+
+    /**
+     * @param string $strategy
+     * @return string
+     */
+    private function validateStrategyKey(string $strategy): string
+    {
+        if (array_key_exists($strategy, $this->argCounts)) {
+            throw new \InvalidArgumentException("Cannot overwrite registered strategy key: {$strategy}");
+        }
+
+        if (is_numeric($strategy)) {
+            throw new \InvalidArgumentException("Cannot register strategy under a numeric key: {$strategy}");
+        }
+
+        return $strategy;
+    }
+
+    /**
+     * @param string $strategy
+     * @param array $instruction
+     * @return int[]
+     */
+    private function validateSubstitutions(string $strategy, array $instruction): array
+    {
+        $substitutions = [];
+
+        $getSubs = function (NodeAdapterInterface $node) use (&$substitutions): ?NodeAdapterInterface {
+            $value = $node->getValue();
+
+            if (is_numeric($value)) {
+                $substitutions[$value] = true;
+            }
+
+            return $node;
+        };
+
+        // note that I'm ignoring the output: only interested in the side effect here
+        $this->stack->apply(
+            [self::TD_PRE, ['adhoc', ['fail'], $getSubs]],
+            new RestOfElements($instruction)
+        );
+
+        $substitutions = array_keys($substitutions);
+        sort($substitutions);
+
+        if ($substitutions && ($substitutions != range(0, count($substitutions) - 1))) {
+            $sequence = implode(', ', $substitutions);
+            throw new \InvalidArgumentException(
+                "Cannot register strategy: {$strategy}. Non-contiguous substitution sequence: [{$sequence}]"
+            );
+        }
+
+        return $substitutions;
+    }
+
+    /**
+     * @param string $strategy
+     * @param array $instruction
+     * @param int $argCount
+     * @return NodeAdapterInterface
+     */
+    private function validateInstruction(
+        string $strategy,
+        array $instruction,
+        int $argCount
+    ): NodeAdapterInterface {
+        $sanitiseRegisteredAction = new SanitiseRegisteredAction(
+            array_merge([$strategy => $argCount], $this->argCounts)
+        );
+
+        $result = $this->stack->apply(
+            [self::TD_PRE, ['adhoc', ['fail'], $sanitiseRegisteredAction]],
+            new RestOfElements($instruction)
+        );
+
+        if (Fail::fail() === $result) {
+            $error = $this->formatErrorMessage($sanitiseRegisteredAction);
+            throw new \InvalidArgumentException($error);
+        }
+        return $result;
     }
 }

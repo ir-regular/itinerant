@@ -26,10 +26,8 @@ class Adhoc implements StrategyInterface
         $result = ($this->action)($node);
 
         // If result is null, that means action is not applicable to $node
-        // @TODO: document this clearly somewhere or provide a better interface for actions
 
         if ($result !== null) {
-            // @TODO: ...remember that "better interface for actions"? like a return type hint?
             if (!($result instanceof NodeAdapterInterface)) {
                 throw new \UnexpectedValueException('Adhoc callable result must be a NodeAdapterInterface');
             }

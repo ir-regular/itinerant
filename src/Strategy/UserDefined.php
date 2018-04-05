@@ -25,10 +25,9 @@ class UserDefined implements StrategyInterface
     private function substitutePlaceholders(array $instruction, array $args): array
     {
         // substitute numeric placeholders with the actual arguments
-        // @TODO: yep, it's ugly, and it doesn't validate the index
         array_walk_recursive($instruction, function (&$value) use ($args) {
             if (is_numeric($value)) {
-                $value = $args[(int)$value];
+                $value = $args[(int)$value] ?? null;
             }
         });
 

@@ -42,7 +42,7 @@ class InstructionValidatorTest extends TestCase
 
         $this->assertEquals(
             ['adhoc', ['fail'], [$action]],
-            $this->validator->sanitiseRegistered('meh', ['adhoc', 'fail', $action], 0)
+            $this->validator->sanitiseRegistered('meh', ['adhoc', 'fail', $action])
         );
     }
 
@@ -73,7 +73,7 @@ class InstructionValidatorTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Unregistered strategy: does_not_work');
 
-        $this->validator->sanitiseRegistered('broken', ['does_not_work', 'because it is', 'broken'], 0);
+        $this->validator->sanitiseRegistered('broken', ['does_not_work', 'because it is', 'broken']);
     }
 
     public function testThrowsOnReRegisteringInbuiltStrategy()
@@ -81,7 +81,7 @@ class InstructionValidatorTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Cannot overwrite registered strategy key: id');
 
-        $this->validator->sanitiseRegistered('id', ['fail'], 0);
+        $this->validator->sanitiseRegistered('id', ['fail']);
     }
 
     public function testThrowsOnRegisteringActionWithIncorrectArgumentType()
@@ -93,7 +93,7 @@ class InstructionValidatorTest extends TestCase
             return null;
         };
 
-        $this->validator->sanitiseRegistered('meh', ['adhoc', 'fail', $action], 0);
+        $this->validator->sanitiseRegistered('meh', ['adhoc', 'fail', $action]);
     }
 
     public function testThrowsOnRegisteringActionWithIncorrectReturnType()
@@ -106,7 +106,7 @@ class InstructionValidatorTest extends TestCase
             return $node;
         };
 
-        $this->validator->sanitiseRegistered('meh', ['adhoc', 'fail', $action], 0);
+        $this->validator->sanitiseRegistered('meh', ['adhoc', 'fail', $action]);
     }
 
     public function testThrowsOnRegisteringStrategyWithNumericKey()
@@ -114,6 +114,17 @@ class InstructionValidatorTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Cannot register strategy under a numeric key: 1');
 
-        $this->validator->sanitiseRegistered('1', ['all', 'id'], 0);
+        $this->validator->sanitiseRegistered('1', ['all', 'id']);
+    }
+
+    public function testThrowsOnIntsMissingFromSubstitutionSequence()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Cannot register strategy: s. Non-contiguous substitution sequence: [0, 2]');
+
+        $this->validator->sanitiseRegistered(
+            's',
+            ['seq', '0', '2']
+        );
     }
 }

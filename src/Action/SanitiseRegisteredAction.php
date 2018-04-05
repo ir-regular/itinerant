@@ -29,7 +29,6 @@ class SanitiseRegisteredAction extends SanitiseAppliedAction
     {
         return parent::isZeroArgumentStrategy($d)
             || is_numeric($d->getValue()); // allow for substitutions
-        // todo: make sure that substitutions are in a valid range (0...(count_of_args - 1) - must set parent key
     }
 
     protected function sanitiseZeroArgumentNode(NodeAdapterInterface $d)

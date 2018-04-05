@@ -26,12 +26,11 @@ class Itinerant
     /**
      * @param string $strategy
      * @param array $instruction
-     * @param int $argCount
      * @return void
      */
-    public function registerStrategy(string $strategy, array $instruction, int $argCount): void
+    public function registerStrategy(string $strategy, array $instruction): void
     {
-        $instruction = $this->validator->sanitiseRegistered($strategy, $instruction, $argCount);
+        $instruction = $this->validator->sanitiseRegistered($strategy, $instruction);
 
         $this->resolver->registerStrategy($strategy, $instruction);
     }
