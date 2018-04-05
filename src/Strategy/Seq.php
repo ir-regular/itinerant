@@ -8,25 +8,25 @@ use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 class Seq implements StrategyInterface
 {
     /** @var array */
-    private $initialStrategy;
+    private $initialInstruction;
 
     /** @var array */
-    private $followupStrategy;
+    private $followupInstruction;
 
     public function __construct(
-        array $initialStrategy,
-        array $followupStrategy
+        array $initialInstruction,
+        array $followupInstruction
     ) {
-        $this->initialStrategy = $initialStrategy;
-        $this->followupStrategy = $followupStrategy;
+        $this->initialInstruction = $initialInstruction;
+        $this->followupInstruction = $followupInstruction;
     }
 
     public function apply(NodeAdapterInterface $node): \Generator
     {
-        $result = yield [$this->initialStrategy, $node];
+        $result = yield [$this->initialInstruction, $node];
 
         if (Fail::fail() !== $result) {
-            $result = yield [$this->followupStrategy, $result];
+            $result = yield [$this->followupInstruction, $result];
         }
 
         yield $result;

@@ -7,16 +7,16 @@ use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 class Adhoc implements StrategyInterface
 {
     /** @var array */
-    private $strategyIfInapplicable;
+    private $instructionIfInapplicable;
 
     /** @var callable */
     private $action;
 
     public function __construct(
-        array $strategyIfInapplicable,
+        array $instructionIfInapplicable,
         callable $action
     ) {
-        $this->strategyIfInapplicable = $strategyIfInapplicable;
+        $this->instructionIfInapplicable = $instructionIfInapplicable;
         $this->action = $action;
     }
 
@@ -35,7 +35,7 @@ class Adhoc implements StrategyInterface
             }
         } else {
             // if action is inapplicable, apply the fallback strategy instead
-            $result = yield [$this->strategyIfInapplicable, $node];
+            $result = yield [$this->instructionIfInapplicable, $node];
         }
 
         yield $result;

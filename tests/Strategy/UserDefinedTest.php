@@ -10,16 +10,16 @@ class UserDefinedTest extends TestCase
 {
     public function testResolvesKeyToContinuation()
     {
-        $expansion = ['seq', ['0', '1']];
+        $instruction = ['seq', ['0', '1']];
         $node = new SecondElement([1, [2, 3]]);
-        $userDefined = new UserDefined($expansion, ['id', 'fail']);
+        $userDefined = new UserDefined($instruction, ['id', 'fail']);
 
         $continuation = $userDefined->apply($node);
 
         $result = $continuation->current();
         $this->assertEquals([['seq', ['id', 'fail']], $node], $result);
 
-        // pretend $node is the result of applying the expansion to $node
+        // pretend $node is the result of applying the instruction to $node
         $result = $continuation->send($node);
         $this->assertEquals($node, $result); // ...and UserDefined resolves to that result
     }

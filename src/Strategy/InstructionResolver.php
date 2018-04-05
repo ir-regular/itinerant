@@ -2,7 +2,7 @@
 
 namespace JaneOlszewska\Itinerant\Strategy;
 
-class StrategyResolver
+class InstructionResolver
 {
     const ID = 'id';
     const FAIL = 'fail';
@@ -16,16 +16,16 @@ class StrategyResolver
     private $strategies = [];
 
     /**
-     * @param array $strategy
+     * @param array $instruction
      * @return StrategyInterface
      * @throws \DomainException when first element of $strategy is an unregistered strategy key
      */
-    public function resolve(array $strategy): StrategyInterface
+    public function resolve(array $instruction): StrategyInterface
     {
-        $key = array_shift($strategy);
-        $args = $strategy;
+        $strategy = array_shift($instruction);
+        $args = $instruction;
 
-        switch ($key) {
+        switch ($strategy) {
             case self::SEQ:
                 return new Seq($args[0], $args[1]);
             case self::CHOICE:
@@ -37,8 +37,8 @@ class StrategyResolver
             case self::ADHOC:
                 return new Adhoc($args[0], $args[1]);
             default:
-                if (isset($this->strategies[$key])) {
-                    return new UserDefined($this->strategies[$key], $args);
+                if (isset($this->strategies[$strategy])) {
+                    return new UserDefined($this->strategies[$strategy], $args);
                 } else {
                     throw new \DomainException('Invalid strategy: validation process failed');
                 }
@@ -46,11 +46,11 @@ class StrategyResolver
     }
 
     /**
-     * @param string $key
-     * @param array $expansion
+     * @param string $strategy
+     * @param array $instruction
      */
-    public function registerStrategy(string $key, array $expansion): void
+    public function registerStrategy(string $strategy, array $instruction): void
     {
-        $this->strategies[$key] = $expansion;
+        $this->strategies[$strategy] = $instruction;
     }
 }

@@ -5,7 +5,7 @@ namespace JaneOlszewska\Itinerant\Action;
 use JaneOlszewska\Itinerant\NodeAdapter\Fail;
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 use JaneOlszewska\Itinerant\NodeAdapter\RestOfElements;
-use JaneOlszewska\Itinerant\Strategy\StrategyResolver;
+use JaneOlszewska\Itinerant\Strategy\InstructionResolver;
 
 /**
  * Internal library action: validates and sanitises instructions given to Itinerant::apply()
@@ -16,7 +16,7 @@ use JaneOlszewska\Itinerant\Strategy\StrategyResolver;
  *   - array element count equals (registered argument count + 1)
  *
  * For readability, the above ruleset has an exception. Zero-argument strategies can be represented
- * as strings (keys) instead of single-element arrays.
+ * as instructions as strings (keys) instead of single-element arrays.
  *
  * SanitiseAppliedAction sanitises such strings by converting them into single-element arrays.
  */
@@ -57,15 +57,18 @@ class SanitiseAppliedAction
 
     public function __invoke(NodeAdapterInterface $d): ?NodeAdapterInterface
     {
-        if ($this->isZeroArgumentNode($d)) { // is applicable to zero-argument nodes
+        if ($this->isZeroArgumentStrategy($d)) {
+            // If special case of zero-argument strategy applies:
+            // sanitise instruction (if string, convert to [string]).
             return $this->sanitiseZeroArgumentNode($d);
+        } elseif ($this->isAction($d)) {
+            // If action (callable):
+            // ensure correct argument/return types.
+            $isValid = $this->isValidAction($d);
         } else {
-            if ($this->isAction($d)) { // is applicable to actions
-                $isValid = $this->isValidAction($d);
-            } else {
-                // ...if not a zero-argument node or action, check if valid strategy
-                $isValid = $this->isValidStrategy($d);
-            }
+            // ...otherwise it must be an instruction.
+            // check that count of arguments provided matches count of arguments expected by strategy.
+            $isValid = $this->isValidInstruction($d);
         }
 
         if ($isValid) {
@@ -80,14 +83,14 @@ class SanitiseAppliedAction
      * @param NodeAdapterInterface $d
      * @return bool
      */
-    protected function isZeroArgumentNode(NodeAdapterInterface $d): bool
+    protected function isZeroArgumentStrategy(NodeAdapterInterface $d): bool
     {
         $strategy = $d->getValue();
 
         return is_string($strategy)
             // inbuilt zero-argument strategies
-            && (StrategyResolver::FAIL == $strategy
-                || StrategyResolver::ID == $strategy
+            && (InstructionResolver::FAIL == $strategy
+                || InstructionResolver::ID == $strategy
                 // user-registered 0-argument strategies
                 || (isset($this->argumentCountsPerStrategyKey[$strategy])
                     && 0 == $this->argumentCountsPerStrategyKey[$strategy]));
@@ -171,16 +174,16 @@ class SanitiseAppliedAction
      * @param NodeAdapterInterface $d
      * @return bool
      */
-    protected function isValidStrategy(NodeAdapterInterface $d): bool
+    protected function isValidInstruction(NodeAdapterInterface $d): bool
     {
         $valid = false;
 
-        // a node is a valid strategy if...
+        // an instruction is a valid strategy application if...
         $strategy = $d->getValue();
 
-        // ...its main node (key) is included in the list of valid strategies
+        // ...its main node (strategy key, first element of array, car) is on registered list
         if (isset($this->argumentCountsPerStrategyKey[$strategy])) {
-            // ...and the count of its children (arguments) count matches the registered count
+            // ...and the count of its children (arguments, rest of the array, cdr) matches expected count
             $expectedCount = $this->argumentCountsPerStrategyKey[$strategy];
             $actualCount = iterator_count($d->getChildren());
             $valid = ($expectedCount == $actualCount);

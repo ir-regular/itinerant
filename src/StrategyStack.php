@@ -4,7 +4,7 @@ namespace JaneOlszewska\Itinerant;
 
 use JaneOlszewska\Itinerant\NodeAdapter\Fail;
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
-use JaneOlszewska\Itinerant\Strategy\StrategyResolver;
+use JaneOlszewska\Itinerant\Strategy\InstructionResolver;
 
 class StrategyStack
 {
@@ -14,11 +14,11 @@ class StrategyStack
     private $stack = [];
 
     /**
-     * @var StrategyResolver
+     * @var InstructionResolver
      */
     private $resolver;
 
-    public function __construct(StrategyResolver $resolver)
+    public function __construct(InstructionResolver $resolver)
     {
         if (class_exists('\Ds\Stack')) {
             $this->stack = new \Ds\Stack();
@@ -44,10 +44,10 @@ class StrategyStack
 
             if (is_array($strategy)) {
                 // speed things up by insta-resolving 'id' and 'fail' strategies
-                if ($strategy[0] == StrategyResolver::ID) {
+                if ($strategy[0] == InstructionResolver::ID) {
                     $result = $node;
                     continue;
-                } elseif ($strategy[0] == StrategyResolver::FAIL) {
+                } elseif ($strategy[0] == InstructionResolver::FAIL) {
                     $result = Fail::fail();
                     continue;
                 } else {

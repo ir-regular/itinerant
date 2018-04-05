@@ -5,14 +5,14 @@ namespace JaneOlszewska\Tests\Itinerant;
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 use JaneOlszewska\Itinerant\NodeAdapter\SecondElement;
 use JaneOlszewska\Itinerant\NodeAdapter\Fail;
-use JaneOlszewska\Itinerant\Strategy\StrategyResolver;
+use JaneOlszewska\Itinerant\Strategy\InstructionResolver;
 use JaneOlszewska\Itinerant\Itinerant;
 use PHPUnit\Framework\TestCase;
 
 class ItinerantTest extends TestCase
 {
     /** @var Itinerant */
-    private $ts;
+    private $itinerant;
 
     /** @var object */
     private $fail;
@@ -23,7 +23,7 @@ class ItinerantTest extends TestCase
 
         $this->fail = Fail::fail();
 
-        $this->ts = new Itinerant();
+        $this->itinerant = new Itinerant();
     }
 
     public function testSanitisationForInbuiltSingleArgumentNodes()
@@ -33,8 +33,8 @@ class ItinerantTest extends TestCase
 
         // note we no longer have to enclose zero-argument strategies in arrays
 
-        $this->assertEquals($this->fail, $this->ts->apply(StrategyResolver::FAIL, $node));
-        $this->assertEquals($node, $this->ts->apply(StrategyResolver::ID, $node));
+        $this->assertEquals($this->fail, $this->itinerant->apply(InstructionResolver::FAIL, $node));
+        $this->assertEquals($node, $this->itinerant->apply(InstructionResolver::ID, $node));
     }
 
     public function testSanitisationForRegisteredSingleArgumentNodes()
@@ -54,8 +54,8 @@ class ItinerantTest extends TestCase
 
         // note we don't have to enclose either 'fail' or 'meh' in []
 
-        $this->ts->registerStrategy('meh', ['adhoc', 'fail', $action], 0);
-        $result = $this->ts->apply(['all', 'meh'], $nodes);
+        $this->itinerant->registerStrategy('meh', ['adhoc', 'fail', $action], 0);
+        $result = $this->itinerant->apply(['all', 'meh'], $nodes);
         $this->assertEquals(['root node', ['whatever', 'whatever']], $result->getNode());
     }
 
@@ -65,7 +65,7 @@ class ItinerantTest extends TestCase
         $this->expectExceptionMessage('Strategy all registered as accepting 1 argument, 0 provided');
 
         $node = null;
-        $this->ts->apply('all', new SecondElement($node));
+        $this->itinerant->apply('all', new SecondElement($node));
 
         // todo: we could test all ways the validation should work... this is just the initial test
     }
@@ -74,7 +74,7 @@ class ItinerantTest extends TestCase
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Unregistered strategy: does_not_work');
-        $this->ts->registerStrategy('broken', ['does_not_work', 'because it is', 'broken'], 0);
+        $this->itinerant->registerStrategy('broken', ['does_not_work', 'because it is', 'broken'], 0);
 
         // todo: again we could test all ways the validation should work... this is just the initial test
     }
@@ -83,7 +83,7 @@ class ItinerantTest extends TestCase
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Cannot overwrite registered strategy key: id');
-        $this->ts->registerStrategy('id', ['fail'], 0);
+        $this->itinerant->registerStrategy('id', ['fail'], 0);
     }
 
     public function testCannotRegisterActionWithIncorrectParameters()
@@ -95,7 +95,7 @@ class ItinerantTest extends TestCase
             return null;
         };
 
-        $this->ts->registerStrategy('meh', ['adhoc', 'fail', $action], 0);
+        $this->itinerant->registerStrategy('meh', ['adhoc', 'fail', $action], 0);
     }
 
     public function testCannotRegisterActionWithIncorrectReturnType()
@@ -108,7 +108,7 @@ class ItinerantTest extends TestCase
             return $node;
         };
 
-        $this->ts->registerStrategy('meh', ['adhoc', 'fail', $action], 0);
+        $this->itinerant->registerStrategy('meh', ['adhoc', 'fail', $action], 0);
     }
 
     public function testCannotRegisterStrategyWithNumericKey()
@@ -116,6 +116,6 @@ class ItinerantTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Cannot register strategy under a numeric key: 1');
 
-        $this->ts->registerStrategy('1', ['all', 'id'], 0);
+        $this->itinerant->registerStrategy('1', ['all', 'id'], 0);
     }
 }

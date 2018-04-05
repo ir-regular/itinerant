@@ -8,12 +8,12 @@ use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 class One implements StrategyInterface
 {
     /** @var array */
-    private $childStrategy;
+    private $childInstruction;
 
     public function __construct(
-        array $childStrategy
+        array $childInstruction
     ) {
-        $this->childStrategy = $childStrategy;
+        $this->childInstruction = $childInstruction;
     }
 
     public function apply(NodeAdapterInterface $node): \Generator
@@ -25,7 +25,7 @@ class One implements StrategyInterface
 
         if ($unprocessed->valid()) {
             foreach ($unprocessed as $child) {
-                $result = yield [$this->childStrategy, $child];
+                $result = yield [$this->childInstruction, $child];
 
                 if (Fail::fail() !== $result) {
                     break;

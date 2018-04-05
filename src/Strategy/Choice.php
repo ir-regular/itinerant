@@ -8,25 +8,25 @@ use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 class Choice implements StrategyInterface
 {
     /** @var array */
-    private $initialStrategy;
+    private $initialInstruction;
 
     /** @var array */
-    private $alternativeStrategy;
+    private $alternativeInstruction;
 
     public function __construct(
-        array $initialStrategy,
-        array $alternativeStrategy
+        array $initialInstruction,
+        array $alternativeInstruction
     ) {
-        $this->initialStrategy = $initialStrategy;
-        $this->alternativeStrategy = $alternativeStrategy;
+        $this->initialInstruction = $initialInstruction;
+        $this->alternativeInstruction = $alternativeInstruction;
     }
 
     public function apply(NodeAdapterInterface $node): \Generator
     {
-        $result = yield [$this->initialStrategy, $node];
+        $result = yield [$this->initialInstruction, $node];
 
         if (Fail::fail() === $result) {
-            $result = yield [$this->alternativeStrategy, $node];
+            $result = yield [$this->alternativeInstruction, $node];
         }
 
         yield $result;

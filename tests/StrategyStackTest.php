@@ -5,7 +5,7 @@ namespace JaneOlszewska\Tests\Itinerant;
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 use JaneOlszewska\Itinerant\NodeAdapter\ViaGetter;
 use JaneOlszewska\Itinerant\NodeAdapter\Fail;
-use JaneOlszewska\Itinerant\Strategy\StrategyResolver;
+use JaneOlszewska\Itinerant\Strategy\InstructionResolver;
 use JaneOlszewska\Itinerant\StrategyStack;
 use PHPUnit\Framework\TestCase;
 
@@ -29,7 +29,7 @@ class StrategyStackTest extends TestCase
 
         $this->fail = Fail::fail();
 
-        $resolver = $this->getInitialisedStrategyResolver();
+        $resolver = $this->getInitialisedInstructionResolver();
 
         $this->stack = new StrategyStack($resolver);
     }
@@ -429,11 +429,11 @@ class StrategyStackTest extends TestCase
     }
 
     /**
-     * @return StrategyResolver
+     * @return InstructionResolver
      */
-    private function getInitialisedStrategyResolver(): StrategyResolver
+    private function getInitialisedInstructionResolver(): InstructionResolver
     {
-        $resolver = new StrategyResolver();
+        $resolver = new InstructionResolver();
 
         // full_td(s) = seq(s, all(full_td(s)))
 
