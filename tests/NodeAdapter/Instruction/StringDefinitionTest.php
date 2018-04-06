@@ -1,9 +1,9 @@
 <?php
 
-namespace JaneOlszewska\Tests\Itinerant\NodeAdapter;
+namespace JaneOlszewska\Tests\Itinerant\NodeAdapter\Instruction;
 
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
-use JaneOlszewska\Itinerant\NodeAdapter\StringDefinition;
+use JaneOlszewska\Itinerant\NodeAdapter\Instruction\StringDefinition;
 use PHPUnit\Framework\TestCase;
 
 class StringDefinitionTest extends TestCase
@@ -26,13 +26,13 @@ class StringDefinitionTest extends TestCase
         fclose($this->belowEqDefinition);
     }
 
-    public function testExtractsStringDefinitionKey()
+    public function testExtractsStrategyKey()
     {
         $this->assertEquals('try', (new StringDefinition($this->tryDefinition))->getValue());
         $this->assertEquals('below_eq', (new StringDefinition($this->belowEqDefinition))->getValue());
     }
 
-    public function testExtractsArguments()
+    public function testExtractsArgumentCount()
     {
         /** @var NodeAdapterInterface $declaration */
         $declaration = (new StringDefinition($this->tryDefinition))->getChildren()->current();
@@ -45,42 +45,14 @@ class StringDefinitionTest extends TestCase
         $this->assertEquals(2, iterator_count($declaration->getChildren()));
     }
 
-    public function testRecursesIntoChildren()
+    public function testExtractsInstruction()
     {
         $children = (new StringDefinition($this->belowEqDefinition))->getChildren();
-
-        // check arguments
-
-        $arguments = $children->current()->getChildren();
-
-        $s1 = $arguments->current();
-        $this->assertEquals('s1', $s1->getValue());
-        $arguments->next();
-
-        $s2 = $arguments->current();
-        $this->assertEquals('s2', $s2->getValue());
-
-        // check instruction
-
-        $children->next();
+        $children->next(); // skip over declaration to instruction
+        /** @var NodeAdapterInterface $instruction */
         $instruction = $children->current();
-        $this->assertEquals('once_td', $instruction->getValue());
-        $children = $instruction->getChildren();
 
-        $seq = $children->current();
-        $this->assertEquals('seq', $seq->getValue());
-        $children = $seq->getChildren();
-
-        $s2 = $children->current();
-        $this->assertEquals('s2', $s2->getValue());
-        $children->next();
-
-        $oncetd = $children->current();
-        $this->assertEquals('once_td', $oncetd->getValue());
-        $children = $oncetd->getChildren();
-
-        $s1 = $children->current();
-        $this->assertEquals('s1', $s1->getValue());
+        $this->assertEquals(['once_td', ['seq', ['s2'], ['once_td', ['s1']]]], $instruction->getNode());
     }
 
     /**
