@@ -17,18 +17,24 @@ class StringDefinition implements NodeAdapterInterface
     private $declaration;
 
     /**
-     * @param resource $definition
+     * @var array|\Ds\Set|null
      */
-    public function __construct($definition)
+    private $knownSymbols;
+
+    /**
+     * @param resource $definition
+     * @param \Ds\Set|array|null $knownSymbols
+     */
+    public function __construct($definition, $knownSymbols = null)
     {
         $this->definition = $definition;
-
-        $this->declaration = $this->getExpression($definition);
+        $this->declaration = new StringExpression($definition);
+        $this->knownSymbols = $knownSymbols;
     }
 
     public function getNode()
     {
-        return $this->definition;
+        return [$this->declaration->getValue(), $this->getInstruction($this->definition)->getNode()];
     }
 
     public function getValue()
@@ -47,11 +53,21 @@ class StringDefinition implements NodeAdapterInterface
         // cannot amend children
     }
 
+    /**
+     * @param resource $definition
+     * @return NodeAdapterInterface
+     */
     private function getInstruction($definition): NodeAdapterInterface
     {
-        // (this forces the stream to be consumed up to the point where the instruction starts)
+        // (this also forces the stream to be consumed up to the point where the instruction starts)
 
-        iterator_count($this->declaration->getChildren());
+        $symbols = array_map(function ($s) {
+            return is_array($s) ? array_pop($s) : $s;
+        }, $this->declaration->getNode());
+
+        if ($symbols) {
+            $this->addKnownSymbols($symbols);
+        }
 
         while (($c = fgetc($definition)) !== false) {
             if ($this->isWordCharacter($c)) {
@@ -60,17 +76,37 @@ class StringDefinition implements NodeAdapterInterface
         }
 
         if ($c !== false) {
-            return $this->getExpression($this->definition, $c);
+            return new StringExpression($definition, $c, $this->knownSymbols);
         }
     }
 
-    private function getExpression($definition, ?string $peeked = null): NodeAdapterInterface
-    {
-        return new StringExpression($definition, $peeked);
-    }
-
-    private function isWordCharacter($char)
+    /**
+     * @param string $char
+     * @return bool
+     */
+    private function isWordCharacter(string $char): bool
     {
         return ctype_alnum($char) || $char == '_';
+    }
+
+    /**
+     * @param string[] $symbols
+     * @return void
+     */
+    private function addKnownSymbols(array $symbols): void
+    {
+        if (is_array($this->knownSymbols)) {
+            $this->knownSymbols = array_unique(array_merge($this->knownSymbols, $symbols));
+
+        } elseif ($this->knownSymbols) {
+            $this->knownSymbols = clone $this->knownSymbols;
+            $this->knownSymbols->add(...$symbols);
+
+        } elseif (class_exists('\Ds\Set')) {
+            $this->knownSymbols = new \Ds\Set($symbols);
+
+        } else {
+            $this->knownSymbols = $symbols;
+        }
     }
 }

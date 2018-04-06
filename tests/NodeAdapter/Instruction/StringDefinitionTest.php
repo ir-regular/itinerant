@@ -9,50 +9,74 @@ use PHPUnit\Framework\TestCase;
 class StringDefinitionTest extends TestCase
 {
     /** @var resource */
-    private $tryDefinition;
+    private $tryDefinitionStream;
 
     /** @var resource */
+    private $belowEqDefinitionStream;
+
+    /** @var StringDefinition */
+    private $tryDefinition;
+
+    /** @var StringDefinition */
     private $belowEqDefinition;
 
     protected function setUp()
     {
-        $this->tryDefinition = $this->get_string_stream('try(s) = choice(s, id)');
-        $this->belowEqDefinition = $this->get_string_stream('below_eq(s1, s2) = once_td(seq(s2, once_td(s1)))');
+        $this->tryDefinitionStream = $this->get_string_stream('try(s) = choice(s, id)');
+        $this->belowEqDefinitionStream = $this->get_string_stream('below_eq(s1, s2) = once_td(seq(s2, once_td(s1)))');
+
+        $this->tryDefinition = new StringDefinition($this->tryDefinitionStream, ['choice', 'id']);
+        $this->belowEqDefinition = new StringDefinition($this->belowEqDefinitionStream, ['once_td', 'seq']);
     }
 
     protected function tearDown()
     {
-        fclose($this->tryDefinition);
-        fclose($this->belowEqDefinition);
+        fclose($this->tryDefinitionStream);
+        fclose($this->belowEqDefinitionStream);
     }
 
     public function testExtractsStrategyKey()
     {
-        $this->assertEquals('try', (new StringDefinition($this->tryDefinition))->getValue());
-        $this->assertEquals('below_eq', (new StringDefinition($this->belowEqDefinition))->getValue());
+        $this->assertEquals('try', $this->tryDefinition->getValue());
+        $this->assertEquals('below_eq', $this->belowEqDefinition->getValue());
     }
 
-    public function testExtractsArgumentCount()
+    public function testExtractsArguments()
     {
         /** @var NodeAdapterInterface $declaration */
-        $declaration = (new StringDefinition($this->tryDefinition))->getChildren()->current();
-        // s
-        $this->assertEquals(1, iterator_count($declaration->getChildren()));
+        $declaration = $this->tryDefinition->getChildren()->current();
+        $this->assertEquals(['try', ['s']], $declaration->getNode());
 
         /** @var NodeAdapterInterface $declaration */
-        $declaration = (new StringDefinition($this->belowEqDefinition))->getChildren()->current();
-        // s1, s2
-        $this->assertEquals(2, iterator_count($declaration->getChildren()));
+        $declaration = $this->belowEqDefinition->getChildren()->current();
+        $this->assertEquals(['below_eq', ['s1'], ['s2']], $declaration->getNode());
     }
 
     public function testExtractsInstruction()
     {
-        $children = (new StringDefinition($this->belowEqDefinition))->getChildren();
+        $children = $this->belowEqDefinition->getChildren();
         $children->next(); // skip over declaration to instruction
         /** @var NodeAdapterInterface $instruction */
         $instruction = $children->current();
 
         $this->assertEquals(['once_td', ['seq', ['s2'], ['once_td', ['s1']]]], $instruction->getNode());
+    }
+
+    public function testThrowsIfUnknownSymbolEncountered()
+    {
+        $stream = $this->get_string_stream('below_eq(s1, s2) = once_td(seq(s3, once_td(s1)))');
+
+        try {
+            // will not understand 's3', since it's not one of the existing parameters
+            (new StringDefinition($stream, ['once_td', 'seq']))->getNode();
+            $this->fail('Did not fail on unrecognised symbol');
+
+        } catch (\UnexpectedValueException $e) {
+            $this->assertEquals('Unknown symbol: s3', $e->getMessage());
+
+        } finally {
+            fclose($stream);
+        }
     }
 
     /**
