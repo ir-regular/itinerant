@@ -4,6 +4,12 @@ namespace JaneOlszewska\Itinerant\NodeAdapter\Instruction;
 
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 
+/**
+ * Parses a string to an Itinerant::registerStrategy() compliant input.
+ *
+ * Because of generators, this is somewhat fragile.
+ * Do not attempt to getNode() and getChildren() on the same object (or vice versa).
+ */
 class StringDefinition implements NodeAdapterInterface
 {
     /**
