@@ -68,6 +68,19 @@ class StringExpression implements NodeAdapterInterface
      */
     private function extractName($definition, ?string $peeked = null): string
     {
+        if (!$peeked) {
+            while (($c = fgetc($definition)) !== false && ctype_space($c)) {
+                // skip whitespace
+            }
+            if ($c !== false) {
+                $peeked = $c;
+            }
+        }
+
+        if (!$this->isWordCharacter($peeked)) {
+            throw new \UnexpectedValueException("Invalid expression: name not found");
+        }
+
         $name = $peeked;
 
         while (($c = fgetc($definition)) !== false && $this->isWordCharacter($c)) {
@@ -75,10 +88,6 @@ class StringExpression implements NodeAdapterInterface
         }
 
         $this->lastReadCharacter = $c;
-
-        if (is_null($name)) {
-            throw new \UnexpectedValueException("Invalid expression: name not found");
-        }
 
         if ($this->knownSymbols && !$this->isKnownSymbol($this->knownSymbols, $name)) {
             throw new \UnexpectedValueException("Unknown symbol: {$name}");

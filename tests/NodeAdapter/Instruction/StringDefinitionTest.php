@@ -96,6 +96,25 @@ class StringDefinitionTest extends TestCase
         }
     }
 
+    public function testMultipleDefinitionsLoadFromSameStream()
+    {
+        $twoDefinitions = "try(s) = choice(s, id)\nbelow_eq(s1, s2) = once_td(seq(s2, once_td(s1)))";
+        $stream = $this->get_string_stream($twoDefinitions);
+
+        $knownSymbols = ['choice', 'id', 'seq', 'once_td'];
+
+        $this->assertEquals(
+            ['try', ['choice', ['s'], ['id']]],
+            (new StringDefinition($stream, $knownSymbols))->getNode()
+        );
+        $this->assertEquals(
+            ['below_eq', ['once_td', ['seq', ['s2'], ['once_td', ['s1']]]]],
+            (new StringDefinition($stream, $knownSymbols))->getNode()
+        );
+
+        fclose($stream);
+    }
+
     /**
      * @param string $string
      * @return resource

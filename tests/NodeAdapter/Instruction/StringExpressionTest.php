@@ -48,6 +48,14 @@ class StringExpressionTest extends TestCase
         new StringExpression($expression);
     }
 
+    public function testAllowsWhitespaceBeforeExpression()
+    {
+        $stream = $this->get_string_stream("\n below_eq(s1, s2)");
+        $node = new StringExpression($stream);
+        $this->assertEquals(['below_eq', ['s1'], ['s2']], $node->getNode());
+        fclose($stream);
+    }
+
     /**
      * @param string $string
      * @return resource
