@@ -6,6 +6,9 @@ use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 
 class StringExpression implements NodeAdapterInterface
 {
+    /** @var array */
+    private $node;
+
     /** @var string */
     private $name;
 
@@ -35,13 +38,17 @@ class StringExpression implements NodeAdapterInterface
 
     public function getNode()
     {
-        $instruction = [$this->getValue()];
-
-        foreach ($this->getChildren() as $child) {
-            $instruction[] = $child->getNode();
+        if (isset($this->node)) {
+            return $this->node;
         }
 
-        return $instruction;
+        $this->node = [$this->getValue()];
+
+        foreach ($this->getChildren() as $child) {
+            $this->node[] = $child->getNode();
+        }
+
+        return $this->node;
     }
 
     public function getValue()
