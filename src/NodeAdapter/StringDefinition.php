@@ -36,22 +36,30 @@ class StringDefinition implements NodeAdapterInterface
 
     public function getChildren(): \Iterator
     {
-        yield from $this->declaration->getChildren();
+        yield 'declaration' => $this->declaration;
+        yield 'instruction' => $this->getInstruction($this->definition);
+    }
 
-        while (($c = fgetc($this->definition)) !== false) {
+    public function setChildren(array $children = []): void
+    {
+        // cannot amend children
+    }
+
+    private function getInstruction($definition): NodeAdapterInterface
+    {
+        // (this forces the stream to be consumed up to the point where the instruction starts)
+
+        iterator_count($this->declaration->getChildren());
+
+        while (($c = fgetc($definition)) !== false) {
             if ($this->isWordCharacter($c)) {
                 break;
             }
         }
 
         if ($c !== false) {
-            yield $this->getExpression($this->definition, $c);
+            return $this->getExpression($this->definition, $c);
         }
-    }
-
-    public function setChildren(array $children = []): void
-    {
-        // cannot amend children
     }
 
     private function getExpression($definition, ?string $peeked = null): NodeAdapterInterface
