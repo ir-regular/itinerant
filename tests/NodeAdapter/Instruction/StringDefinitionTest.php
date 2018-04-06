@@ -104,11 +104,11 @@ class StringDefinitionTest extends TestCase
         $knownSymbols = ['choice', 'id', 'seq', 'once_td'];
 
         $this->assertEquals(
-            ['try', ['choice', ['s'], ['id']]],
+            ['try', ['choice', ['0'], ['id']]],
             (new StringDefinition($stream, $knownSymbols))->getNode()
         );
         $this->assertEquals(
-            ['below_eq', ['once_td', ['seq', ['s2'], ['once_td', ['s1']]]]],
+            ['below_eq', ['once_td', ['seq', ['1'], ['once_td', ['0']]]]],
             (new StringDefinition($stream, $knownSymbols))->getNode()
         );
 

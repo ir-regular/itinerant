@@ -13,19 +13,14 @@ use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 class StringDefinition implements NodeAdapterInterface
 {
     /**
-     * @var resource
-     */
-    private $definition;
-
-    /**
-     * @var NodeAdapterInterface
-     */
-    private $declaration;
-
-    /**
      * @var array|\Ds\Set|null
      */
     private $knownSymbols;
+
+    /**
+     * @var NodeAdapterInterface[]
+     */
+    private $children;
 
     /**
      * @param resource $definition
@@ -34,29 +29,47 @@ class StringDefinition implements NodeAdapterInterface
     public function __construct($definition, $knownSymbols = null)
     {
         $this->definition = $definition;
-        $this->declaration = new StringExpression($definition);
         $this->knownSymbols = $knownSymbols;
+
+        $this->children = [];
+        $this->children['declaration'] = new StringExpression($definition);
+        // need to do this separately since instruction uses declaration
+        $this->children['instruction'] = $this->getInstruction($definition);
     }
 
     public function getNode()
     {
-        return [$this->declaration->getValue(), $this->getInstruction($this->definition)->getNode()];
+        $declaration = $this->children['declaration']->getNode();
+        $instruction = $this->children['instruction']->getNode();
+
+        $strategy = array_shift($declaration);
+        $args = array_map('array_pop', $declaration); // unwrap the rest
+        $args = array_flip($args); // arg name => arg index
+
+        // substitute arg names with numeric placeholders
+        array_walk_recursive($instruction, function (&$value) use ($args) {
+            if (isset($args[$value])) {
+                $value = strval($args[$value]);
+            }
+        });
+
+        return [$strategy, $instruction];
     }
 
     public function getValue()
     {
-        return $this->declaration->getValue();
+        return $this->children['declaration']->getValue();
     }
 
     public function getChildren(): \Iterator
     {
-        yield 'declaration' => $this->declaration;
-        yield 'instruction' => $this->getInstruction($this->definition);
+        yield from $this->children;
     }
 
     public function setChildren(array $children = []): void
     {
-        // cannot amend children
+        // cannot amend children yet
+        throw new \RuntimeException('Not implemented');
     }
 
     /**
@@ -69,7 +82,7 @@ class StringDefinition implements NodeAdapterInterface
 
         $symbols = array_map(function ($s) {
             return is_array($s) ? array_pop($s) : $s;
-        }, $this->declaration->getNode());
+        }, $this->children['declaration']->getNode());
 
         if ($symbols) {
             $this->addKnownSymbols($symbols);
@@ -85,7 +98,7 @@ class StringDefinition implements NodeAdapterInterface
             return new StringExpression($definition, $c, $this->knownSymbols);
         }
 
-        throw new \UnderflowException("Definition {$this->declaration->getValue()} incomplete: body missing");
+        throw new \UnderflowException("Definition {$symbols[0]} incomplete: body missing");
     }
 
     /**
