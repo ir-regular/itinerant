@@ -84,6 +84,8 @@ class StringDefinition implements NodeAdapterInterface
         if ($c !== false) {
             return new StringExpression($definition, $c, $this->knownSymbols);
         }
+
+        throw new \UnderflowException("Definition {$this->declaration->getValue()} incomplete: body missing");
     }
 
     /**

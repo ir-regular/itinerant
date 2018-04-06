@@ -79,6 +79,23 @@ class StringDefinitionTest extends TestCase
         }
     }
 
+    public function testThrowsWhenDefinitionBodyMissing()
+    {
+        $stream = $this->get_string_stream('below_eq(s1, s2)');
+
+        try {
+            // will not understand 's3', since it's not one of the existing parameters
+            (new StringDefinition($stream))->getNode();
+            $this->fail('Did not fail due to missing body');
+
+        } catch (\UnderflowException $e) {
+            $this->assertEquals('Definition below_eq incomplete: body missing', $e->getMessage());
+
+        } finally {
+            fclose($stream);
+        }
+    }
+
     /**
      * @param string $string
      * @return resource
