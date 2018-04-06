@@ -24,7 +24,14 @@ class Iterator implements NodeAdapterInterface
 
     public function getNode()
     {
-        return [$this->value, $this->iterator];
+        $children = [];
+
+        /** @var NodeAdapterInterface $child */
+        foreach ($this->iterator as $child) {
+            $children[] = $child->getNode();
+        }
+
+        return [$this->value, $children];
     }
 
     public function getValue()
