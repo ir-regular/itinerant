@@ -1,12 +1,12 @@
 <?php
 
-namespace JaneOlszewska\Tests\Itinerant;
+namespace JaneOlszewska\Tests\Itinerant\Strategy;
 
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 use JaneOlszewska\Itinerant\NodeAdapter\ViaGetter;
 use JaneOlszewska\Itinerant\NodeAdapter\Fail;
 use JaneOlszewska\Itinerant\Strategy\InstructionResolver;
-use JaneOlszewska\Itinerant\StrategyStack;
+use JaneOlszewska\Itinerant\Strategy\StrategyStack;
 use PHPUnit\Framework\TestCase;
 
 /**

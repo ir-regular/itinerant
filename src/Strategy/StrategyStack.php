@@ -1,10 +1,9 @@
 <?php
 
-namespace JaneOlszewska\Itinerant;
+namespace JaneOlszewska\Itinerant\Strategy;
 
 use JaneOlszewska\Itinerant\NodeAdapter\Fail;
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
-use JaneOlszewska\Itinerant\Strategy\InstructionResolver;
 
 class StrategyStack
 {
