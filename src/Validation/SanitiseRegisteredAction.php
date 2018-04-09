@@ -2,6 +2,7 @@
 
 namespace JaneOlszewska\Itinerant\Validation;
 
+use JaneOlszewska\Itinerant\NodeAdapter\Leaf;
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 
 /**
@@ -34,6 +35,8 @@ class SanitiseRegisteredAction extends SanitiseAppliedAction
     protected function sanitiseZeroArgumentNode(NodeAdapterInterface $d)
     {
         // do not wrap substitutions
-        return is_numeric($d->getValue()) ? $d : parent::sanitiseZeroArgumentNode($d);
+        return is_numeric($d->getValue())
+            ? new Leaf($d->getValue())
+            : parent::sanitiseZeroArgumentNode($d);
     }
 }

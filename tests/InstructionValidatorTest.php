@@ -5,7 +5,6 @@ namespace JaneOlszewska\Tests\Itinerant;
 use JaneOlszewska\Itinerant\InstructionValidator;
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 use JaneOlszewska\Itinerant\Strategy\InstructionResolver;
-use JaneOlszewska\Itinerant\StrategyStack;
 use PHPUnit\Framework\TestCase;
 
 class InstructionValidatorTest extends TestCase
@@ -31,6 +30,16 @@ class InstructionValidatorTest extends TestCase
         $this->assertEquals(
             [InstructionResolver::ID],
             $this->validator->sanitiseApplied(InstructionResolver::ID)
+        );
+    }
+
+    public function testDoesNotWrapSubstitutions()
+    {
+        $instruction = [InstructionResolver::CHOICE, '0', InstructionResolver::FAIL];
+
+        $this->assertEquals(
+            [InstructionResolver::CHOICE, '0', [InstructionResolver::FAIL]],
+            $this->validator->sanitiseRegistered('x', $instruction)
         );
     }
 

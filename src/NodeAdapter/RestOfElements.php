@@ -39,7 +39,7 @@ class RestOfElements implements NodeAdapterInterface
     public function setChildren(array $children = []): void
     {
         // unwrap
-        $children = array_map(function (RestOfElements $nodeAdapter) {
+        $children = array_map(function (NodeAdapterInterface $nodeAdapter) {
             return $nodeAdapter->getNode();
         }, $children);
 

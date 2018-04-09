@@ -66,7 +66,7 @@ class ViaGetter implements NodeAdapterInterface
     public function setChildren(array $children = []): void
     {
         // unwrap
-        $children = array_map(function (ViaGetter $nodeAdapter) {
+        $children = array_map(function (NodeAdapterInterface $nodeAdapter) {
             return $nodeAdapter->getNode();
         }, $children);
 
