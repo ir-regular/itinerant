@@ -1,7 +1,8 @@
 <?php
 
-namespace JaneOlszewska\Itinerant\NodeAdapter\Instruction;
+namespace JaneOlszewska\Tests\Itinerant\NodeAdapter\Instruction;
 
+use JaneOlszewska\Itinerant\NodeAdapter\Instruction\StringExpression;
 use PHPUnit\Framework\TestCase;
 
 class StringExpressionTest extends TestCase
