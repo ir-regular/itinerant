@@ -14,8 +14,8 @@ class ItinerantTest extends TestCase
     public function testRegistersStrategyUsingRegisteredStrategy()
     {
         $itinerant = new Itinerant();
-        $itinerant->registerStrategy('first', ['id']);
-        $itinerant->registerStrategy('second', ['choice', 'fail', 'first']);
+        $itinerant->register('first', ['id']);
+        $itinerant->register('second', ['choice', 'fail', 'first']);
 
         $node = $this->createMock(NodeAdapterInterface::class);
 
@@ -30,7 +30,7 @@ class ItinerantTest extends TestCase
         $stream = fopen('data://text/plain,' . $string, 'r');
 
         $itinerant = new Itinerant();
-        $itinerant->registerStrategiesFromStream($stream);
+        $itinerant->registerFromStream($stream);
 
         fclose($stream);
 

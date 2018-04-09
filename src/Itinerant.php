@@ -30,13 +30,13 @@ class Itinerant
      * @param resource $stream
      * @return void
      */
-    public function registerStrategiesFromStream($stream): void
+    public function registerFromStream($stream): void
     {
         while (($c = fgetc($stream)) !== false) {
             if (!ctype_space($c)) {
                 $definition = (new StringDefinition($stream, $c))->getNode();
 
-                $this->registerStrategy(...$definition);
+                $this->register(...$definition);
             }
         }
     }
@@ -46,7 +46,7 @@ class Itinerant
      * @param array $instruction
      * @return void
      */
-    public function registerStrategy(string $strategy, array $instruction): void
+    public function register(string $strategy, array $instruction): void
     {
         $instruction = $this->validator->sanitiseRegistered($strategy, $instruction);
 
