@@ -4,7 +4,7 @@ namespace JaneOlszewska\Itinerant\Validation;
 
 use JaneOlszewska\Itinerant\NodeAdapter\Fail;
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
-use JaneOlszewska\Itinerant\NodeAdapter\RestOfElements;
+use JaneOlszewska\Itinerant\NodeAdapter\Sequence;
 use JaneOlszewska\Itinerant\Strategy\InstructionResolver;
 
 /**
@@ -202,6 +202,6 @@ class SanitiseAppliedAction
     protected function sanitiseZeroArgumentNode(NodeAdapterInterface $d)
     {
         $sanitisedNode = [$d->getValue()];
-        return new RestOfElements($sanitisedNode);
+        return new Sequence($sanitisedNode);
     }
 }

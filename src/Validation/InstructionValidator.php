@@ -4,7 +4,7 @@ namespace JaneOlszewska\Itinerant\Validation;
 
 use JaneOlszewska\Itinerant\NodeAdapter\Fail;
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
-use JaneOlszewska\Itinerant\NodeAdapter\RestOfElements;
+use JaneOlszewska\Itinerant\NodeAdapter\Sequence;
 use JaneOlszewska\Itinerant\Strategy\InstructionResolver;
 use JaneOlszewska\Itinerant\Strategy\StrategyStack;
 
@@ -58,7 +58,7 @@ class InstructionValidator
         // apply without validation to avoid infinite recursion
         $result = $this->stack->apply(
             [self::TD_PRE, ['adhoc', ['fail'], $sanitiseAppliedAction]],
-            new RestOfElements($instruction)
+            new Sequence($instruction)
         );
 
         if (Fail::fail() === $result) {
@@ -151,7 +151,7 @@ class InstructionValidator
         // note that I'm ignoring the output: only interested in the side effect here
         $this->stack->apply(
             [self::TD_PRE, ['adhoc', ['fail'], $getSubs]],
-            new RestOfElements($instruction)
+            new Sequence($instruction)
         );
 
         $substitutions = array_keys($substitutions);
@@ -184,7 +184,7 @@ class InstructionValidator
 
         $result = $this->stack->apply(
             [self::TD_PRE, ['adhoc', ['fail'], $sanitiseRegisteredAction]],
-            new RestOfElements($instruction)
+            new Sequence($instruction)
         );
 
         if (Fail::fail() === $result) {

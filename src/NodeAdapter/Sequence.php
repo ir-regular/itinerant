@@ -2,7 +2,7 @@
 
 namespace JaneOlszewska\Itinerant\NodeAdapter;
 
-class RestOfElements implements NodeAdapterInterface
+class Sequence implements NodeAdapterInterface
 {
     /**
      * @var array
@@ -32,7 +32,7 @@ class RestOfElements implements NodeAdapterInterface
     {
         foreach (array_slice($this->node, 1) as $child) {
             // wrap
-            yield new RestOfElements($child);
+            yield new Sequence($child);
         }
     }
 
