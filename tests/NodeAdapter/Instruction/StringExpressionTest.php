@@ -28,17 +28,6 @@ class StringExpressionTest extends TestCase
         fclose($body);
     }
 
-    public function testThrowsWhenEncounteringUnknownSymbol()
-    {
-        $this->expectException(\UnexpectedValueException::class);
-        $this->expectExceptionMessage('Unknown symbol: derp');
-
-        $expression = $this->get_string_stream('seq(id, derp)');
-        $node = new StringExpression($expression, null, ['seq', 'id']);
-        // here's where it has to realise children and subsequently throws
-        $node->getNode();
-    }
-
     public function testThrowsWhenNameNotFound()
     {
         $this->expectException(\UnexpectedValueException::class);

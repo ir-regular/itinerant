@@ -13,24 +13,15 @@ use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 class StringDefinition implements NodeAdapterInterface
 {
     /**
-     * @var array|\Ds\Set|null
-     */
-    private $knownSymbols;
-
-    /**
      * @var NodeAdapterInterface[]
      */
     private $children;
 
     /**
      * @param resource $definition
-     * @param \Ds\Set|array|null $knownSymbols
      */
-    public function __construct($definition, $knownSymbols = null)
+    public function __construct($definition)
     {
-        $this->definition = $definition;
-        $this->knownSymbols = $knownSymbols;
-
         $this->children = [];
         $this->children['declaration'] = new StringExpression($definition);
         // need to do this separately since instruction uses declaration
@@ -84,10 +75,6 @@ class StringDefinition implements NodeAdapterInterface
             return is_array($s) ? array_pop($s) : $s;
         }, $this->children['declaration']->getNode());
 
-        if ($symbols) {
-            $this->addKnownSymbols($symbols);
-        }
-
         while (($c = fgetc($definition)) !== false) {
             if ($this->isWordCharacter($c)) {
                 break;
@@ -95,7 +82,7 @@ class StringDefinition implements NodeAdapterInterface
         }
 
         if ($c !== false) {
-            return new StringExpression($definition, $c, $this->knownSymbols);
+            return new StringExpression($definition, $c);
         }
 
         throw new \UnderflowException("Definition {$symbols[0]} incomplete: body missing");
@@ -108,26 +95,5 @@ class StringDefinition implements NodeAdapterInterface
     private function isWordCharacter(string $char): bool
     {
         return ctype_alnum($char) || $char == '_';
-    }
-
-    /**
-     * @param string[] $symbols
-     * @return void
-     */
-    private function addKnownSymbols(array $symbols): void
-    {
-        if (is_array($this->knownSymbols)) {
-            $this->knownSymbols = array_unique(array_merge($this->knownSymbols, $symbols));
-
-        } elseif ($this->knownSymbols) {
-            $this->knownSymbols = clone $this->knownSymbols;
-            $this->knownSymbols->add(...$symbols);
-
-        } elseif (class_exists('\Ds\Set')) {
-            $this->knownSymbols = new \Ds\Set($symbols);
-
-        } else {
-            $this->knownSymbols = $symbols;
-        }
     }
 }

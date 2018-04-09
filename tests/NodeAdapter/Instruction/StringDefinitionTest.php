@@ -25,8 +25,8 @@ class StringDefinitionTest extends TestCase
         $this->tryDefinitionStream = $this->get_string_stream('try(s) = choice(s, id)');
         $this->belowEqDefinitionStream = $this->get_string_stream('below_eq(s1, s2) = once_td(seq(s2, once_td(s1)))');
 
-        $this->tryDefinition = new StringDefinition($this->tryDefinitionStream, ['choice', 'id']);
-        $this->belowEqDefinition = new StringDefinition($this->belowEqDefinitionStream, ['once_td', 'seq']);
+        $this->tryDefinition = new StringDefinition($this->tryDefinitionStream);
+        $this->belowEqDefinition = new StringDefinition($this->belowEqDefinitionStream);
     }
 
     protected function tearDown()
@@ -62,23 +62,6 @@ class StringDefinitionTest extends TestCase
         $this->assertEquals(['once_td', ['seq', ['s2'], ['once_td', ['s1']]]], $instruction->getNode());
     }
 
-    public function testThrowsIfUnknownSymbolEncountered()
-    {
-        $stream = $this->get_string_stream('below_eq(s1, s2) = once_td(seq(s3, once_td(s1)))');
-
-        try {
-            // will not understand 's3', since it's not one of the existing parameters
-            (new StringDefinition($stream, ['once_td', 'seq']))->getNode();
-            $this->fail('Did not fail on unrecognised symbol');
-
-        } catch (\UnexpectedValueException $e) {
-            $this->assertEquals('Unknown symbol: s3', $e->getMessage());
-
-        } finally {
-            fclose($stream);
-        }
-    }
-
     public function testThrowsWhenDefinitionBodyMissing()
     {
         $stream = $this->get_string_stream('below_eq(s1, s2)');
@@ -101,15 +84,13 @@ class StringDefinitionTest extends TestCase
         $twoDefinitions = "try(s) = choice(s, id)\nbelow_eq(s1, s2) = once_td(seq(s2, once_td(s1)))";
         $stream = $this->get_string_stream($twoDefinitions);
 
-        $knownSymbols = ['choice', 'id', 'seq', 'once_td'];
-
         $this->assertEquals(
             ['try', ['choice', ['0'], ['id']]],
-            (new StringDefinition($stream, $knownSymbols))->getNode()
+            (new StringDefinition($stream))->getNode()
         );
         $this->assertEquals(
             ['below_eq', ['once_td', ['seq', ['1'], ['once_td', ['0']]]]],
-            (new StringDefinition($stream, $knownSymbols))->getNode()
+            (new StringDefinition($stream))->getNode()
         );
 
         fclose($stream);

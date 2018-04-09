@@ -18,17 +18,12 @@ class StringExpression implements NodeAdapterInterface
     /** @var string|bool */
     private $lastReadCharacter;
 
-    /** @var \Ds\Set|array|null */
-    private $knownSymbols;
-
     /**
      * @param resource $definition
      * @param null|string $peeked
-     * @param \Ds\Set|array $knownSymbols
      */
-    public function __construct($definition, ?string $peeked = null, $knownSymbols = null)
+    public function __construct($definition, ?string $peeked = null)
     {
-        $this->knownSymbols = $knownSymbols;
         $this->name = $this->extractName($definition, $peeked);
 
         if ($this->lastReadCharacter == '(') {
@@ -96,10 +91,6 @@ class StringExpression implements NodeAdapterInterface
 
         $this->lastReadCharacter = $c;
 
-        if ($this->knownSymbols && !$this->isKnownSymbol($this->knownSymbols, $name)) {
-            throw new \UnexpectedValueException("Unknown symbol: {$name}");
-        }
-
         return $name;
     }
 
@@ -114,7 +105,7 @@ class StringExpression implements NodeAdapterInterface
                 break;
             } elseif ($this->isWordCharacter($c)) {
                 // this new object will advance $definition stream internally
-                $child = new self($definition, $c, $this->knownSymbols);
+                $child = new self($definition, $c);
 
                 yield $child;
 
@@ -135,20 +126,5 @@ class StringExpression implements NodeAdapterInterface
     private function isWordCharacter(string $char): bool
     {
         return ctype_alnum($char) || $char == '_';
-    }
-
-    /**
-     * @param \Ds\Set|array $knownSymbols
-     * @param string $string
-     * @return bool
-     */
-    private function isKnownSymbol($knownSymbols, string $string): bool
-    {
-        if (is_array($knownSymbols)) {
-            return in_array($string, $knownSymbols);
-
-        } else {
-            return $knownSymbols->contains($string);
-        }
     }
 }
