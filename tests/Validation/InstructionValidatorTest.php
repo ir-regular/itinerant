@@ -1,8 +1,8 @@
 <?php
 
-namespace JaneOlszewska\Tests\Itinerant;
+namespace JaneOlszewska\Tests\Itinerant\Validation;
 
-use JaneOlszewska\Itinerant\InstructionValidator;
+use JaneOlszewska\Itinerant\Validation\InstructionValidator;
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 use JaneOlszewska\Itinerant\Strategy\InstructionResolver;
 use PHPUnit\Framework\TestCase;

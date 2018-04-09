@@ -1,13 +1,12 @@
 <?php
 
-namespace JaneOlszewska\Itinerant;
+namespace JaneOlszewska\Itinerant\Validation;
 
-use JaneOlszewska\Itinerant\Validation\SanitiseAppliedAction;
-use JaneOlszewska\Itinerant\Validation\SanitiseRegisteredAction;
 use JaneOlszewska\Itinerant\NodeAdapter\Fail;
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 use JaneOlszewska\Itinerant\NodeAdapter\RestOfElements;
 use JaneOlszewska\Itinerant\Strategy\InstructionResolver;
+use JaneOlszewska\Itinerant\StrategyStack;
 
 /**
  * Witness the ultimate coolness: Itinerant is self-validating!
