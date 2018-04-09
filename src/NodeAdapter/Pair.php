@@ -2,7 +2,7 @@
 
 namespace JaneOlszewska\Itinerant\NodeAdapter;
 
-class SecondElement implements NodeAdapterInterface
+class Pair implements NodeAdapterInterface
 {
     /**
      * @var array
@@ -31,7 +31,7 @@ class SecondElement implements NodeAdapterInterface
     public function getChildren(): \Iterator
     {
         foreach ($this->node[1] ?? [] as $child) {
-            yield new SecondElement($child);
+            yield new Pair($child);
         }
     }
 

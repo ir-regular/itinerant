@@ -3,7 +3,7 @@
 namespace JaneOlszewska\Tests\Itinerant\Strategy;
 
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
-use JaneOlszewska\Itinerant\NodeAdapter\SecondElement;
+use JaneOlszewska\Itinerant\NodeAdapter\Pair;
 use JaneOlszewska\Itinerant\NodeAdapter\Fail;
 use JaneOlszewska\Itinerant\Strategy\Choice;
 use PHPUnit\Framework\TestCase;
@@ -21,7 +21,7 @@ class ChoiceTest extends TestCase
 
     protected function setUp()
     {
-        $this->node = new SecondElement([1, [2, 3]]);
+        $this->node = new Pair([1, [2, 3]]);
         $this->choice = new Choice($this->initialInstruction, $this->followupInstruction);
     }
 

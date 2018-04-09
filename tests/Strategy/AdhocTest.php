@@ -3,7 +3,7 @@
 namespace JaneOlszewska\Tests\Itinerant\Strategy;
 
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
-use JaneOlszewska\Itinerant\NodeAdapter\SecondElement;
+use JaneOlszewska\Itinerant\NodeAdapter\Pair;
 use JaneOlszewska\Itinerant\Strategy\Adhoc;
 use PHPUnit\Framework\TestCase;
 
@@ -14,7 +14,7 @@ class AdhocTest extends TestCase
 
     protected function setUp()
     {
-        $this->node = new SecondElement([1, [2, 3]]);
+        $this->node = new Pair([1, [2, 3]]);
         $this->fallbackInstruction = ['fallback'];
     }
 

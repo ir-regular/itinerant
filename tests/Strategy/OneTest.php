@@ -3,7 +3,7 @@
 namespace JaneOlszewska\Tests\Itinerant\Strategy;
 
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
-use JaneOlszewska\Itinerant\NodeAdapter\SecondElement;
+use JaneOlszewska\Itinerant\NodeAdapter\Pair;
 use JaneOlszewska\Itinerant\NodeAdapter\Fail;
 use JaneOlszewska\Itinerant\Strategy\One;
 use PHPUnit\Framework\TestCase;
@@ -20,7 +20,7 @@ class OneTest extends TestCase
 
     protected function setUp()
     {
-        $this->node = new SecondElement([1, [2, 3]]);
+        $this->node = new Pair([1, [2, 3]]);
         $this->one = new One($this->childInstruction);
     }
 
@@ -52,7 +52,7 @@ class OneTest extends TestCase
 
     public function testReturnsChildThatSucceeded()
     {
-        $success = new SecondElement([2, [99]]);
+        $success = new Pair([2, [99]]);
 
         $continuation = $this->one->apply($this->node);
 
@@ -75,7 +75,7 @@ class OneTest extends TestCase
 
     public function testFailsIfNoChildren()
     {
-        $node = new SecondElement([2]);
+        $node = new Pair([2]);
 
         $continuation = $this->one->apply($node);
 

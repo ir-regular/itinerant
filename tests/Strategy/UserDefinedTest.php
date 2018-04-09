@@ -2,7 +2,7 @@
 
 namespace JaneOlszewska\Tests\Itinerant\Strategy;
 
-use JaneOlszewska\Itinerant\NodeAdapter\SecondElement;
+use JaneOlszewska\Itinerant\NodeAdapter\Pair;
 use JaneOlszewska\Itinerant\Strategy\UserDefined;
 use PHPUnit\Framework\TestCase;
 
@@ -11,7 +11,7 @@ class UserDefinedTest extends TestCase
     public function testResolvesKeyToContinuation()
     {
         $instruction = ['seq', ['0', '1']];
-        $node = new SecondElement([1, [2, 3]]);
+        $node = new Pair([1, [2, 3]]);
         $userDefined = new UserDefined($instruction, ['id', 'fail']);
 
         $continuation = $userDefined->apply($node);

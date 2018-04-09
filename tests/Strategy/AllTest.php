@@ -3,7 +3,7 @@
 namespace JaneOlszewska\Tests\Itinerant\Strategy;
 
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
-use JaneOlszewska\Itinerant\NodeAdapter\SecondElement;
+use JaneOlszewska\Itinerant\NodeAdapter\Pair;
 use JaneOlszewska\Itinerant\Strategy\All;
 use JaneOlszewska\Itinerant\NodeAdapter\Fail;
 use PHPUnit\Framework\TestCase;
@@ -20,7 +20,7 @@ class AllTest extends TestCase
 
     protected function setUp()
     {
-        $this->node = new SecondElement([1, [2, 3]]);
+        $this->node = new Pair([1, [2, 3]]);
         $this->all = new All($this->childInstruction);
     }
 
@@ -73,7 +73,7 @@ class AllTest extends TestCase
 
     public function testReturnsNodeIfNoChildren()
     {
-        $node = new SecondElement([2]);
+        $node = new Pair([2]);
 
         $continuation = $this->all->apply($node);
 
