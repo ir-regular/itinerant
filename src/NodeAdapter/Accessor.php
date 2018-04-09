@@ -2,7 +2,7 @@
 
 namespace JaneOlszewska\Itinerant\NodeAdapter;
 
-class ViaGetter implements NodeAdapterInterface
+class Accessor implements NodeAdapterInterface
 {
     /**
      * @var object
@@ -59,7 +59,7 @@ class ViaGetter implements NodeAdapterInterface
     {
         foreach ($this->node->{$this->getChildren}() ?? [] as $child) {
             // wrap
-            yield new ViaGetter($child);
+            yield new Accessor($child);
         }
     }
 

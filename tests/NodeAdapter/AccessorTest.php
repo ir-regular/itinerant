@@ -2,21 +2,21 @@
 
 namespace JaneOlszewska\Tests\Itinerant\NodeAdapter;
 
-use JaneOlszewska\Itinerant\NodeAdapter\ViaGetter;
+use JaneOlszewska\Itinerant\NodeAdapter\Accessor;
 use PHPUnit\Framework\TestCase;
 
-class ViaGetterTest extends TestCase
+class AccessorTest extends TestCase
 {
     public function testGetChildren()
     {
         $a = $this->getDatum(1, [2, 3]);
-        $adapter = new ViaGetter($a);
+        $adapter = new Accessor($a);
 
         // check that adapter can access the correct children
 
         $adapterChildren = $adapter->getChildren();
         // unwrap
-        $adapterChildren = array_map(function(ViaGetter $node) {
+        $adapterChildren = array_map(function(Accessor $node) {
             return $node->getNode();
         }, iterator_to_array($adapterChildren));
 
@@ -27,11 +27,11 @@ class ViaGetterTest extends TestCase
     public function testSetChildren()
     {
         $a = $this->getDatum(1, [2, 3]);
-        $adapter = new ViaGetter($a);
+        $adapter = new Accessor($a);
 
         $children = [];
         foreach ($this->wrapChildren([4, 5]) as $child) {
-            $children[] = new ViaGetter($child);
+            $children[] = new Accessor($child);
         }
 
         // check that when adapter updates the object with the new children
@@ -47,7 +47,7 @@ class ViaGetterTest extends TestCase
     public function testNoChildren()
     {
         $a = $this->getDatum(1, []);
-        $adapter = new ViaGetter($a);
+        $adapter = new Accessor($a);
 
         $this->assertFalse($adapter->getChildren()->valid());
     }

@@ -3,7 +3,7 @@
 namespace JaneOlszewska\Tests\Itinerant\Strategy;
 
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
-use JaneOlszewska\Itinerant\NodeAdapter\ViaGetter;
+use JaneOlszewska\Itinerant\NodeAdapter\Accessor;
 use JaneOlszewska\Itinerant\NodeAdapter\Fail;
 use JaneOlszewska\Itinerant\Strategy\InstructionResolver;
 use JaneOlszewska\Itinerant\Strategy\StrategyStack;
@@ -93,11 +93,11 @@ class StrategyStackTest extends TestCase
         $modifyAction = $this->getSetNameAction($newName);
 
         $unwrappedNode = $this->getUnwrappedNodeDatum('original');
-        $node = new ViaGetter($unwrappedNode);
+        $node = new Accessor($unwrappedNode);
         $modifiedNode = $this->getNodeDatum($newName);
 
         $unwrappedNodes = $this->getUnwrappedNodeArrayDatum($this->getNodes());
-        $nodes = new ViaGetter($unwrappedNodes);
+        $nodes = new Accessor($unwrappedNodes);
         $modifiedNodes = $this->getNodeArrayDatum($this->getNodes(2, $newName));
 
         // adhoc on its own, not applying action (because only applicable to nodes with 'getName')
@@ -248,7 +248,7 @@ class StrategyStackTest extends TestCase
             ]
         );
         // to use it as an argument on its own, I need to wrap it
-        $secondNode = new ViaGetter($secondNode);
+        $secondNode = new Accessor($secondNode);
 
         $this->assertEquals($secondNode, $this->stack->apply(['attr'], $secondNode)); // yep, it matches
 
@@ -267,7 +267,7 @@ class StrategyStackTest extends TestCase
     private function getNodeDatum(string $name = 'node'): NodeAdapterInterface
     {
         $node = $this->getUnwrappedNodeDatum($name);
-        return new ViaGetter($node);
+        return new Accessor($node);
     }
 
     private function getUnwrappedNodeDatum(string $name)
@@ -324,7 +324,7 @@ class StrategyStackTest extends TestCase
     {
         $n = $this->getUnwrappedNodeArrayDatum($children);
 
-        return new ViaGetter($n);
+        return new Accessor($n);
     }
 
     /**
