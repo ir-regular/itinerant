@@ -31,19 +31,8 @@ class StringDefinition implements NodeAdapterInterface
 
     public function getNode()
     {
-        $declaration = $this->children['declaration']->getNode();
+        $strategy = $this->children['declaration']->getValue();
         $instruction = $this->children['instruction']->getNode();
-
-        $strategy = array_shift($declaration);
-        $args = array_map('array_pop', $declaration); // unwrap the rest
-        $args = array_flip($args); // arg name => arg index
-
-        // substitute arg names with numeric placeholders
-        array_walk_recursive($instruction, function (&$value) use ($args) {
-            if (isset($args[$value])) {
-                $value = strval($args[$value]);
-            }
-        });
 
         return [$strategy, $instruction];
     }
@@ -83,7 +72,9 @@ class StringDefinition implements NodeAdapterInterface
         }
 
         if ($c !== false) {
-            return new StringExpression($definition, $c);
+            array_shift($symbols); // args
+            $substitutions = array_flip($symbols);
+            return new StringExpression($definition, $c, $substitutions);
         }
 
         throw new \UnderflowException("Definition {$symbols[0]} incomplete: body missing");

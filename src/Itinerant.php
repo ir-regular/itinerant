@@ -2,6 +2,7 @@
 
 namespace JaneOlszewska\Itinerant;
 
+use JaneOlszewska\Itinerant\NodeAdapter\Instruction\StringDefinition;
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 use JaneOlszewska\Itinerant\Strategy\InstructionResolver;
 
@@ -21,6 +22,21 @@ class Itinerant
         $this->resolver = new InstructionResolver();
         $this->stack = new StrategyStack($this->resolver);
         $this->validator = new InstructionValidator();
+    }
+
+    /**
+     * @param resource $stream
+     * @return void
+     */
+    public function registerStrategiesFromStream($stream): void
+    {
+        while (($c = fgetc($stream)) !== false) {
+            if (!ctype_space($c)) {
+                $definition = (new StringDefinition($stream, $c))->getNode();
+
+                $this->registerStrategy(...$definition);
+            }
+        }
     }
 
     /**

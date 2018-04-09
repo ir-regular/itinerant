@@ -21,26 +21,28 @@ class StringExpression implements NodeAdapterInterface
     /**
      * @param resource $definition
      * @param null|string $peeked
+     * @param array|null $substitutions
      */
-    public function __construct($definition, ?string $peeked = null)
+    public function __construct($definition, ?string $peeked = null, $substitutions = null)
     {
         $this->name = $this->extractName($definition, $peeked);
 
-        if ($this->lastReadCharacter == '(') {
-            $this->children = $this->extractChildren($definition);
+        if ($substitutions && array_key_exists($this->name, $substitutions)) {
+            $this->node = strval($substitutions[$this->name]);
+
+        } elseif ($this->lastReadCharacter == '(') {
+            $this->children = $this->extractChildren($definition, $substitutions);
         }
     }
 
     public function getNode()
     {
-        if (isset($this->node)) {
-            return $this->node;
-        }
+        if (!isset($this->node)) {
+            $this->node = [$this->getValue()];
 
-        $this->node = [$this->getValue()];
-
-        foreach ($this->getChildren() as $child) {
-            $this->node[] = $child->getNode();
+            foreach ($this->getChildren() as $child) {
+                $this->node[] = $child->getNode();
+            }
         }
 
         return $this->node;
@@ -79,7 +81,7 @@ class StringExpression implements NodeAdapterInterface
             }
         }
 
-        if (!$this->isWordCharacter($peeked)) {
+        if ($peeked === false || !$this->isWordCharacter($peeked)) {
             throw new \UnexpectedValueException("Invalid expression: name not found");
         }
 
@@ -96,16 +98,17 @@ class StringExpression implements NodeAdapterInterface
 
     /**
      * @param resource $definition
+     * @param array|null $substitutions
      * @return \Iterator
      */
-    private function extractChildren($definition): \Iterator
+    private function extractChildren($definition, $substitutions = null): \Iterator
     {
         while ($c = fgetc($definition)) {
             if (')' == $c) {
                 break;
             } elseif ($this->isWordCharacter($c)) {
                 // this new object will advance $definition stream internally
-                $child = new self($definition, $c);
+                $child = new self($definition, $c, $substitutions);
 
                 yield $child;
 

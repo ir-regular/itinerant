@@ -59,7 +59,7 @@ class StringDefinitionTest extends TestCase
         /** @var NodeAdapterInterface $instruction */
         $instruction = $children->current();
 
-        $this->assertEquals(['once_td', ['seq', ['s2'], ['once_td', ['s1']]]], $instruction->getNode());
+        $this->assertEquals(['once_td', ['seq', '1', ['once_td', '0']]], $instruction->getNode());
     }
 
     public function testThrowsWhenDefinitionBodyMissing()
@@ -92,8 +92,8 @@ class StringDefinitionTest extends TestCase
 
         $this->assertEquals(
             [
-                ['try', ['choice', ['0'], ['id']]],
-                ['below_eq', ['once_td', ['seq', ['1'], ['once_td', ['0']]]]],
+                ['try', ['choice', '0', ['id']]],
+                ['below_eq', ['once_td', ['seq', '1', ['once_td', '0']]]],
             ],
             $nodes
         );
