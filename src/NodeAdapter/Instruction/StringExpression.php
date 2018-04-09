@@ -65,12 +65,12 @@ class StringExpression implements NodeAdapterInterface
 
     /**
      * @param resource $definition
-     * @param string|null $peeked
+     * @param string|null $peeked Character last read from $definition which indicated start of expression
      * @return string
      */
     private function extractName($definition, ?string $peeked = null): string
     {
-        if (!$peeked) {
+        if (!$peeked || ctype_space($peeked)) {
             while (($c = fgetc($definition)) !== false && ctype_space($c)) {
                 // skip whitespace
             }
@@ -109,8 +109,10 @@ class StringExpression implements NodeAdapterInterface
 
                 yield $child;
 
-                // last child eats up the closing ')' so we need to check it to know we ended
-                if ($child->lastReadCharacter == ')') {
+                // if the last child had no children, it would have eaten the closing ')' of current node
+                // so we need to check the child to know we can finish processing
+                if (!$child->children && $child->lastReadCharacter == ')') {
+                    $c = $child->lastReadCharacter;
                     break;
                 }
             }

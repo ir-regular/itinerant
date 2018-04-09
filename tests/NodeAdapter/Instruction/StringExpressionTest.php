@@ -37,6 +37,15 @@ class StringExpressionTest extends TestCase
         new StringExpression($expression);
     }
 
+    public function testNameStartsWithPeekedCharacter()
+    {
+        $stream = $this->get_string_stream('test(id)');
+        $peeked = fgetc($stream);
+        $node = new StringExpression($stream, $peeked);
+
+        $this->assertEquals('test', $node->getValue());
+    }
+
     public function testAllowsWhitespaceBeforeExpression()
     {
         $stream = $this->get_string_stream("\n below_eq(s1, s2)");

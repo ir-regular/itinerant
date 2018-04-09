@@ -19,11 +19,12 @@ class StringDefinition implements NodeAdapterInterface
 
     /**
      * @param resource $definition
+     * @param null|string $peeked
      */
-    public function __construct($definition)
+    public function __construct($definition, ?string $peeked = null)
     {
         $this->children = [];
-        $this->children['declaration'] = new StringExpression($definition);
+        $this->children['declaration'] = new StringExpression($definition, $peeked);
         // need to do this separately since instruction uses declaration
         $this->children['instruction'] = $this->getInstruction($definition);
     }

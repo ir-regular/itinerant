@@ -84,13 +84,18 @@ class StringDefinitionTest extends TestCase
         $twoDefinitions = "try(s) = choice(s, id)\nbelow_eq(s1, s2) = once_td(seq(s2, once_td(s1)))";
         $stream = $this->get_string_stream($twoDefinitions);
 
+        $nodes = [];
+
+        while (($peeked = fgetc($stream)) !== false) {
+            $nodes[] = (new StringDefinition($stream, $peeked))->getNode();
+        }
+
         $this->assertEquals(
-            ['try', ['choice', ['0'], ['id']]],
-            (new StringDefinition($stream))->getNode()
-        );
-        $this->assertEquals(
-            ['below_eq', ['once_td', ['seq', ['1'], ['once_td', ['0']]]]],
-            (new StringDefinition($stream))->getNode()
+            [
+                ['try', ['choice', ['0'], ['id']]],
+                ['below_eq', ['once_td', ['seq', ['1'], ['once_td', ['0']]]]],
+            ],
+            $nodes
         );
 
         fclose($stream);
