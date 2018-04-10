@@ -11,7 +11,7 @@ use PHPUnit\Framework\TestCase;
  */
 class ItinerantTest extends TestCase
 {
-    public function testRegistersStrategyUsingRegisteredStrategy()
+    public function testRegistersInstructionUsingPreviouslyRegisteredInstruction()
     {
         $itinerant = new Itinerant();
         $itinerant->register('first', ['id']);
@@ -23,7 +23,7 @@ class ItinerantTest extends TestCase
         $this->assertEquals($node, $itinerant->apply('second', $node));
     }
 
-    public function testRegistersStrategyFromStream()
+    public function testRegistersInstructionsFromStream()
     {
         // let's pretend we have a file
         $string = "try(s) = choice(s, id)\nrepeat(s) = try(choice(s, repeat(s)))\n";

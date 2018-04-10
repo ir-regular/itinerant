@@ -27,6 +27,8 @@ class Itinerant
     }
 
     /**
+     * @todo move to utils
+     *
      * @param resource $stream
      * @return void
      */
@@ -42,26 +44,26 @@ class Itinerant
     }
 
     /**
-     * @param string $strategy
-     * @param array $instruction
+     * @param string $instruction
+     * @param array $definition
      * @return void
      */
-    public function register(string $strategy, array $instruction): void
+    public function register(string $instruction, array $definition): void
     {
-        $instruction = $this->validator->validateUserInstruction($strategy, $instruction);
+        $definition = $this->validator->validateUserInstruction($instruction, $definition);
 
-        $this->resolver->register($strategy, $instruction);
+        $this->resolver->register($instruction, $definition);
     }
 
     /**
-     * @param array|string $instruction
+     * @param array|string $expression
      * @param NodeAdapterInterface $node
      * @return NodeAdapterInterface
      */
-    public function apply($instruction, NodeAdapterInterface $node): NodeAdapterInterface
+    public function apply($expression, NodeAdapterInterface $node): NodeAdapterInterface
     {
-        $instruction = $this->validator->validate($instruction);
+        $expression = $this->validator->validate($expression);
 
-        return $this->stack->apply($instruction, $node);
+        return $this->stack->apply($expression, $node);
     }
 }
