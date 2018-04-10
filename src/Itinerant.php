@@ -4,13 +4,13 @@ namespace JaneOlszewska\Itinerant;
 
 use JaneOlszewska\Itinerant\NodeAdapter\Instruction\StringDefinition;
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
-use JaneOlszewska\Itinerant\Instruction\InstructionResolver;
+use JaneOlszewska\Itinerant\Instruction\ExpressionResolver;
 use JaneOlszewska\Itinerant\Instruction\InstructionStack;
 use JaneOlszewska\Itinerant\Validation\InstructionValidator;
 
 class Itinerant
 {
-    /** @var InstructionResolver */
+    /** @var ExpressionResolver */
     private $resolver;
 
     /** @var InstructionStack */
@@ -21,7 +21,7 @@ class Itinerant
 
     public function __construct()
     {
-        $this->resolver = new InstructionResolver();
+        $this->resolver = new ExpressionResolver();
         $this->stack = new InstructionStack($this->resolver);
         $this->validator = new InstructionValidator();
     }

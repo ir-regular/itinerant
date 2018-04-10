@@ -5,7 +5,7 @@ namespace JaneOlszewska\Itinerant\Validation;
 use JaneOlszewska\Itinerant\NodeAdapter\Fail;
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 use JaneOlszewska\Itinerant\NodeAdapter\Sequence;
-use JaneOlszewska\Itinerant\Instruction\InstructionResolver;
+use JaneOlszewska\Itinerant\Instruction\ExpressionResolver;
 use JaneOlszewska\Itinerant\Instruction\InstructionStack;
 
 /**
@@ -17,16 +17,16 @@ class InstructionValidator
 
     /** @var int[] */
     private $argCounts = [
-        InstructionResolver::ID => 0,
-        InstructionResolver::FAIL => 0,
-        InstructionResolver::SEQ => 2,
-        InstructionResolver::CHOICE => 2,
-        InstructionResolver::ALL => 1,
-        InstructionResolver::ONE => 1,
-        InstructionResolver::ADHOC => 2,
+        ExpressionResolver::ID => 0,
+        ExpressionResolver::FAIL => 0,
+        ExpressionResolver::SEQ => 2,
+        ExpressionResolver::CHOICE => 2,
+        ExpressionResolver::ALL => 1,
+        ExpressionResolver::ONE => 1,
+        ExpressionResolver::ADHOC => 2,
     ];
 
-    /** @var InstructionResolver */
+    /** @var ExpressionResolver */
     private $resolver;
 
     /** @var InstructionStack */
@@ -36,7 +36,7 @@ class InstructionValidator
     {
         // Yes, both classes are instantiated twice (the 'original' instances are in Itinerant).
         // This guarantees that TD_PRE strategy won't conflict with user's strategies.
-        $resolver = new InstructionResolver();
+        $resolver = new ExpressionResolver();
         // top-down, depth first, prefix application
         $resolver->register(self::TD_PRE, ['seq', '0', ['all', [self::TD_PRE, '0']]]);
         $this->resolver = $resolver;

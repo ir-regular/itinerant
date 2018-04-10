@@ -4,20 +4,20 @@ namespace JaneOlszewska\Tests\Itinerant\Instruction;
 
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 use JaneOlszewska\Itinerant\NodeAdapter\Fail;
-use JaneOlszewska\Itinerant\Instruction\InstructionResolver;
+use JaneOlszewska\Itinerant\Instruction\ExpressionResolver;
 use JaneOlszewska\Itinerant\Instruction\UserDefined;
 use PHPUnit\Framework\TestCase;
 
-class InstructionResolverTest extends TestCase
+class ExpressionResolverTest extends TestCase
 {
-    /** @var InstructionResolver */
+    /** @var ExpressionResolver */
     private $resolver;
 
     protected function setUp()
     {
         parent::setUp();
 
-        $this->resolver = new InstructionResolver();
+        $this->resolver = new ExpressionResolver();
     }
 
     public function testRegisterStrategy()

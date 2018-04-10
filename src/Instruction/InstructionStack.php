@@ -13,11 +13,11 @@ class InstructionStack
     private $stack = [];
 
     /**
-     * @var InstructionResolver
+     * @var ExpressionResolver
      */
     private $resolver;
 
-    public function __construct(InstructionResolver $resolver)
+    public function __construct(ExpressionResolver $resolver)
     {
         if (class_exists('\Ds\Stack')) {
             $this->stack = new \Ds\Stack();
@@ -43,10 +43,10 @@ class InstructionStack
 
             if (is_array($strategy)) {
                 // speed things up by insta-resolving 'id' and 'fail' strategies
-                if ($strategy[0] == InstructionResolver::ID) {
+                if ($strategy[0] == ExpressionResolver::ID) {
                     $result = $node;
                     continue;
-                } elseif ($strategy[0] == InstructionResolver::FAIL) {
+                } elseif ($strategy[0] == ExpressionResolver::FAIL) {
                     $result = Fail::fail();
                     continue;
                 } else {

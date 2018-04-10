@@ -5,7 +5,7 @@ namespace JaneOlszewska\Tests\Itinerant\Instruction;
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 use JaneOlszewska\Itinerant\NodeAdapter\Accessor;
 use JaneOlszewska\Itinerant\NodeAdapter\Fail;
-use JaneOlszewska\Itinerant\Instruction\InstructionResolver;
+use JaneOlszewska\Itinerant\Instruction\ExpressionResolver;
 use JaneOlszewska\Itinerant\Instruction\InstructionStack;
 use PHPUnit\Framework\TestCase;
 
@@ -429,11 +429,11 @@ class InstructionStackTest extends TestCase
     }
 
     /**
-     * @return InstructionResolver
+     * @return ExpressionResolver
      */
-    private function getInitialisedInstructionResolver(): InstructionResolver
+    private function getInitialisedInstructionResolver(): ExpressionResolver
     {
-        $resolver = new InstructionResolver();
+        $resolver = new ExpressionResolver();
 
         // full_td(s) = seq(s, all(full_td(s)))
 

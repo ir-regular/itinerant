@@ -5,7 +5,7 @@ namespace JaneOlszewska\Itinerant\Validation;
 use JaneOlszewska\Itinerant\NodeAdapter\Fail;
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 use JaneOlszewska\Itinerant\NodeAdapter\Sequence;
-use JaneOlszewska\Itinerant\Instruction\InstructionResolver;
+use JaneOlszewska\Itinerant\Instruction\ExpressionResolver;
 
 /**
  * Internal library action: validates and sanitises instructions given to Itinerant::apply()
@@ -86,8 +86,8 @@ class SanitiseAppliedAction
 
         return is_string($strategy)
             // inbuilt zero-argument strategies
-            && (InstructionResolver::FAIL == $strategy
-                || InstructionResolver::ID == $strategy
+            && (ExpressionResolver::FAIL == $strategy
+                || ExpressionResolver::ID == $strategy
                 // user-registered 0-argument strategies
                 || (isset($this->argumentCountsPerStrategyKey[$strategy])
                     && 0 == $this->argumentCountsPerStrategyKey[$strategy]));

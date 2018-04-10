@@ -2,7 +2,7 @@
 
 namespace JaneOlszewska\Itinerant\Instruction;
 
-class InstructionResolver
+class ExpressionResolver
 {
     const ID = 'id';
     const FAIL = 'fail';

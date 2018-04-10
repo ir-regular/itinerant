@@ -4,7 +4,7 @@ namespace JaneOlszewska\Tests\Itinerant\Validation;
 
 use JaneOlszewska\Itinerant\Validation\InstructionValidator;
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
-use JaneOlszewska\Itinerant\Instruction\InstructionResolver;
+use JaneOlszewska\Itinerant\Instruction\ExpressionResolver;
 use PHPUnit\Framework\TestCase;
 
 class InstructionValidatorTest extends TestCase
@@ -23,22 +23,22 @@ class InstructionValidatorTest extends TestCase
     public function testSanitiseInbuiltZeroArgumentNodes()
     {
         $this->assertEquals(
-            [InstructionResolver::FAIL],
-            $this->validator->sanitiseApplied(InstructionResolver::FAIL)
+            [ExpressionResolver::FAIL],
+            $this->validator->sanitiseApplied(ExpressionResolver::FAIL)
         );
 
         $this->assertEquals(
-            [InstructionResolver::ID],
-            $this->validator->sanitiseApplied(InstructionResolver::ID)
+            [ExpressionResolver::ID],
+            $this->validator->sanitiseApplied(ExpressionResolver::ID)
         );
     }
 
     public function testDoesNotWrapSubstitutions()
     {
-        $instruction = [InstructionResolver::CHOICE, '0', InstructionResolver::FAIL];
+        $instruction = [ExpressionResolver::CHOICE, '0', ExpressionResolver::FAIL];
 
         $this->assertEquals(
-            [InstructionResolver::CHOICE, '0', [InstructionResolver::FAIL]],
+            [ExpressionResolver::CHOICE, '0', [ExpressionResolver::FAIL]],
             $this->validator->sanitiseRegistered('x', $instruction)
         );
     }
