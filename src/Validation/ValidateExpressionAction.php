@@ -8,22 +8,23 @@ use JaneOlszewska\Itinerant\NodeAdapter\Sequence;
 use JaneOlszewska\Itinerant\Instruction\ExpressionResolver;
 
 /**
- * Internal library action: validates and sanitises instructions given to Itinerant::apply()
+ * Internal library action: validates expressions passed to Itinerant::apply()
  *
- * SanitiseAppliedAction validates every node of the instructions by checking that:
+ * ValidateExpressionAction validates every node of the expression by checking that:
  *   - the node is an array
- *   - its first element is a string key, on the list of registered actions
- *   - array element count equals (registered argument count + 1)
+ *   - the first element is a string, which is the name a registered instruction
+ *   - count of the rest of elements equals argument count of the instruction
  *
- * For readability, the above ruleset has an exception. Zero-argument strategies can be represented
- * as instructions as strings (keys) instead of single-element arrays.
+ * For readability, the above ruleset has an exception. Zero-argument instructions
+ * (id, fail, and any user-registered zero argument instructions) can be represented
+ * as strings instead of single-element arrays.
  *
- * SanitiseAppliedAction sanitises such strings by converting them into single-element arrays.
+ * ValidateExpressionAction converts the strings into single-element arrays.
  */
-class SanitiseAppliedAction
+class ValidateExpressionAction
 {
     /** @var int[] */
-    protected $argumentCountsPerStrategyKey;
+    protected $instructionArgumentCounts;
 
     /** @var string|null */
     protected $validationError;
@@ -31,9 +32,9 @@ class SanitiseAppliedAction
     /** @var NodeAdapterInterface|null */
     private $invalidNode;
 
-    public function __construct(array $argumentCountsPerStrategyKey = [])
+    public function __construct(array $instructionArgumentCounts = [])
     {
-        $this->argumentCountsPerStrategyKey = $argumentCountsPerStrategyKey;
+        $this->instructionArgumentCounts = $instructionArgumentCounts;
     }
 
     /**
@@ -54,18 +55,20 @@ class SanitiseAppliedAction
 
     public function __invoke(NodeAdapterInterface $d): ?NodeAdapterInterface
     {
-        if ($this->isZeroArgumentStrategy($d)) {
-            // If special case of zero-argument strategy applies:
-            // sanitise instruction (if string, convert to [string]).
-            return $this->sanitiseZeroArgumentNode($d);
+        if ($this->isZeroArgumentShorthand($d)) {
+            // If special case of zero-argument instruction applies:
+            // sanitise instruction (convert 'string' to ['string']).
+            return $this->convertZeroArgumentShorthand($d);
+
         } elseif ($this->isAction($d)) {
             // If action (callable):
             // ensure correct argument/return types.
             $isValid = $this->isValidAction($d);
+
         } else {
-            // ...otherwise it must be an instruction.
-            // check that count of arguments provided matches count of arguments expected by strategy.
-            $isValid = $this->isValidInstruction($d);
+            // ...otherwise it must be an expression.
+            // check that provided argument count equals expected instruction argument count
+            $isValid = $this->isValidExpression($d);
         }
 
         if ($isValid) {
@@ -80,17 +83,16 @@ class SanitiseAppliedAction
      * @param NodeAdapterInterface $d
      * @return bool
      */
-    protected function isZeroArgumentStrategy(NodeAdapterInterface $d): bool
+    protected function isZeroArgumentShorthand(NodeAdapterInterface $d): bool
     {
-        $strategy = $d->getValue();
+        $instruction = $d->getValue();
 
-        return is_string($strategy)
-            // inbuilt zero-argument strategies
-            && (ExpressionResolver::FAIL == $strategy
-                || ExpressionResolver::ID == $strategy
-                // user-registered 0-argument strategies
-                || (isset($this->argumentCountsPerStrategyKey[$strategy])
-                    && 0 == $this->argumentCountsPerStrategyKey[$strategy]));
+        return is_string($instruction)
+            // inbuilt zero-argument instructions
+            && (ExpressionResolver::FAIL == $instruction
+                || ExpressionResolver::ID == $instruction
+                // user-registered 0-argument instructions
+                || (0 === ($this->instructionArgumentCounts[$instruction] ?? null)));
     }
 
     /**
@@ -171,35 +173,35 @@ class SanitiseAppliedAction
      * @param NodeAdapterInterface $d
      * @return bool
      */
-    protected function isValidInstruction(NodeAdapterInterface $d): bool
+    protected function isValidExpression(NodeAdapterInterface $d): bool
     {
         $valid = false;
 
-        // an instruction is a valid strategy application if...
-        $strategy = $d->getValue();
+        // an expression is a valid instruction application if...
+        $instruction = $d->getValue();
 
-        // ...its main node (strategy key, first element of array, car) is on registered list
-        if (isset($this->argumentCountsPerStrategyKey[$strategy])) {
+        // ...its main node (instruction, first element of array, car) is on list of known instructions
+        if (isset($this->instructionArgumentCounts[$instruction])) {
             // ...and the count of its children (arguments, rest of the array, cdr) matches expected count
-            $expectedCount = $this->argumentCountsPerStrategyKey[$strategy];
+            $expectedCount = $this->instructionArgumentCounts[$instruction];
             $actualCount = iterator_count($d->getChildren());
             $valid = ($expectedCount == $actualCount);
 
             if (!$valid) {
                 $expectedCount .= ($expectedCount < 2) ? ' argument' : ' arguments';
 
-                $this->validationError = "Instruction {$strategy} registered as accepting {$expectedCount}"
+                $this->validationError = "Instruction {$instruction} registered as accepting {$expectedCount}"
                     . ", {$actualCount} provided";
             }
         } else {
             // this shouldn't ever happen but just in case ¯\_(ツ)_/¯
-            $this->validationError = "Unregistered strategy: {$strategy}";
+            $this->validationError = "Unregistered instruction: {$instruction}";
         }
 
         return $valid;
     }
 
-    protected function sanitiseZeroArgumentNode(NodeAdapterInterface $d)
+    protected function convertZeroArgumentShorthand(NodeAdapterInterface $d)
     {
         $sanitisedNode = [$d->getValue()];
         return new Sequence($sanitisedNode);

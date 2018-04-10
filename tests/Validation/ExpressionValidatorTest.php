@@ -2,14 +2,14 @@
 
 namespace JaneOlszewska\Tests\Itinerant\Validation;
 
-use JaneOlszewska\Itinerant\Validation\InstructionValidator;
+use JaneOlszewska\Itinerant\Validation\ExpressionValidator;
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 use JaneOlszewska\Itinerant\Instruction\ExpressionResolver;
 use PHPUnit\Framework\TestCase;
 
-class InstructionValidatorTest extends TestCase
+class ExpressionValidatorTest extends TestCase
 {
-    /** @var InstructionValidator */
+    /** @var ExpressionValidator */
     private $validator;
 
 
@@ -17,19 +17,19 @@ class InstructionValidatorTest extends TestCase
     {
         parent::setUp();
 
-        $this->validator = new InstructionValidator();
+        $this->validator = new ExpressionValidator();
     }
 
     public function testSanitiseInbuiltZeroArgumentNodes()
     {
         $this->assertEquals(
             [ExpressionResolver::FAIL],
-            $this->validator->sanitiseApplied(ExpressionResolver::FAIL)
+            $this->validator->validate(ExpressionResolver::FAIL)
         );
 
         $this->assertEquals(
             [ExpressionResolver::ID],
-            $this->validator->sanitiseApplied(ExpressionResolver::ID)
+            $this->validator->validate(ExpressionResolver::ID)
         );
     }
 
@@ -39,7 +39,7 @@ class InstructionValidatorTest extends TestCase
 
         $this->assertEquals(
             [ExpressionResolver::CHOICE, '0', [ExpressionResolver::FAIL]],
-            $this->validator->sanitiseRegistered('x', $instruction)
+            $this->validator->validateUserInstruction('x', $instruction)
         );
     }
 
@@ -51,7 +51,7 @@ class InstructionValidatorTest extends TestCase
 
         $this->assertEquals(
             ['adhoc', ['fail'], [$action]],
-            $this->validator->sanitiseRegistered('meh', ['adhoc', 'fail', $action])
+            $this->validator->validateUserInstruction('meh', ['adhoc', 'fail', $action])
         );
     }
 
@@ -65,7 +65,7 @@ class InstructionValidatorTest extends TestCase
 
         $this->assertEquals(
             ['adhoc', ['fail'], [[$object, 'f']]],
-            $this->validator->sanitiseApplied(['adhoc', 'fail', [$object, 'f']])
+            $this->validator->validate(['adhoc', 'fail', [$object, 'f']])
         );
     }
 
@@ -74,23 +74,23 @@ class InstructionValidatorTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Instruction all registered as accepting 1 argument, 0 provided');
 
-        $this->validator->sanitiseApplied('all');
+        $this->validator->validate('all');
     }
 
-    public function testThrowsOnUnregisteredStrategyApplication()
+    public function testThrowsOnUnregisteredInstructionApplication()
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Unregistered strategy: does_not_work');
+        $this->expectExceptionMessage('Unregistered instruction: does_not_work');
 
-        $this->validator->sanitiseRegistered('broken', ['does_not_work', 'because it is', 'broken']);
+        $this->validator->validateUserInstruction('broken', ['does_not_work', 'because it is', 'broken']);
     }
 
-    public function testThrowsOnReRegisteringInbuiltStrategy()
+    public function testThrowsOnOverwritingExistingInstruction()
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Cannot overwrite registered strategy key: id');
+        $this->expectExceptionMessage('Cannot overwrite existing instruction: id');
 
-        $this->validator->sanitiseRegistered('id', ['fail']);
+        $this->validator->validateUserInstruction('id', ['fail']);
     }
 
     public function testThrowsOnRegisteringActionWithIncorrectArgumentType()
@@ -102,7 +102,7 @@ class InstructionValidatorTest extends TestCase
             return null;
         };
 
-        $this->validator->sanitiseRegistered('meh', ['adhoc', 'fail', $action]);
+        $this->validator->validateUserInstruction('meh', ['adhoc', 'fail', $action]);
     }
 
     public function testThrowsOnRegisteringActionWithIncorrectReturnType()
@@ -115,23 +115,23 @@ class InstructionValidatorTest extends TestCase
             return $node;
         };
 
-        $this->validator->sanitiseRegistered('meh', ['adhoc', 'fail', $action]);
+        $this->validator->validateUserInstruction('meh', ['adhoc', 'fail', $action]);
     }
 
-    public function testThrowsOnRegisteringStrategyWithNumericKey()
+    public function testThrowsOnRegisteringInstructionWithNumericName()
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Cannot register strategy under a numeric key: 1');
+        $this->expectExceptionMessage('Cannot register instruction with a numeric name: 1');
 
-        $this->validator->sanitiseRegistered('1', ['all', 'id']);
+        $this->validator->validateUserInstruction('1', ['all', 'id']);
     }
 
     public function testThrowsOnIntsMissingFromSubstitutionSequence()
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Cannot register strategy: s. Non-contiguous substitution sequence: [0, 2]');
+        $this->expectExceptionMessage('Cannot register instruction: s. Non-contiguous substitution sequence: [0, 2]');
 
-        $this->validator->sanitiseRegistered(
+        $this->validator->validateUserInstruction(
             's',
             ['seq', '0', '2']
         );

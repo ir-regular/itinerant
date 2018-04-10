@@ -6,7 +6,7 @@ use JaneOlszewska\Itinerant\NodeAdapter\Instruction\StringDefinition;
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 use JaneOlszewska\Itinerant\Instruction\ExpressionResolver;
 use JaneOlszewska\Itinerant\Instruction\InstructionStack;
-use JaneOlszewska\Itinerant\Validation\InstructionValidator;
+use JaneOlszewska\Itinerant\Validation\ExpressionValidator;
 
 class Itinerant
 {
@@ -16,14 +16,14 @@ class Itinerant
     /** @var InstructionStack */
     private $stack;
 
-    /** @var InstructionValidator */
+    /** @var ExpressionValidator */
     private $validator;
 
     public function __construct()
     {
         $this->resolver = new ExpressionResolver();
         $this->stack = new InstructionStack($this->resolver);
-        $this->validator = new InstructionValidator();
+        $this->validator = new ExpressionValidator();
     }
 
     /**
@@ -48,7 +48,7 @@ class Itinerant
      */
     public function register(string $strategy, array $instruction): void
     {
-        $instruction = $this->validator->sanitiseRegistered($strategy, $instruction);
+        $instruction = $this->validator->validateUserInstruction($strategy, $instruction);
 
         $this->resolver->register($strategy, $instruction);
     }
@@ -60,7 +60,7 @@ class Itinerant
      */
     public function apply($instruction, NodeAdapterInterface $node): NodeAdapterInterface
     {
-        $instruction = $this->validator->sanitiseApplied($instruction);
+        $instruction = $this->validator->validate($instruction);
 
         return $this->stack->apply($instruction, $node);
     }
