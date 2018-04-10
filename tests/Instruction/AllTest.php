@@ -1,40 +1,41 @@
 <?php
 
-namespace JaneOlszewska\Tests\Itinerant\Strategy;
+namespace JaneOlszewska\Tests\Itinerant\Instruction;
 
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 use JaneOlszewska\Itinerant\NodeAdapter\Pair;
+use JaneOlszewska\Itinerant\Instruction\All;
 use JaneOlszewska\Itinerant\NodeAdapter\Fail;
-use JaneOlszewska\Itinerant\Strategy\Seq;
 use PHPUnit\Framework\TestCase;
 
-class SeqTest extends TestCase
+class AllTest extends TestCase
 {
-    private $initialInstruction = ['initial'];
-    private $followupInstruction = ['followup'];
+    private $childInstruction = ['resolve-child'];
 
     /** @var NodeAdapterInterface */
     private $node;
 
-    /** @var Seq */
-    private $seq;
+    /** @var All */
+    private $all;
 
     protected function setUp()
     {
         $this->node = new Pair([1, [2, 3]]);
-        $this->seq = new Seq($this->initialInstruction, $this->followupInstruction);
+        $this->all = new All($this->childInstruction);
     }
 
-    public function testExecutesFollowupWhenInitialSucceeded()
+    public function testReturnsNodeWhenAllChildrenSucceeded()
     {
-        $continuation = $this->seq->apply($this->node);
+        $continuation = $this->all->apply($this->node);
 
         $result = $continuation->current();
-        $this->assertEquals([$this->initialInstruction, $this->node], $result);
+        $this->assertEquals($this->childInstruction, $result[0]);
+        $this->assertEquals(2, $result[1]->getValue());
         $this->assertTrue($continuation->valid());
 
         $result = $continuation->send($this->node);
-        $this->assertEquals([$this->followupInstruction, $this->node], $result);
+        $this->assertEquals($this->childInstruction, $result[0]);
+        $this->assertEquals(3, $result[1]->getValue());
         $this->assertTrue($continuation->valid());
 
         $result = $continuation->send($this->node);
@@ -49,12 +50,13 @@ class SeqTest extends TestCase
         $this->assertFalse($continuation->valid());
     }
 
-    public function testSkipsFollowupWhenInitialFailed()
+    public function testFailsWhenOneChildFailed()
     {
-        $continuation = $this->seq->apply($this->node);
+        $continuation = $this->all->apply($this->node);
 
         $result = $continuation->current();
-        $this->assertEquals([$this->initialInstruction, $this->node], $result);
+        $this->assertEquals($this->childInstruction, $result[0]);
+        $this->assertEquals(2, $result[1]->getValue());
         $this->assertTrue($continuation->valid());
 
         $result = $continuation->send(Fail::fail());
@@ -67,5 +69,15 @@ class SeqTest extends TestCase
         $result = $continuation->send(1);
         $this->assertNull($result);
         $this->assertFalse($continuation->valid());
+    }
+
+    public function testReturnsNodeIfNoChildren()
+    {
+        $node = new Pair([2]);
+
+        $continuation = $this->all->apply($node);
+
+        $result = $continuation->current();
+        $this->assertEquals($node, $result);
     }
 }

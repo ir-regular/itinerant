@@ -1,6 +1,6 @@
 <?php
 
-namespace JaneOlszewska\Itinerant\Strategy;
+namespace JaneOlszewska\Itinerant\Instruction;
 
 use JaneOlszewska\Itinerant\NodeAdapter\Fail;
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;

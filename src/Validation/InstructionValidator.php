@@ -5,8 +5,8 @@ namespace JaneOlszewska\Itinerant\Validation;
 use JaneOlszewska\Itinerant\NodeAdapter\Fail;
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 use JaneOlszewska\Itinerant\NodeAdapter\Sequence;
-use JaneOlszewska\Itinerant\Strategy\InstructionResolver;
-use JaneOlszewska\Itinerant\Strategy\StrategyStack;
+use JaneOlszewska\Itinerant\Instruction\InstructionResolver;
+use JaneOlszewska\Itinerant\Instruction\StrategyStack;
 
 /**
  * Witness the ultimate coolness: Itinerant is self-validating!

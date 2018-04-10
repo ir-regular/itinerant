@@ -1,32 +1,32 @@
 <?php
 
-namespace JaneOlszewska\Itinerant\Strategy;
+namespace JaneOlszewska\Itinerant\Instruction;
 
 use JaneOlszewska\Itinerant\NodeAdapter\Fail;
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 
-class Seq implements StrategyInterface
+class Choice implements StrategyInterface
 {
     /** @var array */
     private $initialInstruction;
 
     /** @var array */
-    private $followupInstruction;
+    private $alternativeInstruction;
 
     public function __construct(
         array $initialInstruction,
-        array $followupInstruction
+        array $alternativeInstruction
     ) {
         $this->initialInstruction = $initialInstruction;
-        $this->followupInstruction = $followupInstruction;
+        $this->alternativeInstruction = $alternativeInstruction;
     }
 
     public function apply(NodeAdapterInterface $node): \Generator
     {
         $result = yield [$this->initialInstruction, $node];
 
-        if (Fail::fail() !== $result) {
-            $result = yield [$this->followupInstruction, $result];
+        if (Fail::fail() === $result) {
+            $result = yield [$this->alternativeInstruction, $node];
         }
 
         yield $result;

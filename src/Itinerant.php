@@ -4,8 +4,8 @@ namespace JaneOlszewska\Itinerant;
 
 use JaneOlszewska\Itinerant\NodeAdapter\Instruction\StringDefinition;
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
-use JaneOlszewska\Itinerant\Strategy\InstructionResolver;
-use JaneOlszewska\Itinerant\Strategy\StrategyStack;
+use JaneOlszewska\Itinerant\Instruction\InstructionResolver;
+use JaneOlszewska\Itinerant\Instruction\StrategyStack;
 use JaneOlszewska\Itinerant\Validation\InstructionValidator;
 
 class Itinerant

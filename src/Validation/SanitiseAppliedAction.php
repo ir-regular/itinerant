@@ -5,7 +5,7 @@ namespace JaneOlszewska\Itinerant\Validation;
 use JaneOlszewska\Itinerant\NodeAdapter\Fail;
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 use JaneOlszewska\Itinerant\NodeAdapter\Sequence;
-use JaneOlszewska\Itinerant\Strategy\InstructionResolver;
+use JaneOlszewska\Itinerant\Instruction\InstructionResolver;
 
 /**
  * Internal library action: validates and sanitises instructions given to Itinerant::apply()
@@ -188,7 +188,7 @@ class SanitiseAppliedAction
             if (!$valid) {
                 $expectedCount .= ($expectedCount < 2) ? ' argument' : ' arguments';
 
-                $this->validationError = "Strategy {$strategy} registered as accepting {$expectedCount}"
+                $this->validationError = "Instruction {$strategy} registered as accepting {$expectedCount}"
                     . ", {$actualCount} provided";
             }
         } else {

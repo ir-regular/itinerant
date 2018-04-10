@@ -1,14 +1,14 @@
 <?php
 
-namespace JaneOlszewska\Tests\Itinerant\Strategy;
+namespace JaneOlszewska\Tests\Itinerant\Instruction;
 
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 use JaneOlszewska\Itinerant\NodeAdapter\Pair;
 use JaneOlszewska\Itinerant\NodeAdapter\Fail;
-use JaneOlszewska\Itinerant\Strategy\Choice;
+use JaneOlszewska\Itinerant\Instruction\Seq;
 use PHPUnit\Framework\TestCase;
 
-class ChoiceTest extends TestCase
+class SeqTest extends TestCase
 {
     private $initialInstruction = ['initial'];
     private $followupInstruction = ['followup'];
@@ -16,24 +16,24 @@ class ChoiceTest extends TestCase
     /** @var NodeAdapterInterface */
     private $node;
 
-    /** @var Choice */
-    private $choice;
+    /** @var Seq */
+    private $seq;
 
     protected function setUp()
     {
         $this->node = new Pair([1, [2, 3]]);
-        $this->choice = new Choice($this->initialInstruction, $this->followupInstruction);
+        $this->seq = new Seq($this->initialInstruction, $this->followupInstruction);
     }
 
-    public function testExecutesFollowupWhenFirstStrategyFails()
+    public function testExecutesFollowupWhenInitialSucceeded()
     {
-        $continuation = $this->choice->apply($this->node);
+        $continuation = $this->seq->apply($this->node);
 
         $result = $continuation->current();
         $this->assertEquals([$this->initialInstruction, $this->node], $result);
         $this->assertTrue($continuation->valid());
 
-        $result = $continuation->send(Fail::fail());
+        $result = $continuation->send($this->node);
         $this->assertEquals([$this->followupInstruction, $this->node], $result);
         $this->assertTrue($continuation->valid());
 
@@ -49,16 +49,16 @@ class ChoiceTest extends TestCase
         $this->assertFalse($continuation->valid());
     }
 
-    public function testSkipsFollowupWhenFirstStrategySucceeds()
+    public function testSkipsFollowupWhenInitialFailed()
     {
-        $continuation = $this->choice->apply($this->node);
+        $continuation = $this->seq->apply($this->node);
 
         $result = $continuation->current();
         $this->assertEquals([$this->initialInstruction, $this->node], $result);
         $this->assertTrue($continuation->valid());
 
-        $result = $continuation->send($this->node);
-        $this->assertEquals($this->node, $result);
+        $result = $continuation->send(Fail::fail());
+        $this->assertEquals(Fail::fail(), $result);
         $this->assertTrue($continuation->valid());
 
         // for illustration purposes only:

@@ -1,41 +1,40 @@
 <?php
 
-namespace JaneOlszewska\Tests\Itinerant\Strategy;
+namespace JaneOlszewska\Tests\Itinerant\Instruction;
 
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 use JaneOlszewska\Itinerant\NodeAdapter\Pair;
-use JaneOlszewska\Itinerant\Strategy\All;
 use JaneOlszewska\Itinerant\NodeAdapter\Fail;
+use JaneOlszewska\Itinerant\Instruction\Choice;
 use PHPUnit\Framework\TestCase;
 
-class AllTest extends TestCase
+class ChoiceTest extends TestCase
 {
-    private $childInstruction = ['resolve-child'];
+    private $initialInstruction = ['initial'];
+    private $followupInstruction = ['followup'];
 
     /** @var NodeAdapterInterface */
     private $node;
 
-    /** @var All */
-    private $all;
+    /** @var Choice */
+    private $choice;
 
     protected function setUp()
     {
         $this->node = new Pair([1, [2, 3]]);
-        $this->all = new All($this->childInstruction);
+        $this->choice = new Choice($this->initialInstruction, $this->followupInstruction);
     }
 
-    public function testReturnsNodeWhenAllChildrenSucceeded()
+    public function testExecutesFollowupWhenFirstStrategyFails()
     {
-        $continuation = $this->all->apply($this->node);
+        $continuation = $this->choice->apply($this->node);
 
         $result = $continuation->current();
-        $this->assertEquals($this->childInstruction, $result[0]);
-        $this->assertEquals(2, $result[1]->getValue());
+        $this->assertEquals([$this->initialInstruction, $this->node], $result);
         $this->assertTrue($continuation->valid());
 
-        $result = $continuation->send($this->node);
-        $this->assertEquals($this->childInstruction, $result[0]);
-        $this->assertEquals(3, $result[1]->getValue());
+        $result = $continuation->send(Fail::fail());
+        $this->assertEquals([$this->followupInstruction, $this->node], $result);
         $this->assertTrue($continuation->valid());
 
         $result = $continuation->send($this->node);
@@ -50,17 +49,16 @@ class AllTest extends TestCase
         $this->assertFalse($continuation->valid());
     }
 
-    public function testFailsWhenOneChildFailed()
+    public function testSkipsFollowupWhenFirstStrategySucceeds()
     {
-        $continuation = $this->all->apply($this->node);
+        $continuation = $this->choice->apply($this->node);
 
         $result = $continuation->current();
-        $this->assertEquals($this->childInstruction, $result[0]);
-        $this->assertEquals(2, $result[1]->getValue());
+        $this->assertEquals([$this->initialInstruction, $this->node], $result);
         $this->assertTrue($continuation->valid());
 
-        $result = $continuation->send(Fail::fail());
-        $this->assertEquals(Fail::fail(), $result);
+        $result = $continuation->send($this->node);
+        $this->assertEquals($this->node, $result);
         $this->assertTrue($continuation->valid());
 
         // for illustration purposes only:
@@ -69,15 +67,5 @@ class AllTest extends TestCase
         $result = $continuation->send(1);
         $this->assertNull($result);
         $this->assertFalse($continuation->valid());
-    }
-
-    public function testReturnsNodeIfNoChildren()
-    {
-        $node = new Pair([2]);
-
-        $continuation = $this->all->apply($node);
-
-        $result = $continuation->current();
-        $this->assertEquals($node, $result);
     }
 }

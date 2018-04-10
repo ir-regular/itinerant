@@ -4,7 +4,7 @@ namespace JaneOlszewska\Tests\Itinerant\Validation;
 
 use JaneOlszewska\Itinerant\Validation\InstructionValidator;
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
-use JaneOlszewska\Itinerant\Strategy\InstructionResolver;
+use JaneOlszewska\Itinerant\Instruction\InstructionResolver;
 use PHPUnit\Framework\TestCase;
 
 class InstructionValidatorTest extends TestCase
@@ -72,7 +72,7 @@ class InstructionValidatorTest extends TestCase
     public function testThrowsOnWrongArgumentCountProvided()
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Strategy all registered as accepting 1 argument, 0 provided');
+        $this->expectExceptionMessage('Instruction all registered as accepting 1 argument, 0 provided');
 
         $this->validator->sanitiseApplied('all');
     }
