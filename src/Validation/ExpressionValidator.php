@@ -98,24 +98,6 @@ class ExpressionValidator
     }
 
     /**
-     * @param ValidateExpressionAction $action
-     * @return string
-     */
-    private function formatErrorMessage(ValidateExpressionAction $action): string
-    {
-        // (Neither node nor validation error should be null at this point)
-
-        $instruction = ($node = $action->getInvalidNode()) ? $node->getValue() : null;
-        $error = $action->getValidationError() ?: '';
-
-        if (is_array($instruction) && isset($instruction[0])) {
-            $error .= " (in {$instruction[0]})";
-        }
-
-        return $error;
-    }
-
-    /**
      * @param string $name
      */
     private function validateInstructionName(string $name): void
@@ -196,5 +178,23 @@ class ExpressionValidator
             throw new \InvalidArgumentException($error);
         }
         return $result;
+    }
+
+    /**
+     * @param ValidateExpressionAction $action
+     * @return string
+     */
+    private function formatErrorMessage(ValidateExpressionAction $action): string
+    {
+        // (Neither node nor validation error should be null at this point)
+
+        $instruction = ($node = $action->getInvalidNode()) ? $node->getValue() : null;
+        $error = $action->getValidationError() ?: '';
+
+        if (is_array($instruction) && isset($instruction[0])) {
+            $error .= " (in {$instruction[0]})";
+        }
+
+        return $error;
     }
 }
