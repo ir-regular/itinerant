@@ -8,25 +8,25 @@ use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 class Choice implements InstructionInterface
 {
     /** @var array */
-    private $initialInstruction;
+    private $initialExpression;
 
     /** @var array */
-    private $alternativeInstruction;
+    private $alternativeExpression;
 
     public function __construct(
-        array $initialInstruction,
-        array $alternativeInstruction
+        array $initialExpression,
+        array $alternativeExpression
     ) {
-        $this->initialInstruction = $initialInstruction;
-        $this->alternativeInstruction = $alternativeInstruction;
+        $this->initialExpression = $initialExpression;
+        $this->alternativeExpression = $alternativeExpression;
     }
 
     public function apply(NodeAdapterInterface $node): \Generator
     {
-        $result = yield [$this->initialInstruction, $node];
+        $result = yield [$this->initialExpression, $node];
 
         if (Fail::fail() === $result) {
-            $result = yield [$this->alternativeInstruction, $node];
+            $result = yield [$this->alternativeExpression, $node];
         }
 
         yield $result;
