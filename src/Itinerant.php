@@ -50,7 +50,7 @@ class Itinerant
     {
         $instruction = $this->validator->sanitiseRegistered($strategy, $instruction);
 
-        $this->resolver->registerStrategy($strategy, $instruction);
+        $this->resolver->register($strategy, $instruction);
     }
 
     /**

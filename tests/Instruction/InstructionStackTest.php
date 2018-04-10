@@ -437,18 +437,18 @@ class InstructionStackTest extends TestCase
 
         // full_td(s) = seq(s, all(full_td(s)))
 
-        $resolver->registerStrategy('full_td', ['seq', '0', ['all', ['full_td', '0']]]);
+        $resolver->register('full_td', ['seq', '0', ['all', ['full_td', '0']]]);
 
         // register 'attr' strategy: this is a rather roundabout way of creating a node-by-attribute selector.
 
         $action = $this->getNameMatchAction();
         $action->setCurrentSearch('2'); // look for node with name == '2'
-        $resolver->registerStrategy('attr', ['adhoc', ['fail'], $action]);
+        $resolver->register('attr', ['adhoc', ['fail'], $action]);
 
         // register strategy that traverses the graph top-down and return the first element that successfully fulfils
         // whatever strategy was provided as 1st arg
 
-        $resolver->registerStrategy('once_td', ['choice', '0', ['one', ['once_td', '0']]]);
+        $resolver->register('once_td', ['choice', '0', ['one', ['once_td', '0']]]);
         return $resolver;
     }
 }

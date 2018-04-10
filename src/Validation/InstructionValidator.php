@@ -38,7 +38,7 @@ class InstructionValidator
         // This guarantees that TD_PRE strategy won't conflict with user's strategies.
         $resolver = new InstructionResolver();
         // top-down, depth first, prefix application
-        $resolver->registerStrategy(self::TD_PRE, ['seq', '0', ['all', [self::TD_PRE, '0']]]);
+        $resolver->register(self::TD_PRE, ['seq', '0', ['all', [self::TD_PRE, '0']]]);
         $this->resolver = $resolver;
 
         $this->stack = new InstructionStack($this->resolver);

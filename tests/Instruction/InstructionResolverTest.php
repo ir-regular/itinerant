@@ -26,7 +26,7 @@ class InstructionResolverTest extends TestCase
             return null;
         };
 
-        $this->resolver->registerStrategy('meh', ['adhoc', 'fail', $action]);
+        $this->resolver->register('meh', ['adhoc', 'fail', $action]);
 
         $result = $this->resolver->resolve(['meh']);
         $this->assertInstanceOf(UserDefined::class, $result);

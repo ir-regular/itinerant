@@ -13,19 +13,19 @@ class InstructionResolver
     const ADHOC = 'adhoc';
 
     /** @var array */
-    private $strategies = [];
+    private $instructions = [];
 
     /**
-     * @param array $instruction
+     * @param array $expression
      * @return InstructionInterface
-     * @throws \DomainException when first element of $strategy is an unregistered strategy key
+     * @throws \DomainException when first element of $expression is an unregistered instruction
      */
-    public function resolve(array $instruction): InstructionInterface
+    public function resolve(array $expression): InstructionInterface
     {
-        $strategy = array_shift($instruction);
-        $args = $instruction;
+        $instruction = array_shift($expression);
+        $args = $expression;
 
-        switch ($strategy) {
+        switch ($instruction) {
             case self::SEQ:
                 return new Seq($args[0], $args[1]);
             case self::CHOICE:
@@ -37,8 +37,8 @@ class InstructionResolver
             case self::ADHOC:
                 return new Adhoc($args[0], $args[1]);
             default:
-                if (isset($this->strategies[$strategy])) {
-                    return new UserDefined($this->strategies[$strategy], $args);
+                if (isset($this->instructions[$instruction])) {
+                    return new UserDefined($this->instructions[$instruction], $args);
                 } else {
                     throw new \DomainException('Invalid strategy: validation process failed');
                 }
@@ -46,11 +46,11 @@ class InstructionResolver
     }
 
     /**
-     * @param string $strategy
-     * @param array $instruction
+     * @param string $instruction
+     * @param array $definition A valid Itinerant expression
      */
-    public function registerStrategy(string $strategy, array $instruction): void
+    public function register(string $instruction, array $definition): void
     {
-        $this->strategies[$strategy] = $instruction;
+        $this->instructions[$instruction] = $definition;
     }
 }
