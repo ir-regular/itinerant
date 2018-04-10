@@ -5,7 +5,7 @@ namespace JaneOlszewska\Itinerant\Instruction;
 use JaneOlszewska\Itinerant\NodeAdapter\Fail;
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 
-class StrategyStack
+class InstructionStack
 {
     /**
      * @var array|\Ds\Stack

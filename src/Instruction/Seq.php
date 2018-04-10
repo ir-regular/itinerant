@@ -5,7 +5,7 @@ namespace JaneOlszewska\Itinerant\Instruction;
 use JaneOlszewska\Itinerant\NodeAdapter\Fail;
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 
-class Seq implements StrategyInterface
+class Seq implements InstructionInterface
 {
     /** @var array */
     private $initialInstruction;

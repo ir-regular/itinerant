@@ -6,7 +6,7 @@ use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 use JaneOlszewska\Itinerant\NodeAdapter\Accessor;
 use JaneOlszewska\Itinerant\NodeAdapter\Fail;
 use JaneOlszewska\Itinerant\Instruction\InstructionResolver;
-use JaneOlszewska\Itinerant\Instruction\StrategyStack;
+use JaneOlszewska\Itinerant\Instruction\InstructionStack;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -15,9 +15,9 @@ use PHPUnit\Framework\TestCase;
  * fail = seq(fail, s) = seq(s, fail) = one(fail)
  * id = choice(id, s) = all(id)
  */
-class StrategyStackTest extends TestCase
+class InstructionStackTest extends TestCase
 {
-    /** @var StrategyStack */
+    /** @var InstructionStack */
     private $stack;
 
     /** @var object */
@@ -31,7 +31,7 @@ class StrategyStackTest extends TestCase
 
         $resolver = $this->getInitialisedInstructionResolver();
 
-        $this->stack = new StrategyStack($resolver);
+        $this->stack = new InstructionStack($resolver);
     }
 
     public function testFail()

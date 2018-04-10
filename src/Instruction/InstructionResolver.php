@@ -17,10 +17,10 @@ class InstructionResolver
 
     /**
      * @param array $instruction
-     * @return StrategyInterface
+     * @return InstructionInterface
      * @throws \DomainException when first element of $strategy is an unregistered strategy key
      */
-    public function resolve(array $instruction): StrategyInterface
+    public function resolve(array $instruction): InstructionInterface
     {
         $strategy = array_shift($instruction);
         $args = $instruction;

@@ -4,7 +4,7 @@ namespace JaneOlszewska\Itinerant\Instruction;
 
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 
-class Adhoc implements StrategyInterface
+class Adhoc implements InstructionInterface
 {
     /** @var array */
     private $instructionIfInapplicable;

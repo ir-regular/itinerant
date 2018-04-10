@@ -5,7 +5,7 @@ namespace JaneOlszewska\Itinerant\Instruction;
 use JaneOlszewska\Itinerant\NodeAdapter\Fail;
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 
-class One implements StrategyInterface
+class One implements InstructionInterface
 {
     /** @var array */
     private $childInstruction;

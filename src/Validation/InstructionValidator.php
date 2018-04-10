@@ -6,7 +6,7 @@ use JaneOlszewska\Itinerant\NodeAdapter\Fail;
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 use JaneOlszewska\Itinerant\NodeAdapter\Sequence;
 use JaneOlszewska\Itinerant\Instruction\InstructionResolver;
-use JaneOlszewska\Itinerant\Instruction\StrategyStack;
+use JaneOlszewska\Itinerant\Instruction\InstructionStack;
 
 /**
  * Witness the ultimate coolness: Itinerant is self-validating!
@@ -29,7 +29,7 @@ class InstructionValidator
     /** @var InstructionResolver */
     private $resolver;
 
-    /** @var StrategyStack */
+    /** @var InstructionStack */
     private $stack;
 
     public function __construct()
@@ -41,7 +41,7 @@ class InstructionValidator
         $resolver->registerStrategy(self::TD_PRE, ['seq', '0', ['all', [self::TD_PRE, '0']]]);
         $this->resolver = $resolver;
 
-        $this->stack = new StrategyStack($this->resolver);
+        $this->stack = new InstructionStack($this->resolver);
     }
 
     /**

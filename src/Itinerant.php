@@ -5,7 +5,7 @@ namespace JaneOlszewska\Itinerant;
 use JaneOlszewska\Itinerant\NodeAdapter\Instruction\StringDefinition;
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 use JaneOlszewska\Itinerant\Instruction\InstructionResolver;
-use JaneOlszewska\Itinerant\Instruction\StrategyStack;
+use JaneOlszewska\Itinerant\Instruction\InstructionStack;
 use JaneOlszewska\Itinerant\Validation\InstructionValidator;
 
 class Itinerant
@@ -13,7 +13,7 @@ class Itinerant
     /** @var InstructionResolver */
     private $resolver;
 
-    /** @var StrategyStack */
+    /** @var InstructionStack */
     private $stack;
 
     /** @var InstructionValidator */
@@ -22,7 +22,7 @@ class Itinerant
     public function __construct()
     {
         $this->resolver = new InstructionResolver();
-        $this->stack = new StrategyStack($this->resolver);
+        $this->stack = new InstructionStack($this->resolver);
         $this->validator = new InstructionValidator();
     }
 
