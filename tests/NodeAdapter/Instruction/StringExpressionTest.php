@@ -18,7 +18,7 @@ class StringExpressionTest extends TestCase
         fclose($declaration);
     }
 
-    public function testParsesBody()
+    public function testParsesDefinition()
     {
         $body = $this->get_string_stream('once_td(seq(s2, once_td(s1)))');
 
