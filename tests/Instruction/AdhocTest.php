@@ -9,13 +9,13 @@ use PHPUnit\Framework\TestCase;
 
 class AdhocTest extends TestCase
 {
-    private $fallbackInstruction;
+    private $fallbackExpression;
     private $node;
 
     protected function setUp()
     {
         $this->node = new Pair([1, [2, 3]]);
-        $this->fallbackInstruction = ['fallback'];
+        $this->fallbackExpression = ['fallback'];
     }
 
     public function testExecutesApplicableAction()
@@ -23,7 +23,7 @@ class AdhocTest extends TestCase
         $action = function (NodeAdapterInterface $node): ?NodeAdapterInterface {
             return $node;
         };
-        $adhoc = new Adhoc($this->fallbackInstruction, $action);
+        $adhoc = new Adhoc($this->fallbackExpression, $action);
 
         $continuation = $adhoc->apply($this->node);
 
@@ -31,19 +31,19 @@ class AdhocTest extends TestCase
         $this->assertEquals($this->node, $result);
     }
 
-    public function testFallsBackToStrategyOnInapplicableAction()
+    public function testAppliesFallbackWhenActionInapplicable()
     {
         $action = function (NodeAdapterInterface $node): ?NodeAdapterInterface {
             return null; // null == inapplicable to this specific $node
         };
-        $adhoc = new Adhoc($this->fallbackInstruction, $action);
+        $adhoc = new Adhoc($this->fallbackExpression, $action);
 
         $continuation = $adhoc->apply($this->node);
 
         $result = $continuation->current();
-        $this->assertEquals([$this->fallbackInstruction, $this->node], $result);
+        $this->assertEquals([$this->fallbackExpression, $this->node], $result);
 
-        // pretend $this->node was the result of applying $this->fallbackInstruction to $this->>node
+        // pretend $this->node was the result of applying $this->fallbackExpression to $this->>node
         $result = $continuation->send($this->node);
         $this->assertEquals($this->node, $result); // ...and adhoc resolves to fallback result
     }
