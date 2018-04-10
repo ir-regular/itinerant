@@ -1,10 +1,10 @@
 <?php
 
-namespace JaneOlszewska\Itinerant\Strategy;
+namespace JaneOlszewska\Itinerant\Instruction;
 
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 
-class UserDefined implements StrategyInterface
+class UserDefined implements InstructionInterface
 {
     /** @var array */
     private $instruction;

@@ -1,12 +1,11 @@
 <?php
 
-namespace JaneOlszewska\Itinerant;
+namespace JaneOlszewska\Itinerant\Instruction;
 
 use JaneOlszewska\Itinerant\NodeAdapter\Fail;
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
-use JaneOlszewska\Itinerant\Strategy\InstructionResolver;
 
-class StrategyStack
+class InstructionStack
 {
     /**
      * @var array|\Ds\Stack
@@ -14,11 +13,11 @@ class StrategyStack
     private $stack = [];
 
     /**
-     * @var InstructionResolver
+     * @var ExpressionResolver
      */
     private $resolver;
 
-    public function __construct(InstructionResolver $resolver)
+    public function __construct(ExpressionResolver $resolver)
     {
         if (class_exists('\Ds\Stack')) {
             $this->stack = new \Ds\Stack();
@@ -30,46 +29,50 @@ class StrategyStack
     }
 
     /**
-     * @param array $strategy
+     * @param array $expression
      * @param NodeAdapterInterface $node
      * @return NodeAdapterInterface
      */
-    public function apply(array $strategy, NodeAdapterInterface $node): NodeAdapterInterface
+    public function apply(array $expression, NodeAdapterInterface $node): NodeAdapterInterface
     {
-        $this->push([$strategy, $node]);
+        $this->push([$expression, $node]);
         $result = null;
 
         do {
-            [$strategy, $node] = $this->pop();
+            [$expression, $node] = $this->pop();
 
-            if (is_array($strategy)) {
+            if (is_array($expression)) {
                 // speed things up by insta-resolving 'id' and 'fail' strategies
-                if ($strategy[0] == InstructionResolver::ID) {
+                if ($expression[0] == ExpressionResolver::ID) {
                     $result = $node;
                     continue;
-                } elseif ($strategy[0] == InstructionResolver::FAIL) {
+                } elseif ($expression[0] == ExpressionResolver::FAIL) {
                     $result = Fail::fail();
                     continue;
                 } else {
-                    $strategy = $this->resolver->resolve($strategy);
-                    $continuation = $strategy->apply($node);
+                    $instruction = $this->resolver->resolve($expression);
+                    $continuation = $instruction->apply($node);
                     $result = $continuation->current();
                 }
             } else {
-                $continuation = $strategy;
-                // apply continuation to result of previous strategy
+                $continuation = $expression;
+                // pass result of previous instruction to continuation
                 $result = $continuation->send($result);
             }
 
             if (!($result instanceof NodeAdapterInterface)) {
-                // strategy non-terminal, preserve current state
+                // instruction non-terminal: $result is an expression to execute on $node
+
+                // preserve current state
                 $this->push([$continuation, null]);
-                // ...and queue up a new instruction
+                // ...and queue up the expression for processing
                 $this->push($result);
             }
 
-            // else: strategy terminal. $currentDatum transformed into $result
-            // pass the result into the strategy lower on the stack
+            // else: instruction terminal: it transformed $node into $result
+            // Now pass the result into the continuation lower on the stack
+            // (see above for the branch that runs when !is_array($expression))
+
         } while (!$this->isEmpty());
 
         return $result;
@@ -94,15 +97,15 @@ class StrategyStack
     }
 
     /**
-     * @param array $strategy
+     * @param array $expression
      * @return void
      */
-    private function push(array $strategy): void
+    private function push(array $expression): void
     {
         if (is_array($this->stack)) {
-            $this->stack[] = $strategy;
+            $this->stack[] = $expression;
         } else {
-            $this->stack->push($strategy);
+            $this->stack->push($expression);
         }
     }
 }

@@ -1,32 +1,32 @@
 <?php
 
-namespace JaneOlszewska\Tests\Itinerant\Strategy;
+namespace JaneOlszewska\Tests\Itinerant\Instruction;
 
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 use JaneOlszewska\Itinerant\NodeAdapter\Fail;
-use JaneOlszewska\Itinerant\Strategy\InstructionResolver;
-use JaneOlszewska\Itinerant\Strategy\UserDefined;
+use JaneOlszewska\Itinerant\Instruction\ExpressionResolver;
+use JaneOlszewska\Itinerant\Instruction\UserDefined;
 use PHPUnit\Framework\TestCase;
 
-class InstructionResolverTest extends TestCase
+class ExpressionResolverTest extends TestCase
 {
-    /** @var InstructionResolver */
+    /** @var ExpressionResolver */
     private $resolver;
 
     protected function setUp()
     {
         parent::setUp();
 
-        $this->resolver = new InstructionResolver();
+        $this->resolver = new ExpressionResolver();
     }
 
-    public function testRegisterStrategy()
+    public function testResolvesRegisteredInstruction()
     {
         $action = function (NodeAdapterInterface $node) {
             return null;
         };
 
-        $this->resolver->registerStrategy('meh', ['adhoc', 'fail', $action]);
+        $this->resolver->register('meh', ['adhoc', 'fail', $action]);
 
         $result = $this->resolver->resolve(['meh']);
         $this->assertInstanceOf(UserDefined::class, $result);

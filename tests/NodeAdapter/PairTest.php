@@ -2,19 +2,19 @@
 
 namespace JaneOlszewska\Tests\Itinerant\NodeAdapter;
 
-use JaneOlszewska\Itinerant\NodeAdapter\SecondElement;
+use JaneOlszewska\Itinerant\NodeAdapter\Pair;
 use PHPUnit\Framework\TestCase;
 
-class SecondElementTest extends TestCase
+class PairTest extends TestCase
 {
     public function testGetChildren()
     {
         $a = [1, [2, 3]];
-        $adapter = new SecondElement($a);
+        $adapter = new Pair($a);
 
         $children = $adapter->getChildren();
         // unwrap
-        $children = array_map(function(SecondElement $node) {
+        $children = array_map(function(Pair $node) {
             return $node->getNode();
         }, iterator_to_array($children));
 
@@ -27,16 +27,16 @@ class SecondElementTest extends TestCase
         $v2 = 5;
 
         $a = [1, [2, 3]];
-        $adapter = new SecondElement($a);
+        $adapter = new Pair($a);
 
-        $adapter->setChildren([new SecondElement($v1), new SecondElement($v2)]);
+        $adapter->setChildren([new Pair($v1), new Pair($v2)]);
         $this->assertEquals([1, [[4], [5]]], $adapter->getNode());
     }
 
     public function testNoChildren()
     {
         $a = [1];
-        $adapter = new SecondElement($a);
+        $adapter = new Pair($a);
 
         $this->assertFalse($adapter->getChildren()->valid());
     }

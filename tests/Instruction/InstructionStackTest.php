@@ -1,12 +1,12 @@
 <?php
 
-namespace JaneOlszewska\Tests\Itinerant;
+namespace JaneOlszewska\Tests\Itinerant\Instruction;
 
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
-use JaneOlszewska\Itinerant\NodeAdapter\ViaGetter;
+use JaneOlszewska\Itinerant\NodeAdapter\Accessor;
 use JaneOlszewska\Itinerant\NodeAdapter\Fail;
-use JaneOlszewska\Itinerant\Strategy\InstructionResolver;
-use JaneOlszewska\Itinerant\StrategyStack;
+use JaneOlszewska\Itinerant\Instruction\ExpressionResolver;
+use JaneOlszewska\Itinerant\Instruction\InstructionStack;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -15,9 +15,9 @@ use PHPUnit\Framework\TestCase;
  * fail = seq(fail, s) = seq(s, fail) = one(fail)
  * id = choice(id, s) = all(id)
  */
-class StrategyStackTest extends TestCase
+class InstructionStackTest extends TestCase
 {
-    /** @var StrategyStack */
+    /** @var InstructionStack */
     private $stack;
 
     /** @var object */
@@ -31,7 +31,7 @@ class StrategyStackTest extends TestCase
 
         $resolver = $this->getInitialisedInstructionResolver();
 
-        $this->stack = new StrategyStack($resolver);
+        $this->stack = new InstructionStack($resolver);
     }
 
     public function testFail()
@@ -93,20 +93,20 @@ class StrategyStackTest extends TestCase
         $modifyAction = $this->getSetNameAction($newName);
 
         $unwrappedNode = $this->getUnwrappedNodeDatum('original');
-        $node = new ViaGetter($unwrappedNode);
+        $node = new Accessor($unwrappedNode);
         $modifiedNode = $this->getNodeDatum($newName);
 
         $unwrappedNodes = $this->getUnwrappedNodeArrayDatum($this->getNodes());
-        $nodes = new ViaGetter($unwrappedNodes);
+        $nodes = new Accessor($unwrappedNodes);
         $modifiedNodes = $this->getNodeArrayDatum($this->getNodes(2, $newName));
 
         // adhoc on its own, not applying action (because only applicable to nodes with 'getName')
-        // and thus defaulting to 'fail' strategy
+        // and thus defaulting to 'fail' instruction
 
         $result = $this->stack->apply(['adhoc', ['fail'], $modifyAction], $this->getNodeArrayDatum([]));
         $this->assertEquals($this->fail, $result);
 
-        // adhoc on its own, not applying action and defaulting to 'id' strategy
+        // adhoc on its own, not applying action and defaulting to 'id' instruction
 
         $this->assertEquals($nodes, $this->stack->apply(['adhoc', ['id'], $modifyAction], $nodes));
 
@@ -116,7 +116,7 @@ class StrategyStackTest extends TestCase
         $this->assertEquals($modifiedNode, $result);
         $this->assertNotEquals($unwrappedNode, $result->getNode()); // original data was not modified in the process
 
-        // todo: test adhoc where it substitutes with strategy (id/fail)
+        // todo: test adhoc where it substitutes with instruction (id/fail)
 
         // adhoc with all
 
@@ -160,7 +160,7 @@ class StrategyStackTest extends TestCase
         $this->assertEquals($nodes, $result); // check that result is unmodified
     }
 
-    public function testUserDefinedStrategy()
+    public function testUserDefinedInstruction()
     {
         $nodeOfNodes = $this->getNodeArrayDatum(
             [
@@ -248,7 +248,7 @@ class StrategyStackTest extends TestCase
             ]
         );
         // to use it as an argument on its own, I need to wrap it
-        $secondNode = new ViaGetter($secondNode);
+        $secondNode = new Accessor($secondNode);
 
         $this->assertEquals($secondNode, $this->stack->apply(['attr'], $secondNode)); // yep, it matches
 
@@ -267,7 +267,7 @@ class StrategyStackTest extends TestCase
     private function getNodeDatum(string $name = 'node'): NodeAdapterInterface
     {
         $node = $this->getUnwrappedNodeDatum($name);
-        return new ViaGetter($node);
+        return new Accessor($node);
     }
 
     private function getUnwrappedNodeDatum(string $name)
@@ -324,7 +324,7 @@ class StrategyStackTest extends TestCase
     {
         $n = $this->getUnwrappedNodeArrayDatum($children);
 
-        return new ViaGetter($n);
+        return new Accessor($n);
     }
 
     /**
@@ -429,26 +429,26 @@ class StrategyStackTest extends TestCase
     }
 
     /**
-     * @return InstructionResolver
+     * @return ExpressionResolver
      */
-    private function getInitialisedInstructionResolver(): InstructionResolver
+    private function getInitialisedInstructionResolver(): ExpressionResolver
     {
-        $resolver = new InstructionResolver();
+        $resolver = new ExpressionResolver();
 
         // full_td(s) = seq(s, all(full_td(s)))
 
-        $resolver->registerStrategy('full_td', ['seq', '0', ['all', ['full_td', '0']]]);
+        $resolver->register('full_td', ['seq', '0', ['all', ['full_td', '0']]]);
 
-        // register 'attr' strategy: this is a rather roundabout way of creating a node-by-attribute selector.
+        // register 'attr' instruction: this is a rather roundabout way of creating a node-by-attribute selector.
 
         $action = $this->getNameMatchAction();
         $action->setCurrentSearch('2'); // look for node with name == '2'
-        $resolver->registerStrategy('attr', ['adhoc', ['fail'], $action]);
+        $resolver->register('attr', ['adhoc', ['fail'], $action]);
 
-        // register strategy that traverses the graph top-down and return the first element that successfully fulfils
-        // whatever strategy was provided as 1st arg
+        // register instruction that traverses the graph top-down and return the first element that successfully fulfils
+        // whatever instruction was provided as 1st arg
 
-        $resolver->registerStrategy('once_td', ['choice', '0', ['one', ['once_td', '0']]]);
+        $resolver->register('once_td', ['choice', '0', ['one', ['once_td', '0']]]);
         return $resolver;
     }
 }

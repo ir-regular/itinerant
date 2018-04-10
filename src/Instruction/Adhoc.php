@@ -1,28 +1,32 @@
 <?php
 
-namespace JaneOlszewska\Itinerant\Strategy;
+namespace JaneOlszewska\Itinerant\Instruction;
 
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 
-class Adhoc implements StrategyInterface
+/**
+ * @TODO rename
+ * @TODO add optional argument ?callable $isApplicable = null (stop returning null if not applicable)
+ */
+class Adhoc implements InstructionInterface
 {
     /** @var array */
-    private $instructionIfInapplicable;
+    private $fallbackExpression;
 
     /** @var callable */
     private $action;
 
     public function __construct(
-        array $instructionIfInapplicable,
+        array $fallbackExpression,
         callable $action
     ) {
-        $this->instructionIfInapplicable = $instructionIfInapplicable;
+        $this->fallbackExpression = $fallbackExpression;
         $this->action = $action;
     }
 
     public function apply(NodeAdapterInterface $node): \Generator
     {
-        // strategy resolved to applied action
+        // instruction resolved to applied action
         $result = ($this->action)($node);
 
         // If result is null, that means action is not applicable to $node
@@ -32,8 +36,8 @@ class Adhoc implements StrategyInterface
                 throw new \UnexpectedValueException('Adhoc callable result must be a NodeAdapterInterface');
             }
         } else {
-            // if action is inapplicable, apply the fallback strategy instead
-            $result = yield [$this->instructionIfInapplicable, $node];
+            // if action is inapplicable, apply the fallback instead
+            $result = yield [$this->fallbackExpression, $node];
         }
 
         yield $result;

@@ -11,11 +11,11 @@ use PHPUnit\Framework\TestCase;
  */
 class ItinerantTest extends TestCase
 {
-    public function testRegistersStrategyUsingRegisteredStrategy()
+    public function testRegistersInstructionUsingPreviouslyRegisteredInstruction()
     {
         $itinerant = new Itinerant();
-        $itinerant->registerStrategy('first', ['id']);
-        $itinerant->registerStrategy('second', ['choice', 'fail', 'first']);
+        $itinerant->register('first', ['id']);
+        $itinerant->register('second', ['choice', 'fail', 'first']);
 
         $node = $this->createMock(NodeAdapterInterface::class);
 
@@ -23,14 +23,14 @@ class ItinerantTest extends TestCase
         $this->assertEquals($node, $itinerant->apply('second', $node));
     }
 
-    public function testRegistersStrategyFromStream()
+    public function testRegistersInstructionsFromStream()
     {
         // let's pretend we have a file
         $string = "try(s) = choice(s, id)\nrepeat(s) = try(choice(s, repeat(s)))\n";
         $stream = fopen('data://text/plain,' . $string, 'r');
 
         $itinerant = new Itinerant();
-        $itinerant->registerStrategiesFromStream($stream);
+        $itinerant->registerFromStream($stream);
 
         fclose($stream);
 

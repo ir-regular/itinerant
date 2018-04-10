@@ -1,7 +1,8 @@
 <?php
 
-namespace JaneOlszewska\Itinerant\NodeAdapter\Instruction;
+namespace JaneOlszewska\Tests\Itinerant\NodeAdapter\Instruction;
 
+use JaneOlszewska\Itinerant\NodeAdapter\Instruction\StringExpression;
 use PHPUnit\Framework\TestCase;
 
 class StringExpressionTest extends TestCase
@@ -17,7 +18,7 @@ class StringExpressionTest extends TestCase
         fclose($declaration);
     }
 
-    public function testParsesBody()
+    public function testParsesDefinition()
     {
         $body = $this->get_string_stream('once_td(seq(s2, once_td(s1)))');
 

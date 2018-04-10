@@ -4,6 +4,9 @@ namespace JaneOlszewska\Itinerant\NodeAdapter\Instruction;
 
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 
+/**
+ * @TODO move to Utils namespace
+ */
 class StringExpression implements NodeAdapterInterface
 {
     /** @var array */
@@ -13,25 +16,25 @@ class StringExpression implements NodeAdapterInterface
     private $name;
 
     /** @var \Iterator */
-    private $children;
+    private $arguments;
 
     /** @var string|bool */
     private $lastReadCharacter;
 
     /**
-     * @param resource $definition
+     * @param resource $source
      * @param null|string $peeked
      * @param array|null $substitutions
      */
-    public function __construct($definition, ?string $peeked = null, $substitutions = null)
+    public function __construct($source, ?string $peeked = null, $substitutions = null)
     {
-        $this->name = $this->extractName($definition, $peeked);
+        $this->name = $this->extractName($source, $peeked);
 
         if ($substitutions && array_key_exists($this->name, $substitutions)) {
             $this->node = strval($substitutions[$this->name]);
 
         } elseif ($this->lastReadCharacter == '(') {
-            $this->children = $this->extractChildren($definition, $substitutions);
+            $this->arguments = $this->extractArguments($source, $substitutions);
         }
     }
 
@@ -55,25 +58,25 @@ class StringExpression implements NodeAdapterInterface
 
     public function getChildren(): \Iterator
     {
-        if ($this->children) {
-            yield from $this->children;
+        if ($this->arguments) {
+            yield from $this->arguments;
         }
     }
 
     public function setChildren(array $children = []): void
     {
-        $this->children = new \ArrayIterator($children);
+        $this->arguments = new \ArrayIterator($children);
     }
 
     /**
-     * @param resource $definition
-     * @param string|null $peeked Character last read from $definition which indicated start of expression
+     * @param resource $source
+     * @param string|null $peeked Character last read from $source which indicated start of expression
      * @return string
      */
-    private function extractName($definition, ?string $peeked = null): string
+    private function extractName($source, ?string $peeked = null): string
     {
         if (!$peeked || ctype_space($peeked)) {
-            while (($c = fgetc($definition)) !== false && ctype_space($c)) {
+            while (($c = fgetc($source)) !== false && ctype_space($c)) {
                 // skip whitespace
             }
             if ($c !== false) {
@@ -87,7 +90,7 @@ class StringExpression implements NodeAdapterInterface
 
         $name = $peeked;
 
-        while (($c = fgetc($definition)) !== false && $this->isWordCharacter($c)) {
+        while (($c = fgetc($source)) !== false && $this->isWordCharacter($c)) {
             $name .= $c;
         }
 
@@ -97,25 +100,26 @@ class StringExpression implements NodeAdapterInterface
     }
 
     /**
-     * @param resource $definition
+     * @param resource $source
      * @param array|null $substitutions
      * @return \Iterator
      */
-    private function extractChildren($definition, $substitutions = null): \Iterator
+    private function extractArguments($source, $substitutions = null): \Iterator
     {
-        while ($c = fgetc($definition)) {
+        while ($c = fgetc($source)) {
             if (')' == $c) {
                 break;
             } elseif ($this->isWordCharacter($c)) {
                 // this new object will advance $definition stream internally
-                $child = new self($definition, $c, $substitutions);
+                $argument = new self($source, $c, $substitutions);
 
-                yield $child;
+                yield $argument;
 
-                // if the last child had no children, it would have eaten the closing ')' of current node
-                // so we need to check the child to know we can finish processing
-                if (!$child->children && $child->lastReadCharacter == ')') {
-                    $c = $child->lastReadCharacter;
+                // If the last sub-expression had no arguments itself, it would have eaten the parenthesis
+                // indicating that current node is closed.
+                // Therefore, we need to check its lastReadCharacter to know we can finish processing.
+                if (!$argument->arguments && $argument->lastReadCharacter == ')') {
+                    $c = $argument->lastReadCharacter;
                     break;
                 }
             }

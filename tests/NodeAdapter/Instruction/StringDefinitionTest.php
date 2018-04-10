@@ -35,7 +35,7 @@ class StringDefinitionTest extends TestCase
         fclose($this->belowEqDefinitionStream);
     }
 
-    public function testExtractsStrategyKey()
+    public function testExtractsInstructionName()
     {
         $this->assertEquals('try', $this->tryDefinition->getValue());
         $this->assertEquals('below_eq', $this->belowEqDefinition->getValue());
@@ -52,7 +52,7 @@ class StringDefinitionTest extends TestCase
         $this->assertEquals(['below_eq', ['s1'], ['s2']], $declaration->getNode());
     }
 
-    public function testExtractsInstruction()
+    public function testExtractsDefinition()
     {
         $children = $this->belowEqDefinition->getChildren();
         $children->next(); // skip over declaration to instruction
@@ -62,7 +62,7 @@ class StringDefinitionTest extends TestCase
         $this->assertEquals(['once_td', ['seq', '1', ['once_td', '0']]], $instruction->getNode());
     }
 
-    public function testThrowsWhenDefinitionBodyMissing()
+    public function testThrowsWhenDefinitionMissing()
     {
         $stream = $this->get_string_stream('below_eq(s1, s2)');
 
@@ -72,7 +72,7 @@ class StringDefinitionTest extends TestCase
             $this->fail('Did not fail due to missing body');
 
         } catch (\UnderflowException $e) {
-            $this->assertEquals('Definition below_eq incomplete: body missing', $e->getMessage());
+            $this->assertEquals('below_eq incomplete: definition missing', $e->getMessage());
 
         } finally {
             fclose($stream);

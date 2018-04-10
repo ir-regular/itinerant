@@ -1,11 +1,11 @@
 <?php
 
-namespace JaneOlszewska\Tests\Itinerant\Strategy;
+namespace JaneOlszewska\Tests\Itinerant\Instruction;
 
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
-use JaneOlszewska\Itinerant\NodeAdapter\SecondElement;
+use JaneOlszewska\Itinerant\NodeAdapter\Pair;
 use JaneOlszewska\Itinerant\NodeAdapter\Fail;
-use JaneOlszewska\Itinerant\Strategy\Seq;
+use JaneOlszewska\Itinerant\Instruction\Seq;
 use PHPUnit\Framework\TestCase;
 
 class SeqTest extends TestCase
@@ -21,7 +21,7 @@ class SeqTest extends TestCase
 
     protected function setUp()
     {
-        $this->node = new SecondElement([1, [2, 3]]);
+        $this->node = new Pair([1, [2, 3]]);
         $this->seq = new Seq($this->initialInstruction, $this->followupInstruction);
     }
 

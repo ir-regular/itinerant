@@ -1,17 +1,17 @@
 <?php
 
-namespace JaneOlszewska\Tests\Itinerant\Strategy;
+namespace JaneOlszewska\Tests\Itinerant\Instruction;
 
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
-use JaneOlszewska\Itinerant\NodeAdapter\SecondElement;
+use JaneOlszewska\Itinerant\NodeAdapter\Pair;
 use JaneOlszewska\Itinerant\NodeAdapter\Fail;
-use JaneOlszewska\Itinerant\Strategy\Choice;
+use JaneOlszewska\Itinerant\Instruction\Choice;
 use PHPUnit\Framework\TestCase;
 
 class ChoiceTest extends TestCase
 {
-    private $initialInstruction = ['initial'];
-    private $followupInstruction = ['followup'];
+    private $initialExpression = ['initial'];
+    private $alternativeExpression = ['alternative'];
 
     /** @var NodeAdapterInterface */
     private $node;
@@ -21,20 +21,20 @@ class ChoiceTest extends TestCase
 
     protected function setUp()
     {
-        $this->node = new SecondElement([1, [2, 3]]);
-        $this->choice = new Choice($this->initialInstruction, $this->followupInstruction);
+        $this->node = new Pair([1, [2, 3]]);
+        $this->choice = new Choice($this->initialExpression, $this->alternativeExpression);
     }
 
-    public function testExecutesFollowupWhenFirstStrategyFails()
+    public function testExecutesAlternativeWhenInitialExpressionFails()
     {
         $continuation = $this->choice->apply($this->node);
 
         $result = $continuation->current();
-        $this->assertEquals([$this->initialInstruction, $this->node], $result);
+        $this->assertEquals([$this->initialExpression, $this->node], $result);
         $this->assertTrue($continuation->valid());
 
         $result = $continuation->send(Fail::fail());
-        $this->assertEquals([$this->followupInstruction, $this->node], $result);
+        $this->assertEquals([$this->alternativeExpression, $this->node], $result);
         $this->assertTrue($continuation->valid());
 
         $result = $continuation->send($this->node);
@@ -49,12 +49,12 @@ class ChoiceTest extends TestCase
         $this->assertFalse($continuation->valid());
     }
 
-    public function testSkipsFollowupWhenFirstStrategySucceeds()
+    public function testSkipsAlternativeWhenInitialExpressionSucceeds()
     {
         $continuation = $this->choice->apply($this->node);
 
         $result = $continuation->current();
-        $this->assertEquals([$this->initialInstruction, $this->node], $result);
+        $this->assertEquals([$this->initialExpression, $this->node], $result);
         $this->assertTrue($continuation->valid());
 
         $result = $continuation->send($this->node);

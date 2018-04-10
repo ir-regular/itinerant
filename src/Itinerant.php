@@ -4,62 +4,66 @@ namespace JaneOlszewska\Itinerant;
 
 use JaneOlszewska\Itinerant\NodeAdapter\Instruction\StringDefinition;
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
-use JaneOlszewska\Itinerant\Strategy\InstructionResolver;
+use JaneOlszewska\Itinerant\Instruction\ExpressionResolver;
+use JaneOlszewska\Itinerant\Instruction\InstructionStack;
+use JaneOlszewska\Itinerant\Validation\ExpressionValidator;
 
 class Itinerant
 {
-    /** @var InstructionResolver */
+    /** @var ExpressionResolver */
     private $resolver;
 
-    /** @var StrategyStack */
+    /** @var InstructionStack */
     private $stack;
 
-    /** @var InstructionValidator */
+    /** @var ExpressionValidator */
     private $validator;
 
     public function __construct()
     {
-        $this->resolver = new InstructionResolver();
-        $this->stack = new StrategyStack($this->resolver);
-        $this->validator = new InstructionValidator();
+        $this->resolver = new ExpressionResolver();
+        $this->stack = new InstructionStack($this->resolver);
+        $this->validator = new ExpressionValidator();
     }
 
     /**
+     * @todo move to utils
+     *
      * @param resource $stream
      * @return void
      */
-    public function registerStrategiesFromStream($stream): void
+    public function registerFromStream($stream): void
     {
         while (($c = fgetc($stream)) !== false) {
             if (!ctype_space($c)) {
                 $definition = (new StringDefinition($stream, $c))->getNode();
 
-                $this->registerStrategy(...$definition);
+                $this->register(...$definition);
             }
         }
     }
 
     /**
-     * @param string $strategy
-     * @param array $instruction
+     * @param string $instruction
+     * @param array $definition
      * @return void
      */
-    public function registerStrategy(string $strategy, array $instruction): void
+    public function register(string $instruction, array $definition): void
     {
-        $instruction = $this->validator->sanitiseRegistered($strategy, $instruction);
+        $definition = $this->validator->validateUserInstruction($instruction, $definition);
 
-        $this->resolver->registerStrategy($strategy, $instruction);
+        $this->resolver->register($instruction, $definition);
     }
 
     /**
-     * @param array|string $instruction
+     * @param array|string $expression
      * @param NodeAdapterInterface $node
      * @return NodeAdapterInterface
      */
-    public function apply($instruction, NodeAdapterInterface $node): NodeAdapterInterface
+    public function apply($expression, NodeAdapterInterface $node): NodeAdapterInterface
     {
-        $instruction = $this->validator->sanitiseApplied($instruction);
+        $expression = $this->validator->validate($expression);
 
-        return $this->stack->apply($instruction, $node);
+        return $this->stack->apply($expression, $node);
     }
 }
