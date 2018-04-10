@@ -35,7 +35,7 @@ class ExpressionValidator
     public function __construct()
     {
         // Yes, both classes are instantiated twice (the 'original' instances are in Itinerant).
-        // This guarantees that TD_PRE strategy won't conflict with user's strategies.
+        // This guarantees that TD_PRE instruction won't conflict with user's instructions.
         $resolver = new ExpressionResolver();
         // top-down, depth first, prefix application
         $resolver->register(self::TD_PRE, ['seq', '0', ['all', [self::TD_PRE, '0']]]);

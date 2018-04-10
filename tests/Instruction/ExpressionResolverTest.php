@@ -20,7 +20,7 @@ class ExpressionResolverTest extends TestCase
         $this->resolver = new ExpressionResolver();
     }
 
-    public function testRegisterStrategy()
+    public function testResolvesRegisteredInstruction()
     {
         $action = function (NodeAdapterInterface $node) {
             return null;

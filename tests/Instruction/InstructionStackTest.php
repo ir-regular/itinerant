@@ -101,12 +101,12 @@ class InstructionStackTest extends TestCase
         $modifiedNodes = $this->getNodeArrayDatum($this->getNodes(2, $newName));
 
         // adhoc on its own, not applying action (because only applicable to nodes with 'getName')
-        // and thus defaulting to 'fail' strategy
+        // and thus defaulting to 'fail' instruction
 
         $result = $this->stack->apply(['adhoc', ['fail'], $modifyAction], $this->getNodeArrayDatum([]));
         $this->assertEquals($this->fail, $result);
 
-        // adhoc on its own, not applying action and defaulting to 'id' strategy
+        // adhoc on its own, not applying action and defaulting to 'id' instruction
 
         $this->assertEquals($nodes, $this->stack->apply(['adhoc', ['id'], $modifyAction], $nodes));
 
@@ -116,7 +116,7 @@ class InstructionStackTest extends TestCase
         $this->assertEquals($modifiedNode, $result);
         $this->assertNotEquals($unwrappedNode, $result->getNode()); // original data was not modified in the process
 
-        // todo: test adhoc where it substitutes with strategy (id/fail)
+        // todo: test adhoc where it substitutes with instruction (id/fail)
 
         // adhoc with all
 
@@ -160,7 +160,7 @@ class InstructionStackTest extends TestCase
         $this->assertEquals($nodes, $result); // check that result is unmodified
     }
 
-    public function testUserDefinedStrategy()
+    public function testUserDefinedInstruction()
     {
         $nodeOfNodes = $this->getNodeArrayDatum(
             [
@@ -439,14 +439,14 @@ class InstructionStackTest extends TestCase
 
         $resolver->register('full_td', ['seq', '0', ['all', ['full_td', '0']]]);
 
-        // register 'attr' strategy: this is a rather roundabout way of creating a node-by-attribute selector.
+        // register 'attr' instruction: this is a rather roundabout way of creating a node-by-attribute selector.
 
         $action = $this->getNameMatchAction();
         $action->setCurrentSearch('2'); // look for node with name == '2'
         $resolver->register('attr', ['adhoc', ['fail'], $action]);
 
-        // register strategy that traverses the graph top-down and return the first element that successfully fulfils
-        // whatever strategy was provided as 1st arg
+        // register instruction that traverses the graph top-down and return the first element that successfully fulfils
+        // whatever instruction was provided as 1st arg
 
         $resolver->register('once_td', ['choice', '0', ['one', ['once_td', '0']]]);
         return $resolver;

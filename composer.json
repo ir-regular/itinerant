@@ -12,7 +12,7 @@
     "php-ds/php-ds": "^1.2"
   },
   "suggest": {
-    "ext-ds": "StrategyStack performance improves when \\Ds\\Stack is available"
+    "ext-ds": "ExpressionStack performance improves when \\Ds\\Stack is available"
   },
   "scripts": {
     "ci": [

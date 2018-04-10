@@ -40,7 +40,7 @@ class ExpressionResolver
                 if (isset($this->instructions[$instruction])) {
                     return new UserDefined($this->instructions[$instruction], $args);
                 } else {
-                    throw new \DomainException('Invalid strategy: validation process failed');
+                    throw new \DomainException('Invalid instruction: validation process failed');
                 }
         }
     }
