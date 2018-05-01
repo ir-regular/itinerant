@@ -57,8 +57,8 @@ Instructions operating on a single node that require a PHP callback and a fallba
 (this is where you actually do something to the node):
 
 - `adhoc`
-    1. check if the callback can operate on the node
-        1. if yes, execute the callback on the node
+    1. execute `isApplicable` callback on the node to check if the `action` callback can operate on it as well
+        1. if yes, execute the `action` callback on the node
         2. if no, apply the fallback expression to the node
     2. return the result of either callback or fallback expression, as appropriate
 
@@ -99,7 +99,7 @@ $root = ...;
 $node = new Accessor($root);
 
 // callback to be executed on every node
-$callback = function (NodeAdapterInterface $node): ?NodeAdapterInterface {
+$callback = function (NodeAdapterInterface $node): NodeAdapterInterface {
     printf('Node %s has %d children', $node->getName(), iterator_count($node->getChildren());
     return $node;
 };

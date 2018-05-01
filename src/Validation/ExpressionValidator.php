@@ -23,7 +23,7 @@ class ExpressionValidator
         ExpressionResolver::CHOICE => 2,
         ExpressionResolver::ALL => 1,
         ExpressionResolver::ONE => 1,
-        ExpressionResolver::ADHOC => 2,
+        ExpressionResolver::ADHOC => 3,
     ];
 
     /** @var ExpressionResolver */
@@ -57,7 +57,7 @@ class ExpressionValidator
 
         // use own stack instead of Itinerant::apply() to avoid infinite recursion
         $result = $this->stack->apply(
-            [self::TD_PRE, ['adhoc', ['fail'], $validateAction]],
+            [self::TD_PRE, ['adhoc', ['fail'], $validateAction, $this->getAlwaysApplicableFunction()]],
             new Sequence($expression)
         );
 
@@ -116,7 +116,7 @@ class ExpressionValidator
     {
         $placeholders = [];
 
-        $extractPlaceholders = function (NodeAdapterInterface $node) use (&$placeholders): ?NodeAdapterInterface {
+        $extractPlaceholders = function (NodeAdapterInterface $node) use (&$placeholders): NodeAdapterInterface {
             $value = $node->getValue();
 
             if (is_numeric($value)) {
@@ -129,7 +129,7 @@ class ExpressionValidator
         // note that I'm ignoring the output: only interested in the side effect here
         // (also, yeah, I could have done that using array_walk_recursive)
         $this->stack->apply(
-            [self::TD_PRE, ['adhoc', ['fail'], $extractPlaceholders]],
+            [self::TD_PRE, ['adhoc', ['fail'], $extractPlaceholders, $this->getAlwaysApplicableFunction()]],
             new Sequence($expression)
         );
 
@@ -169,7 +169,7 @@ class ExpressionValidator
         );
 
         $result = $this->stack->apply(
-            [self::TD_PRE, ['adhoc', ['fail'], $validateDefinitionAction]],
+            [self::TD_PRE, ['adhoc', ['fail'], $validateDefinitionAction, $this->getAlwaysApplicableFunction()]],
             new Sequence($definition)
         );
 
@@ -186,7 +186,7 @@ class ExpressionValidator
      */
     private function formatErrorMessage(ValidateExpressionAction $action): string
     {
-        // (Neither node nor validation error should be null at this point)
+        // Neither $node nor $error should be null at this point, fallbacks just in case
 
         $instruction = ($node = $action->getInvalidNode()) ? $node->getValue() : null;
         $error = $action->getValidationError() ?: '';
@@ -196,5 +196,12 @@ class ExpressionValidator
         }
 
         return $error;
+    }
+
+    private function getAlwaysApplicableFunction(): callable
+    {
+        return function (NodeAdapterInterface $node) {
+            return true;
+        };
     }
 }

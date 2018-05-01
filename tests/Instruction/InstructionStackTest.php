@@ -91,6 +91,7 @@ class InstructionStackTest extends TestCase
     {
         $newName = 'modified!';
         $modifyAction = $this->getSetNameAction($newName);
+        $isApplicable = $this->getApplicableToNamed();
 
         $unwrappedNode = $this->getUnwrappedNodeDatum('original');
         $node = new Accessor($unwrappedNode);
@@ -103,16 +104,16 @@ class InstructionStackTest extends TestCase
         // adhoc on its own, not applying action (because only applicable to nodes with 'getName')
         // and thus defaulting to 'fail' instruction
 
-        $result = $this->stack->apply(['adhoc', ['fail'], $modifyAction], $this->getNodeArrayDatum([]));
+        $result = $this->stack->apply(['adhoc', ['fail'], $modifyAction, $isApplicable], $this->getNodeArrayDatum([]));
         $this->assertEquals($this->fail, $result);
 
         // adhoc on its own, not applying action and defaulting to 'id' instruction
 
-        $this->assertEquals($nodes, $this->stack->apply(['adhoc', ['id'], $modifyAction], $nodes));
+        $this->assertEquals($nodes, $this->stack->apply(['adhoc', ['id'], $modifyAction, $isApplicable], $nodes));
 
         // adhoc on its own, applying action
 
-        $result = $this->stack->apply(['adhoc', ['fail'], $modifyAction], $node);
+        $result = $this->stack->apply(['adhoc', ['fail'], $modifyAction, $isApplicable], $node);
         $this->assertEquals($modifiedNode, $result);
         $this->assertNotEquals($unwrappedNode, $result->getNode()); // original data was not modified in the process
 
@@ -120,13 +121,13 @@ class InstructionStackTest extends TestCase
 
         // adhoc with all
 
-        $result = $this->stack->apply(['all', ['adhoc', ['fail'], $modifyAction]], $nodes);
+        $result = $this->stack->apply(['all', ['adhoc', ['fail'], $modifyAction, $isApplicable]], $nodes);
         $this->assertEquals($modifiedNodes, $result);
         $this->assertNotEquals($unwrappedNodes, $result->getNode()); // original data was not modified in the process
 
         // adhoc with one
 
-        $result = $this->stack->apply(['one', ['adhoc', ['fail'], $modifyAction]], $nodes);
+        $result = $this->stack->apply(['one', ['adhoc', ['fail'], $modifyAction, $isApplicable]], $nodes);
         $this->assertEquals($modifiedNode, $result);
         $this->assertNotEquals($unwrappedNodes, $result->getNode()); // original data was not modified in the process
     }
@@ -135,24 +136,20 @@ class InstructionStackTest extends TestCase
     {
         $nodes = $this->getNodeArrayDatum($this->getNodes());
         $modifyAction = function (NodeAdapterInterface $d) {
+            $d->getNode()->setName('modified!');
+            return $d;
+        };
+        $isApplicable = function (NodeAdapterInterface $node): bool {
             static $counter = 0;
-
-            if (method_exists($d->getNode(), 'setName')) {
-                if (++$counter == 2) {
-                    return null; // "doesn't apply" to 2nd child
-                }
-                $d->getNode()->setName('modified!');
-                return $d;
-            }
-
-            return null;
+            return method_exists($node->getNode(), 'setName')
+                && (++$counter == 2); // "doesn't apply" to 2nd child
         };
 
         $result = $this->stack->apply(['choice',
             // modify action "doesn't apply" on 2nd child,
             // thus adhoc calls 'fail' on 2nd child
             // thus all fails
-            ['all', ['adhoc', ['fail'], $modifyAction]],
+            ['all', ['adhoc', ['fail'], $modifyAction, $isApplicable]],
             // therefore, return the original node provided to 'choice'
             ['id']
         ], $nodes);
@@ -182,8 +179,9 @@ class InstructionStackTest extends TestCase
         );
 
         $ordAction = $this->getLabelWithOrdAction();
+        $isApplicable = $this->getApplicableToNamed();
 
-        $result = $this->stack->apply(['full_td', ['adhoc', ['id'], $ordAction]], $nodeOfNodes);
+        $result = $this->stack->apply(['full_td', ['adhoc', ['id'], $ordAction, $isApplicable]], $nodeOfNodes);
         $this->assertEquals($ordNodeOfNodes, $result);
     }
 
@@ -194,23 +192,25 @@ class InstructionStackTest extends TestCase
             $node->getNode()->setName($newName);
             return $node;
         };
+        $alwaysApplicable = function (NodeAdapterInterface $node): bool { return true; };
 
         $modifiedNodes = $this->getNodeArrayDatum($this->getNodes(2, $newName));
 
         $nodes = $this->getNodeArrayDatum($this->getNodes());
 
-        $result = $this->stack->apply(['all', ['adhoc', ['fail'], $modifyAction]], $nodes);
+        $result = $this->stack->apply(['all', ['adhoc', ['fail'], $modifyAction, $alwaysApplicable]], $nodes);
         $this->assertEquals($modifiedNodes, $result);
     }
 
     public function testAdhocWithCallableAsArrayAction()
     {
         $modifyAction = [$this, 'callableAction'];
+        $alwaysApplicable = function (NodeAdapterInterface $node): bool { return true; };
         $modifiedNodes = $this->getNodeArrayDatum($this->getNodes(2, 'modified!'));
 
         $nodes = $this->getNodeArrayDatum($this->getNodes());
 
-        $result = $this->stack->apply(['all', ['adhoc', ['fail'], $modifyAction]], $nodes);
+        $result = $this->stack->apply(['all', ['adhoc', ['fail'], $modifyAction, $alwaysApplicable]], $nodes);
         $this->assertEquals($modifiedNodes, $result);
     }
 
@@ -225,10 +225,13 @@ class InstructionStackTest extends TestCase
         $nonApplicableAction = function ($node) {
             return null;
         };
+        $neverApplicable = function (NodeAdapterInterface $node): bool {
+            return false;
+        };
 
         $nodes = $this->getNodeArrayDatum($this->getNodes());
 
-        $result = $this->stack->apply(['all', ['adhoc', ['fail'], $nonApplicableAction]], $nodes);
+        $result = $this->stack->apply(['all', ['adhoc', ['fail'], $nonApplicableAction, $neverApplicable]], $nodes);
         $this->assertEquals($this->fail, $result);
     }
 
@@ -251,7 +254,6 @@ class InstructionStackTest extends TestCase
         $secondNode = new Accessor($secondNode);
 
         $this->assertEquals($secondNode, $this->stack->apply(['attr'], $secondNode)); // yep, it matches
-
 
         // perform the actual test: search for an element with name == '2'
 
@@ -375,13 +377,16 @@ class InstructionStackTest extends TestCase
 
             public function __invoke(NodeAdapterInterface $d)
             {
-                if (method_exists($d->getNode(), 'setName')) {
-                    $d->getNode()->setName($this->newName);
-                    return $d;
-                }
-
-                return null;
+                $d->getNode()->setName($this->newName);
+                return $d;
             }
+        };
+    }
+
+    private function getApplicableToNamed()
+    {
+        return function (NodeAdapterInterface $node) {
+            return method_exists($node->getNode(), 'setName');
         };
     }
 
@@ -393,38 +398,24 @@ class InstructionStackTest extends TestCase
 
             public function __invoke(NodeAdapterInterface $d)
             {
-                if (method_exists($d->getNode(), 'setName')) {
-                    $d->getNode()->setName(self::$ord++);
-                    return $d;
-                }
-
-                return null;
+                $d->getNode()->setName(self::$ord++);
+                return $d;
             }
         };
     }
 
     private function getNameMatchAction()
     {
-        return new class
-        {
-            /** @var string */
-            private $currentSearch;
+        return function (NodeAdapterInterface $node): NodeAdapterInterface {
+            return $node;
+        };
+    }
 
-            public function setCurrentSearch($s)
-            {
-                $this->currentSearch = $s;
-            }
-
-            public function __invoke(NodeAdapterInterface $d)
-            {
-                if (method_exists($d->getNode(), 'getName')
-                    && ($d->getNode()->getName() == $this->currentSearch)
-                ) {
-                    return $d;
-                }
-
-                return null;
-            }
+    public function getApplicableToNodesWithName($currentSearch)
+    {
+        return function (NodeAdapterInterface $node) use ($currentSearch): bool {
+            return method_exists($node->getNode(), 'getName')
+                && ($node->getNode()->getName() == $currentSearch);
         };
     }
 
@@ -442,8 +433,9 @@ class InstructionStackTest extends TestCase
         // register 'attr' instruction: this is a rather roundabout way of creating a node-by-attribute selector.
 
         $action = $this->getNameMatchAction();
-        $action->setCurrentSearch('2'); // look for node with name == '2'
-        $resolver->register('attr', ['adhoc', ['fail'], $action]);
+        // look for node with name == '2'
+        $applicableToNamed = $this->getApplicableToNodesWithName('2');
+        $resolver->register('attr', ['adhoc', ['fail'], $action, $applicableToNamed]);
 
         // register instruction that traverses the graph top-down and return the first element that successfully fulfils
         // whatever instruction was provided as 1st arg

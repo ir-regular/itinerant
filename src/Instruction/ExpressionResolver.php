@@ -35,7 +35,7 @@ class ExpressionResolver
             case self::ONE:
                 return new One($args[0]);
             case self::ADHOC:
-                return new Adhoc($args[0], $args[1]);
+                return new Adhoc($args[0], $args[1], $args[2]);
             default:
                 if (isset($this->instructions[$instruction])) {
                     return new UserDefined($this->instructions[$instruction], $args);

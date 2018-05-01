@@ -12,7 +12,6 @@ class ExpressionValidatorTest extends TestCase
     /** @var ExpressionValidator */
     private $validator;
 
-
     protected function setUp()
     {
         parent::setUp();
@@ -45,12 +44,15 @@ class ExpressionValidatorTest extends TestCase
 
     public function testSanitiseRegisteredZeroArgumentNodes()
     {
-        $action = function (NodeAdapterInterface $node): ?NodeAdapterInterface {
-            return null;
+        $action = function (NodeAdapterInterface $node): NodeAdapterInterface {
+            return $node;
+        };
+        $alwaysApplicable = function (NodeAdapterInterface $node): bool {
+            return true;
         };
 
         $this->assertEquals(
-            ['adhoc', ['fail'], [$action]],
+            ['adhoc', ['fail'], [$action], [$alwaysApplicable]],
             $this->validator->validateUserInstruction('meh', ['adhoc', 'fail', $action])
         );
     }
@@ -58,13 +60,16 @@ class ExpressionValidatorTest extends TestCase
     public function testValidatesArrayCallableActions()
     {
         $object = new class {
-            public function f(NodeAdapterInterface $node): ?NodeAdapterInterface {
+            public function f(NodeAdapterInterface $node): NodeAdapterInterface {
                 return $node;
             }
         };
+        $alwaysApplicable = function (NodeAdapterInterface $node): bool {
+            return true;
+        };
 
         $this->assertEquals(
-            ['adhoc', ['fail'], [[$object, 'f']]],
+            ['adhoc', ['fail'], [[$object, 'f']], [$alwaysApplicable]],
             $this->validator->validate(['adhoc', 'fail', [$object, 'f']])
         );
     }
@@ -98,7 +103,7 @@ class ExpressionValidatorTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Action must accept at least one argument, and it must be of type JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface');
 
-        $action = function (): ?NodeAdapterInterface {
+        $action = function (): NodeAdapterInterface {
             return null;
         };
 
@@ -108,7 +113,7 @@ class ExpressionValidatorTest extends TestCase
     public function testThrowsOnRegisteringActionWithIncorrectReturnType()
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Action must return type ?JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface');
+        $this->expectExceptionMessage('Actions must return type JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface and isApplicable callables must return bool');
 
         // note that implicit return type is ok, but it's not explicitly declared and that's why it breaks
         $action = function (NodeAdapterInterface $node) {

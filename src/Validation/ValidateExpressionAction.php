@@ -53,7 +53,7 @@ class ValidateExpressionAction
         return $this->validationError;
     }
 
-    public function __invoke(NodeAdapterInterface $d): ?NodeAdapterInterface
+    public function __invoke(NodeAdapterInterface $d): NodeAdapterInterface
     {
         if ($this->isZeroArgumentShorthand($d)) {
             // If special case of zero-argument instruction applies:
@@ -64,6 +64,9 @@ class ValidateExpressionAction
             // If action (callable):
             // ensure correct argument/return types.
             $isValid = $this->isValidAction($d);
+
+        } elseif ($this->isAlwaysApplicableAdhoc($d)) {
+            return $this->convertAlwaysApplicableAdhoc($d);
 
         } else {
             // ...otherwise it must be an expression.
@@ -104,6 +107,12 @@ class ValidateExpressionAction
         return is_callable($d->getValue());
     }
 
+    protected function isAlwaysApplicableAdhoc(NodeAdapterInterface $d): bool
+    {
+        return ($d->getValue() === ExpressionResolver::ADHOC)
+            && iterator_count($d->getChildren()) == 2; // missing the 'is applicable' argument
+    }
+
     /**
      * Handroll type checking *le sigh*
      *
@@ -138,15 +147,16 @@ class ValidateExpressionAction
     protected function isValidActionReturnType(\ReflectionFunctionAbstract $reflection): bool
     {
         $returnTypeValid = ($returnType = $reflection->getReturnType())
-            && ($returnType == NodeAdapterInterface::class)
-            && ($returnType->allowsNull() == true);
+            // action - or - is applicable
+            && ($returnType == NodeAdapterInterface::class || $returnType == 'bool')
+            && !$returnType->allowsNull();
 
         // You may be wondering why I didn't hardcode the class in the error messages.
         // This way if I ever want to rename it, automatic refactoring tools will work correctly.
 
         if (!$returnTypeValid) {
-            $this->validationError = 'Action must return type ?'
-                . NodeAdapterInterface::class;
+            $this->validationError = 'Actions must return type '
+                . NodeAdapterInterface::class . ' and isApplicable callables must return bool';
         }
 
         return $returnTypeValid;
@@ -204,6 +214,18 @@ class ValidateExpressionAction
     protected function convertZeroArgumentShorthand(NodeAdapterInterface $d)
     {
         $sanitisedNode = [$d->getValue()];
+        return new Sequence($sanitisedNode);
+    }
+
+    protected function convertAlwaysApplicableAdhoc(NodeAdapterInterface $d)
+    {
+        $sanitisedNode = [$d->getValue()];
+        foreach ($d->getChildren() as $child) {
+            $sanitisedNode[] = $child->getValue();
+        }
+        $sanitisedNode[] = function (NodeAdapterInterface $node): bool {
+            return true;
+        };
         return new Sequence($sanitisedNode);
     }
 }

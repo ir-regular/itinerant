@@ -20,10 +20,13 @@ class AdhocTest extends TestCase
 
     public function testExecutesApplicableAction()
     {
-        $action = function (NodeAdapterInterface $node): ?NodeAdapterInterface {
+        $action = function (NodeAdapterInterface $node): NodeAdapterInterface {
             return $node;
         };
-        $adhoc = new Adhoc($this->fallbackExpression, $action);
+        $alwaysApplicable = function (NodeAdapterInterface $node): bool {
+            return true;
+        };
+        $adhoc = new Adhoc($this->fallbackExpression, $action, $alwaysApplicable);
 
         $continuation = $adhoc->apply($this->node);
 
@@ -33,10 +36,14 @@ class AdhocTest extends TestCase
 
     public function testAppliesFallbackWhenActionInapplicable()
     {
-        $action = function (NodeAdapterInterface $node): ?NodeAdapterInterface {
-            return null; // null == inapplicable to this specific $node
+        $action = function (NodeAdapterInterface $node): NodeAdapterInterface {
+            return null;
         };
-        $adhoc = new Adhoc($this->fallbackExpression, $action);
+        $neverApplicable = function (NodeAdapterInterface $node): bool {
+            return false;
+        };
+
+        $adhoc = new Adhoc($this->fallbackExpression, $action, $neverApplicable);
 
         $continuation = $adhoc->apply($this->node);
 
