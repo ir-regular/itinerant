@@ -1,6 +1,6 @@
 <?php
 
-namespace JaneOlszewska\Itinerant\NodeAdapter\Instruction;
+namespace JaneOlszewska\Itinerant\Config;
 
 use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
 

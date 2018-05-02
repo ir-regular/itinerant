@@ -27,23 +27,6 @@ class Itinerant
     }
 
     /**
-     * @todo move to utils
-     *
-     * @param resource $stream
-     * @return void
-     */
-    public function registerFromStream($stream): void
-    {
-        while (($c = fgetc($stream)) !== false) {
-            if (!ctype_space($c)) {
-                $definition = (new StringDefinition($stream, $c))->getNode();
-
-                $this->register(...$definition);
-            }
-        }
-    }
-
-    /**
      * @param string $instruction
      * @param array $definition
      * @return void
