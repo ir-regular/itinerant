@@ -1,0 +1,12 @@
+try(s) = choice(s, id)
+repeat(s) = try(choice(s, repeat(s)))
+
+full_td(s) = seq(s, all(full_td(s)))
+full_bu(s) = seq(all(full_bu(s)), s)
+once_td(s) = choice(s, one(once_td(s)))
+once_bu(s) = choice(one(once_bu(s)), s)
+stop_td(s) = choice(s, all(stop_td(s)))
+path_td(s) = seq(s, choice(all(fail), one(path_td(s))))
+innermost(s) = seq(all(innermost(s)), try(seq(s, innermost(s))))
+below_eq(s, t) = once_td(seq(t, once_td(s)))
+until_eq(s, t) = seq(s, choice(t, one(until_eq(s, t))))

@@ -105,10 +105,14 @@ $callback = function (NodeAdapterInterface $node): NodeAdapterInterface {
 };
 
 $itinerant = new Itinerant();
+// Load some common traversal strategy definitions
+$filepath = getcwd() . '/resources/common.itinerant';
+Configurator::registerFromFile($itinerant, $filepath);
 
-// Define how to perform depth-first traversal of all nodes
-// Note '0' which is an argument placeholder: 'full_td' is an instruction with one argument 
-$itinerant->register('full_td', ['seq', '0', ['all', ['full_td', '0']]]);
+// You could also define how to perform depth-first traversal of all nodes by hand.
+// Note '0' which is an argument placeholder: 'full_td' is an instruction with one argument.
+// (Compare to how full_td definition looks like in resources/common.itinerant)
+// $itinerant->register('full_td', ['seq', '0', ['all', ['full_td', '0']]]);
 
 // Perform depth-first traversal, which will print out counts of all children
 // In this instance, ['adhoc', 'id', $callback] is the argument value
