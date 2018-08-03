@@ -2,7 +2,7 @@
   "name": "jane-olszewska/itinerant",
   "type": "library",
   "require": {
-    "php": ">=7.1"
+    "php": ">=7.2"
   },
   "require-dev": {
     "phpunit/phpunit": "^6.0",
@@ -41,7 +41,7 @@
   "config": {
     "bin-dir": "bin",
     "platform": {
-      "php": "7.1"
+      "php": "7.2"
     }
   }
 }
