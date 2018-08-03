@@ -1,8 +1,8 @@
 <?php
 
-namespace JaneOlszewska\Tests\Itinerant\NodeAdapter;
+namespace IrRegular\Tests\Itinerant\NodeAdapter;
 
-use JaneOlszewska\Itinerant\NodeAdapter\Pair;
+use IrRegular\Itinerant\NodeAdapter\Pair;
 use PHPUnit\Framework\TestCase;
 
 class PairTest extends TestCase

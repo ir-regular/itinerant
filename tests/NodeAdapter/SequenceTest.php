@@ -1,8 +1,8 @@
 <?php
 
-namespace JaneOlszewska\Tests\Itinerant\NodeAdapter;
+namespace IrRegular\Tests\Itinerant\NodeAdapter;
 
-use JaneOlszewska\Itinerant\NodeAdapter\Sequence;
+use IrRegular\Itinerant\NodeAdapter\Sequence;
 use PHPUnit\Framework\TestCase;
 
 class SequenceTest extends TestCase

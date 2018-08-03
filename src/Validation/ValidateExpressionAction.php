@@ -1,11 +1,11 @@
 <?php
 
-namespace JaneOlszewska\Itinerant\Validation;
+namespace IrRegular\Itinerant\Validation;
 
-use JaneOlszewska\Itinerant\NodeAdapter\Fail;
-use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
-use JaneOlszewska\Itinerant\NodeAdapter\Sequence;
-use JaneOlszewska\Itinerant\Instruction\ExpressionResolver;
+use IrRegular\Itinerant\NodeAdapter\Fail;
+use IrRegular\Itinerant\NodeAdapter\NodeAdapterInterface;
+use IrRegular\Itinerant\NodeAdapter\Sequence;
+use IrRegular\Itinerant\Instruction\ExpressionResolver;
 
 /**
  * Internal library action: validates expressions passed to Itinerant::apply()

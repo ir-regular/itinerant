@@ -1,10 +1,10 @@
 <?php
 
-namespace JaneOlszewska\Tests\Itinerant\Config;
+namespace IrRegular\Tests\Itinerant\Config;
 
-use JaneOlszewska\Itinerant\Config\Configurator;
-use JaneOlszewska\Itinerant\Itinerant;
-use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
+use IrRegular\Itinerant\Config\Configurator;
+use IrRegular\Itinerant\Itinerant;
+use IrRegular\Itinerant\NodeAdapter\NodeAdapterInterface;
 use PHPUnit\Framework\TestCase;
 
 class ConfiguratorTest extends TestCase

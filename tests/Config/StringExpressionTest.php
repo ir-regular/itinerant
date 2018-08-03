@@ -1,8 +1,8 @@
 <?php
 
-namespace JaneOlszewska\Tests\Itinerant\Config;
+namespace IrRegular\Tests\Itinerant\Config;
 
-use JaneOlszewska\Itinerant\Config\StringExpression;
+use IrRegular\Itinerant\Config\StringExpression;
 use PHPUnit\Framework\TestCase;
 
 class StringExpressionTest extends TestCase

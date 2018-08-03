@@ -1,12 +1,12 @@
 <?php
 
-namespace JaneOlszewska\Tests\Itinerant\Instruction;
+namespace IrRegular\Tests\Itinerant\Instruction;
 
-use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
-use JaneOlszewska\Itinerant\NodeAdapter\Accessor;
-use JaneOlszewska\Itinerant\NodeAdapter\Fail;
-use JaneOlszewska\Itinerant\Instruction\ExpressionResolver;
-use JaneOlszewska\Itinerant\Instruction\InstructionStack;
+use IrRegular\Itinerant\NodeAdapter\NodeAdapterInterface;
+use IrRegular\Itinerant\NodeAdapter\Accessor;
+use IrRegular\Itinerant\NodeAdapter\Fail;
+use IrRegular\Itinerant\Instruction\ExpressionResolver;
+use IrRegular\Itinerant\Instruction\InstructionStack;
 use PHPUnit\Framework\TestCase;
 
 /**

@@ -1,8 +1,8 @@
 <?php
 
-namespace JaneOlszewska\Itinerant\Instruction;
+namespace IrRegular\Itinerant\Instruction;
 
-use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
+use IrRegular\Itinerant\NodeAdapter\NodeAdapterInterface;
 
 /**
  * @TODO rename

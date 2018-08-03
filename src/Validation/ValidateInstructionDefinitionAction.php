@@ -1,9 +1,9 @@
 <?php
 
-namespace JaneOlszewska\Itinerant\Validation;
+namespace IrRegular\Itinerant\Validation;
 
-use JaneOlszewska\Itinerant\NodeAdapter\Leaf;
-use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
+use IrRegular\Itinerant\NodeAdapter\Leaf;
+use IrRegular\Itinerant\NodeAdapter\NodeAdapterInterface;
 
 /**
  * Internal library action: validates and sanitises instruction definitions

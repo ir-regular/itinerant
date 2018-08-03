@@ -1,12 +1,12 @@
 <?php
 
-namespace JaneOlszewska\Itinerant;
+namespace IrRegular\Itinerant;
 
-use JaneOlszewska\Itinerant\NodeAdapter\Instruction\StringDefinition;
-use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
-use JaneOlszewska\Itinerant\Instruction\ExpressionResolver;
-use JaneOlszewska\Itinerant\Instruction\InstructionStack;
-use JaneOlszewska\Itinerant\Validation\ExpressionValidator;
+use IrRegular\Itinerant\NodeAdapter\Instruction\StringDefinition;
+use IrRegular\Itinerant\NodeAdapter\NodeAdapterInterface;
+use IrRegular\Itinerant\Instruction\ExpressionResolver;
+use IrRegular\Itinerant\Instruction\InstructionStack;
+use IrRegular\Itinerant\Validation\ExpressionValidator;
 
 class Itinerant
 {

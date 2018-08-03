@@ -1,9 +1,9 @@
 <?php
 
-namespace JaneOlszewska\Tests\Itinerant;
+namespace IrRegular\Tests\Itinerant;
 
-use JaneOlszewska\Itinerant\Itinerant;
-use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
+use IrRegular\Itinerant\Itinerant;
+use IrRegular\Itinerant\NodeAdapter\NodeAdapterInterface;
 use PHPUnit\Framework\TestCase;
 
 /**

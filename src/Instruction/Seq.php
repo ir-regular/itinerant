@@ -1,9 +1,9 @@
 <?php
 
-namespace JaneOlszewska\Itinerant\Instruction;
+namespace IrRegular\Itinerant\Instruction;
 
-use JaneOlszewska\Itinerant\NodeAdapter\Fail;
-use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
+use IrRegular\Itinerant\NodeAdapter\Fail;
+use IrRegular\Itinerant\NodeAdapter\NodeAdapterInterface;
 
 class Seq implements InstructionInterface
 {

@@ -1,6 +1,6 @@
 <?php
 
-namespace JaneOlszewska\Itinerant\Instruction;
+namespace IrRegular\Itinerant\Instruction;
 
 class ExpressionResolver
 {

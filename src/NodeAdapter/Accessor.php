@@ -1,6 +1,6 @@
 <?php
 
-namespace JaneOlszewska\Itinerant\NodeAdapter;
+namespace IrRegular\Itinerant\NodeAdapter;
 
 class Accessor implements NodeAdapterInterface
 {

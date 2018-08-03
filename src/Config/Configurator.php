@@ -1,8 +1,8 @@
 <?php
 
-namespace JaneOlszewska\Itinerant\Config;
+namespace IrRegular\Itinerant\Config;
 
-use JaneOlszewska\Itinerant\Itinerant;
+use IrRegular\Itinerant\Itinerant;
 
 class Configurator
 {

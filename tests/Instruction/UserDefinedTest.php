@@ -1,9 +1,9 @@
 <?php
 
-namespace JaneOlszewska\Tests\Itinerant\Instruction;
+namespace IrRegular\Tests\Itinerant\Instruction;
 
-use JaneOlszewska\Itinerant\NodeAdapter\Pair;
-use JaneOlszewska\Itinerant\Instruction\UserDefined;
+use IrRegular\Itinerant\NodeAdapter\Pair;
+use IrRegular\Itinerant\Instruction\UserDefined;
 use PHPUnit\Framework\TestCase;
 
 class UserDefinedTest extends TestCase

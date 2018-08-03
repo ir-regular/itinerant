@@ -1,8 +1,8 @@
 <?php
 
-namespace JaneOlszewska\Tests\Itinerant\NodeAdapter;
+namespace IrRegular\Tests\Itinerant\NodeAdapter;
 
-use JaneOlszewska\Itinerant\NodeAdapter\Accessor;
+use IrRegular\Itinerant\NodeAdapter\Accessor;
 use PHPUnit\Framework\TestCase;
 
 class AccessorTest extends TestCase

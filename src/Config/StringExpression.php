@@ -1,8 +1,8 @@
 <?php
 
-namespace JaneOlszewska\Itinerant\Config;
+namespace IrRegular\Itinerant\Config;
 
-use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
+use IrRegular\Itinerant\NodeAdapter\NodeAdapterInterface;
 
 /**
  * @TODO move to Utils namespace

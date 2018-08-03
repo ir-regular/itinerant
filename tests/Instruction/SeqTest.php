@@ -1,11 +1,11 @@
 <?php
 
-namespace JaneOlszewska\Tests\Itinerant\Instruction;
+namespace IrRegular\Tests\Itinerant\Instruction;
 
-use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
-use JaneOlszewska\Itinerant\NodeAdapter\Pair;
-use JaneOlszewska\Itinerant\NodeAdapter\Fail;
-use JaneOlszewska\Itinerant\Instruction\Seq;
+use IrRegular\Itinerant\NodeAdapter\NodeAdapterInterface;
+use IrRegular\Itinerant\NodeAdapter\Pair;
+use IrRegular\Itinerant\NodeAdapter\Fail;
+use IrRegular\Itinerant\Instruction\Seq;
 use PHPUnit\Framework\TestCase;
 
 class SeqTest extends TestCase

@@ -1,9 +1,9 @@
 <?php
 
-namespace JaneOlszewska\Tests\Itinerant\Config;
+namespace IrRegular\Tests\Itinerant\Config;
 
-use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
-use JaneOlszewska\Itinerant\Config\StringDefinition;
+use IrRegular\Itinerant\NodeAdapter\NodeAdapterInterface;
+use IrRegular\Itinerant\Config\StringDefinition;
 use PHPUnit\Framework\TestCase;
 
 class StringDefinitionTest extends TestCase

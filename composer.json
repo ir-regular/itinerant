@@ -1,5 +1,5 @@
 {
-  "name": "jane-olszewska/itinerant",
+  "name": "ir-regular/itinerant",
   "type": "library",
   "require": {
     "php": ">=7.2"
@@ -29,12 +29,12 @@
   },
   "autoload": {
     "psr-4": {
-      "JaneOlszewska\\Itinerant\\": "src/"
+      "IrRegular\\Itinerant\\": "src/"
     }
   },
   "autoload-dev": {
     "psr-4": {
-      "JaneOlszewska\\Tests\\Itinerant\\": "tests/"
+      "IrRegular\\Tests\\Itinerant\\": "tests/"
     }
   },
   "minimum-stability": "stable",

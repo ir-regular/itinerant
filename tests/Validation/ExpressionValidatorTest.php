@@ -1,10 +1,10 @@
 <?php
 
-namespace JaneOlszewska\Tests\Itinerant\Validation;
+namespace IrRegular\Tests\Itinerant\Validation;
 
-use JaneOlszewska\Itinerant\Validation\ExpressionValidator;
-use JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface;
-use JaneOlszewska\Itinerant\Instruction\ExpressionResolver;
+use IrRegular\Itinerant\Validation\ExpressionValidator;
+use IrRegular\Itinerant\NodeAdapter\NodeAdapterInterface;
+use IrRegular\Itinerant\Instruction\ExpressionResolver;
 use PHPUnit\Framework\TestCase;
 
 class ExpressionValidatorTest extends TestCase
@@ -101,7 +101,7 @@ class ExpressionValidatorTest extends TestCase
     public function testThrowsOnRegisteringActionWithIncorrectArgumentType()
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Action must accept at least one argument, and it must be of type JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface');
+        $this->expectExceptionMessage('Action must accept at least one argument, and it must be of type IrRegular\Itinerant\NodeAdapter\NodeAdapterInterface');
 
         $action = function (): NodeAdapterInterface {
             return null;
@@ -113,7 +113,7 @@ class ExpressionValidatorTest extends TestCase
     public function testThrowsOnRegisteringActionWithIncorrectReturnType()
     {
         $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('Actions must return type JaneOlszewska\Itinerant\NodeAdapter\NodeAdapterInterface and isApplicable callables must return bool');
+        $this->expectExceptionMessage('Actions must return type IrRegular\Itinerant\NodeAdapter\NodeAdapterInterface and isApplicable callables must return bool');
 
         // note that implicit return type is ok, but it's not explicitly declared and that's why it breaks
         $action = function (NodeAdapterInterface $node) {
